@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Embedded database trial found no assessment of deployment cost or fault isolation.
+  {
+    paradigm: 'Embedded database', layer: 'software', problem_id: 'deployment-complexity', effect: 'reduces',
+    reason: 'SQLite needs no separate database server to install, configure or manage. Assessment: this removes database server setup from deployment. Other application deployment costs remain.',
+    source: { title: 'SQLite: serverless benefits and costs', url: 'https://www.sqlite.org/serverless.html' },
+  },
+  {
+    paradigm: 'Embedded database', layer: 'software', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'SQLite shares the application process. A separate server can protect database memory from stray pointers in the client. Assessment: this removes one fault boundary. This does not prove more faults in every application.',
+    source: { title: 'SQLite: serverless benefits and costs', url: 'https://www.sqlite.org/serverless.html' },
+  },
   // Reason: the CQRS trial found no assessment of its cost for technical debt.
   {
     paradigm: 'CQRS', layer: 'software', problem_id: 'technical-debt', effect: 'worsens',

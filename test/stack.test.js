@@ -45,6 +45,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const injection = { id: 93, layer: 'software', name: 'Dependency injection', url: 'https://martinfowler.com/articles/injection.html' };
   const actor = { id: 94, layer: 'language', name: 'Actor model', url: 'https://en.wikipedia.org/wiki/Actor_model' };
   const cqrs = { id: 96, layer: 'software', name: 'CQRS', url: 'https://martinfowler.com/bliki/CQRS.html' };
+  const embedded = { id: 97, layer: 'software', name: 'Embedded database', url: 'https://www.sqlite.org/serverless.html' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.strictEqual(assessed.coverage.unassessedParadigms, 0);
@@ -65,7 +66,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(cost.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
   assert.strictEqual(cost.coverage.unassessedParadigms, 0);
   assert.match(cost.links[0].reason, /when CQRS does not fit the domain.*Assessment:.*does not apply to every CQRS use/);
-  for (const original of [injection, actor, ownership, cqrs]) {
+  // Reason: the deployment benefit must not hide the loss of a fault boundary.
+  const local = practicalProblems([embedded]);
+  assert.deepStrictEqual(local.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[97, 'deployment-complexity', 'reduces'], [97, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(local.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'unreliable-tools']);
+  assert.strictEqual(local.coverage.unassessedParadigms, 0);
+  assert.match(local.links[0].reason, /no separate database server.*Other application deployment costs remain/);
+  assert.match(local.links[1].reason, /stray pointers.*does not prove more faults in every application/);
+  for (const original of [injection, actor, ownership, cqrs, embedded]) {
     for (const change of [{ name: 'User definition' }, { layer: 'os' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -224,9 +233,9 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.match(problems.source.scope, /Professional Developer/);
   assert.match(problems.source.measure, /more than one/);
   assert.match(problems.source.limit, /do not measure severity/);
-  assert.strictEqual(problems.links.length, 7);
+  assert.strictEqual(problems.links.length, 9);
   assert.deepStrictEqual(problems.coverage.withoutReduction, []);
-  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 6);
+  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 7);
   for (const l of problems.links) {
     assert.ok(s.paradigms.some((p) => p.id === l.paradigm_id && p.name === l.paradigm));
     assert.ok(problems.items.some((p) => p.id === l.problem_id));
@@ -319,6 +328,8 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   const assessments = JSON.parse(prompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);
   assert.deepStrictEqual(assessments, s.practicalProblems.links);
   assert.ok(assessments.some((l) => l.paradigm === 'CQRS' && l.problem_id === 'technical-debt' && l.effect === 'worsens'));
+  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Embedded database').map((l) => [l.problem_id, l.effect]),
+    [['deployment-complexity', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.ok(assessments.some((l) => l.effect === 'worsens'));
   assert.match(prompt, /explain that cost in gain and compare it with the benefit/);
   assert.match(prompt, /No assessment means an unknown effect/);

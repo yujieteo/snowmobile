@@ -78,6 +78,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Fowler reports extra complexity, lower productivity and greater risk in that case.
   The assessment infers a technical debt cost. It does not apply to every CQRS use.
   Reason: a CQRS trial found no assessment of its cost for technical debt.
+  The [SQLite assessment](https://www.sqlite.org/serverless.html) links Embedded database to less database server setup and less isolation from client memory faults.
+  These assessments describe specific mechanisms. They do not prove a whole-application benefit or cost.
+  Reason: an Embedded database trial found no assessment of deployment cost or fault isolation.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.
