@@ -116,6 +116,65 @@ test('joint PCA rejects incomplete, duplicate and invalid paradigm profiles', ()
   assert.equal('gaps' in selectRepos(data, 2), false);
 });
 
+test('map coverage bounds the largest empty circle on a known square', () => {
+  // Synthetic profiles describe geometry only, not real projects or paradigms.
+  const input = {
+    axes: ['x', 'y'],
+    repos: [[0, 0], [0, 10], [10, 0], [10, 10]].map((scores, i) => profile(`corner-${i}`, scores)),
+    paradigms: [{ name: 'Centre', layer: 'software', scores: [5, 5] }],
+  };
+  const before = selectRepos(input, 2).map;
+  assert.deepEqual(before.coverage.bounds, { min: [-5, -5], max: [5, 5] });
+  assert.deepEqual(before.coverage.center, [-5, -5]);
+  assert.equal(before.coverage.radius, Math.sqrt(50));
+  assert.equal(before.coverage.gridSteps, 40);
+  assert.equal(before.coverage.errorBound, Math.hypot(0.25, 0.25) / 2);
+  const after = selectRepos({ ...input, paradigms: [...input.paradigms,
+    ...input.repos.map((repo, i) => ({ name: `Corner ${i}`, layer: 'software', scores: repo.scores })),
+  ] }, 2).map;
+  assert.deepEqual(after.components, before.components);
+  assert.deepEqual(after.mean, before.mean);
+  assert.deepEqual(after.coverage.bounds, before.coverage.bounds);
+  assert.equal(after.coverage.radius, 5);
+  assert.ok(after.coverage.radius < before.coverage.radius);
+  assert.deepEqual(selectRepos(input, 4).map.coverage, before.coverage);
+});
+
+test('map coverage remains finite on coincident and collinear profiles', () => {
+  for (const scores of [[5, 5], [10, 5]]) {
+    const input = { axes: ['x', 'y'], repos: [profile('a', [5, 5]), profile('b', scores)],
+      paradigms: [{ name: 'Centre', layer: 'software', scores: [5, 5] }] };
+    const coverage = selectRepos(input, 2).map.coverage;
+    const exact = scores[0] - 5;
+    assert.equal(coverage.radius, exact);
+    assert.ok(Number.isFinite(coverage.errorBound));
+    assert.ok(coverage.errorBound >= 0);
+  }
+});
+
+test('the error bound includes an empty-circle centre between grid nodes', () => {
+  const input = { axes: ['x', 'y'], repos: [profile('a', [0, 0]), profile('b', [10, 0])],
+    paradigms: [0, 3.1, 10].map((x, i) => ({ name: `Point ${i}`, layer: 'software', scores: [x, 0] })) };
+  const { radius, errorBound } = selectRepos(input, 2).map.coverage;
+  const exact = (10 - 3.1) / 2;
+  assert.ok(radius < exact);
+  assert.ok(exact <= radius + errorBound);
+  assert.ok(Math.abs(radius - 3.4) < 1e-9);
+  assert.ok(Math.abs(errorBound - 0.125) < 1e-9);
+});
+
+test('the real map has empty space despite zero repository search regions', () => {
+  const corpus = require('../data/repo-scores.json');
+  const result = selectRepos(corpus, corpus.repos.length);
+  assert.deepEqual(result.gaps, []);
+  const { center, radius, errorBound } = result.map.coverage;
+  const nearest = Math.min(...result.map.points.slice(corpus.repos.length)
+    .map((point) => Math.hypot(...point.map((value, axis) => value - center[axis]))));
+  assert.ok(Math.abs(nearest - radius) < 1e-9);
+  assert.ok(radius > 7);
+  assert.ok(errorBound < 0.33);
+});
+
 test('gap regions use selected repositories and exact nearest distances in each space', () => {
   const input = {
     axes: ['state', 'parallelism'],

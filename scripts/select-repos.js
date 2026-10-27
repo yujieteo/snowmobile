@@ -3,6 +3,24 @@ const fs = require('node:fs');
 
 const distance = (a, b) => a.reduce((sum, value, i) => sum + (value - b[i]) ** 2, 0);
 
+function mapCoverage(map) {
+  const points = map.points.slice(map.records.filter(({ kind }) => kind === 'repo').length);
+  const bounds = {
+    min: [0, 1].map((axis) => Math.min(...map.points.map((point) => point[axis]))),
+    max: [0, 1].map((axis) => Math.max(...map.points.map((point) => point[axis]))),
+  };
+  const gridSteps = 40;
+  const step = bounds.min.map((value, axis) => (bounds.max[axis] - value) / gridSteps);
+  let radiusSquared = -1, center;
+  for (let x = 0; x <= gridSteps; x++) for (let y = 0; y <= gridSteps; y++) {
+    const point = [bounds.min[0] + x * step[0], bounds.min[1] + y * step[1]];
+    const nearest = Math.min(...points.map((paradigm) => distance(point, paradigm)));
+    if (nearest > radiusSquared) { radiusSquared = nearest; center = point; }
+  }
+  // Nearest-point distance changes by at most the distance to the nearest grid node.
+  return { bounds, gridSteps, center, radius: Math.sqrt(radiusSquared), errorBound: Math.hypot(...step) / 2 };
+}
+
 function checkScores(records, axes) {
   for (const record of records) {
     if (!Array.isArray(record.scores) || record.scores.length !== axes.length ||
@@ -55,6 +73,7 @@ function selectRepos(data, count) {
     ];
     const { pca } = require('../snowmobile.js');
     map = { ...pca(records.map(({ record }) => record.scores)), records };
+    map.coverage = mapCoverage(map);
   }
   const selected = [0, 1];
   let farthest = -1;

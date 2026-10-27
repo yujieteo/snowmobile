@@ -102,6 +102,15 @@ The script omits regions with zero distance in either space, so an exact profile
 These regions suggest places to search for real paradigms. They do not name or verify new paradigms.
 Only input paradigm profiles bound these regions. Unscored seeds can already occupy them.
 
+The joint map also reports `map.coverage`, an estimate of the largest empty circle within the rectangle around all input points.
+Reason: the nine-repository run has zero repository search regions but still has empty space between scored paradigms.
+The circle centre uses a 41 by 41 grid. Its radius measures distance to the nearest scored paradigm, not the nearest repository.
+The true maximum radius lies between `radius` and `radius + errorBound`. The error bound equals half a grid cell diagonal.
+The result includes the rectangle bounds and circle centre. It covers this rectangle only, which can include space outside the point cloud.
+Compare radii only within the same PCA frame and rectangle. New profiles can change both.
+The current corpus has a radius of 7.22 map units and an error bound of 0.33 units, despite zero repository search regions.
+This measure does not establish a real paradigm in that space or complete coverage of unscored seeds.
+
 The Rocket Chip region supplied the **Hardware generators** seed and its profile, with eight score reasons and a `suggestedBy` repository link.
 Reason: the study run placed Rocket Chip 6.71 units from its nearest paradigm across all eight axes.
 The [Rocket Chip report](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html) confirms that a generator composes components and emits a circuit description.
