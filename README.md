@@ -57,6 +57,12 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Reason: a hunt trial showed no practical problems or source assessments in the prompt.
 - **Axes.** Claude proposes 8 to 12 design axes once, for example where state lives or when binding happens. Each axis runs through all 4 layers. Then Claude scores each paradigm on each axis from 0 to 10, with a one-line reason. You can edit each axis and each score. A new score never replaces your edit.
 - **Map.** Principal component analysis puts all paradigms on a 2D map, with a colour and a shape for each layer. Tap a mark to pick it for its layer. Tap an empty area, and Claude tells you which paradigm would live at that point.
+  The map-point prompt receives the sourced practical problems and current assessments.
+  Among comparable fits, it gives practical benefit priority over map distance and uses respondent share when evidence and benefit are comparable.
+  Each answer must name a practical problem and source links for benefits, harms and limits, or state that the effect is unknown.
+  A real paradigm needs a source URL that Claude opened. Without a verified match, the answer must say "No verified match".
+  Prompt tests verify evidence delivery. They do not prove actual answer quality or source accuracy.
+  Reason: a map-point trial supplied zero practical problems and requested an invented paradigm when no real paradigm fit.
 - **Practical problems.** The map page lists leading frustrations from the [2024 Stack Overflow survey](https://survey.stackoverflow.co/2024/professional-developers/#2-most-common-frustrations). Each problem shows its respondent share. Tap a problem to use it as the app seed. These shares describe the survey sample. Source links explain which mechanisms can reduce a problem or make it worse. Tap a linked paradigm to pick it for your stack. The page counts links and names problems without a documented reduction. These assessments describe specific mechanisms, not effects on survey shares. A paradigm without a link has no assessment. This does not prove that it has no benefit. A change to a paradigm name, layer or source removes its seed assessment.
   Reason: an API trial found no paradigm-problem links or measure of problems without a documented reduction.
   The debt assessment uses [Fowler's separation of configuration from use](https://martinfowler.com/articles/injection.html#SeparatingConfigurationFromUse).

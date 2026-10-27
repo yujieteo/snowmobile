@@ -274,7 +274,20 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   // A tap on an empty point asks which paradigm would live there.
   const pt = (await call('/api/stack/point', { x: 1, y: -1 })).body;
   assert.strictEqual(pt.profile.length, 4);
-  assert.strictEqual(pt.answer.name, 'Gap OS');
+  assert.strictEqual(pt.answer.name, 'No verified match');
+  assert.strictEqual(pt.answer.exists, false);
+  assert.strictEqual(pt.answer.url, '');
+  // Reason: the map-point trial supplied no practical problems and requested an invented paradigm.
+  const pointPrompt = fs.readFileSync(path.join(home, 'point-prompt'), 'utf8');
+  const pointProblems = JSON.parse(pointPrompt.split('Practical problems and source assessments (JSON):\n')[1].split('\n')[0]);
+  assert.deepStrictEqual(pointProblems, s.practicalProblems);
+  assert.match(pointPrompt, /prefer evidence of practical benefit over map distance/);
+  assert.match(pointPrompt, /When evidence and benefit are comparable, use the greatest respondent share/);
+  assert.match(pointPrompt, /Do not add shares or equate prevalence with severity/);
+  assert.match(pointPrompt, /source links for the benefit, harm and limits/);
+  assert.match(pointPrompt, /Each real paradigm needs a URL that you opened/);
+  assert.match(pointPrompt, /Do not invent paradigms or URLs/);
+  assert.match(pointPrompt, /If no real paradigm fits, set exists false, name "No verified match", and url ""/);
 
   // One paradigm per layer is a stack, and the gaps show on each axis.
   const pick = Object.keys(s.layers).map((l) => s.paradigms.find((p) => p.layer === l).id);

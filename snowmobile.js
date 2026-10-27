@@ -492,13 +492,26 @@ const POINT_SCHEMA = {
   properties: { layer: { enum: Object.keys(LAYERS) }, name: str, exists: { type: 'boolean' }, url: str, why: str },
 };
 
-function pointPrompt(axes, profile, near) {
+function pointPrompt(axes, profile, near, problems) {
   return `A map of computing paradigms in 4 layers (${Object.values(LAYERS).join(', ')}) has an empty point with this profile (axis: score out of 10, where 0 and 10 mean):
 ${axes.map((a, i) => `${a.name}: ${profile[i]} (0 = ${a.low}, 10 = ${a.high})`).join('\n')}
 The nearest paradigms on the map: ${near.map((p) => `${p.name} (${p.layer})`).join(', ')}.
 
-Which paradigm would live at this point? Name a real one if one fits, with exists true and its URL; else name and describe the paradigm that is missing, with exists false and url "".
-Set why to one or two sentences: how it fits the profile and how it differs from the nearest paradigms.`;
+Practical problems and source assessments (JSON):
+${JSON.stringify(problems)}
+
+Which paradigm would live at this point?
+Use web search and fetch to find a real paradigm that fits the profile.
+Each real paradigm needs a URL that you opened. Do not invent paradigms or URLs.
+If no real paradigm fits, set exists false, name "No verified match", and url "".
+Otherwise, set exists true and give the real name and URL.
+Among comparable fits, prefer evidence of practical benefit over map distance.
+When evidence and benefit are comparable, use the greatest respondent share of a problem the paradigm can reduce.
+Do not add shares or equate prevalence with severity.
+In why, explain the profile fit and the difference from nearby paradigms.
+In why, name the practical problem and source links for the benefit, harm and limits.
+State unknown effects.
+A survey source alone does not prove a paradigm's benefit. No assessment means an unknown effect.`;
 }
 
 const GRILL_SCHEMA = {
@@ -669,7 +682,7 @@ async function askPoint(cfg, x, y) {
   const profile = map.mean.map((m, j) => Math.round(10 * Math.min(10, Math.max(0, m + x * map.components[0][j] + y * map.components[1][j]))) / 10);
   const near = map.ids.map((id, i) => ({ id, d: Math.hypot(map.points[i][0] - x, map.points[i][1] - y) }))
     .sort((a, b) => a.d - b.d).slice(0, 3).map((n) => data.paradigms.find((p) => p.id === n.id));
-  const answer = await ask(cfg, pointPrompt(axes, profile, near), POINT_SCHEMA);
+  const answer = await ask(cfg, pointPrompt(axes, profile, near, data.practicalProblems), POINT_SCHEMA);
   return { x, y, profile, answer };
 }
 

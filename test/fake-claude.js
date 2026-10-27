@@ -53,7 +53,8 @@ process.stdin.on('end', () => {
       { layer: 'hardware', name: 'Processing in memory', summary: 'Compute next to the DRAM.', url: 'https://example.com/pim' },
     ] };
   } else if (prompt.includes('Which paradigm would live')) {
-    out = { layer: 'os', name: 'Gap OS', exists: false, url: '', why: 'Nothing lives here.' };
+    require('node:fs').writeFileSync('point-prompt', prompt);
+    out = { layer: 'os', name: 'No verified match', exists: false, url: '', why: 'No verified match. The practical effect is unknown.' };
   } else {
     const id = Number(prompt.match(/^(\d+) \|/m)[1]);
     // A part that is not in the plan: the plan's parts are inserted first in the tests.
