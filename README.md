@@ -81,6 +81,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [SQLite assessment](https://www.sqlite.org/serverless.html) links Embedded database to less database server setup and less isolation from client memory faults.
   These assessments describe specific mechanisms. They do not prove a whole-application benefit or cost.
   Reason: an Embedded database trial found no assessment of deployment cost or fault isolation.
+  The [MINIX 3 assessment](https://wiki.minix3.org/doku.php?id=www:documentation:reliability) links Microkernel to driver fault isolation through separate processes and memory access limits.
+  This can contain driver memory faults. It does not prove whole-system reliability or apply to every microkernel.
+  Reason: a Microkernel trial found no reliability assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

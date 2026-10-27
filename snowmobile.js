@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Microkernel trial found no reliability assessment and four problem gaps.
+  {
+    paradigm: 'Microkernel', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'MINIX 3 isolates device drivers in separate user-mode processes and restricts their memory access. Assessment: this can contain driver memory faults. This does not prove whole-system reliability or apply to every microkernel.',
+    source: { title: 'MINIX 3: driver isolation and memory access limits', url: 'https://wiki.minix3.org/doku.php?id=www:documentation:reliability' },
+  },
   // Reason: the Embedded database trial found no assessment of deployment cost or fault isolation.
   {
     paradigm: 'Embedded database', layer: 'software', problem_id: 'deployment-complexity', effect: 'reduces',
