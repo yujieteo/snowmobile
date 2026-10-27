@@ -92,7 +92,15 @@ Each profile describes the cited example within its stated scope, rather than ev
 For example, the Unikernel profile scores libraries within one image, while the Unikraft repository profile has uncertain evidence for component isolation.
 The output retains both scopes and their reasons. Review those differences before a conclusion.
 Use `map.explained` to check how much variance the first 2 components retain.
-This small study does not establish empty regions across the full seed set or verify new paradigms.
+With paradigm profiles, the output also has `gaps`, ordered by distance on the map.
+Reason: the real corpus returned a joint map but no search regions near the selected repositories.
+Each region uses a selected repository point as its centre and retains that repository's source evidence.
+`nearestOnMap` gives the nearest scored paradigm and the radius of the open circle with no scored paradigm inside.
+`nearestOnAxes` gives the nearest scored paradigm across all axes. Its distance can reveal separation that the map omits.
+The nearest paradigm can differ between these spaces. Distances below or equal to 1e-9 count as zero.
+The script omits regions with zero distance in either space, so an exact profile match supplies no gap.
+These regions suggest places to search for real paradigms. They do not name or verify new paradigms.
+Only input paradigm profiles bound these regions. Unscored seeds can already occupy them.
 
 ## Interface
 

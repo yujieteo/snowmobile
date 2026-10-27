@@ -75,8 +75,29 @@ function selectRepos(data, count) {
   for (let i = 0; i < selected.length; i++) for (let j = i + 1; j < selected.length; j++) {
     minimum = Math.min(minimum, distance(repos[selected[i]].scores, repos[selected[j]].scores));
   }
+  let gaps;
+  if (map) {
+    // A repository anchors a search region, not a verified new paradigm.
+    gaps = selected.map((index) => {
+      const nearest = (space, point) => {
+        let best = 0, squared = Infinity;
+        data.paradigms.forEach((paradigm, i) => {
+          const candidate = distance(point, space(i));
+          if (candidate < squared) { best = i; squared = candidate; }
+        });
+        return { paradigm: data.paradigms[best], distance: Math.sqrt(squared) };
+      };
+      return {
+        repo: repos[index],
+        point: map.points[index],
+        nearestOnMap: nearest((i) => map.points[repos.length + i], map.points[index]),
+        nearestOnAxes: nearest((i) => data.paradigms[i].scores, repos[index].scores),
+      };
+    }).filter((gap) => gap.nearestOnMap.distance > 1e-9 && gap.nearestOnAxes.distance > 1e-9)
+      .sort((a, b) => b.nearestOnMap.distance - a.nearestOnMap.distance);
+  }
   return { axes, repos: selected.map((i) => repos[i]), minimumDistance: Math.sqrt(minimum),
-    ...(map ? { map } : {}) };
+    ...(map ? { map, gaps } : {}) };
 }
 
 if (require.main === module) {

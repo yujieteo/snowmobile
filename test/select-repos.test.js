@@ -113,6 +113,48 @@ test('joint PCA rejects incomplete, duplicate and invalid paradigm profiles', ()
     assert.throws(() => selectRepos({ ...data, paradigms }, 2), /paradigm|score/);
   }
   assert.equal('map' in selectRepos(data, 2), false);
+  assert.equal('gaps' in selectRepos(data, 2), false);
+});
+
+test('gap regions use selected repositories and exact nearest distances in each space', () => {
+  const input = {
+    axes: ['state', 'parallelism'],
+    repos: [profile('a', [0, 0]), profile('b', [0, 2]), profile('c', [10, 0])],
+    paradigms: [{ name: 'Synthetic paradigm', layer: 'software', scores: [10, 2] }],
+  };
+  const original = structuredClone(input);
+  const result = selectRepos(input, 2);
+  assert.deepEqual(result.gaps.map((gap) => gap.repo), [input.repos[1], input.repos[2]]);
+  assert.deepEqual(result.gaps.map((gap) => gap.nearestOnMap.distance), [10, 2]);
+  assert.deepEqual(result.gaps.map((gap) => gap.nearestOnAxes.distance), [10, 2]);
+  for (const gap of result.gaps) {
+    assert.deepEqual(gap.nearestOnMap.paradigm, input.paradigms[0]);
+    assert.deepEqual(gap.nearestOnAxes.paradigm, input.paradigms[0]);
+    assert.deepEqual(gap.point, result.map.points[input.repos.indexOf(gap.repo)]);
+  }
+  const covered = { ...input, paradigms: input.repos.map((repo, i) => ({
+    name: `Synthetic ${i}`, layer: 'software', scores: repo.scores,
+  })) };
+  assert.deepEqual(selectRepos(covered, 2).gaps, []);
+  assert.deepEqual(input, original);
+});
+
+test('real gap regions exclude an exact profile match and retain source evidence', () => {
+  const corpus = require('../data/repo-scores.json');
+  const result = selectRepos(corpus, 3);
+  assert.equal(result.gaps.length, 2);
+  assert.ok(result.gaps.every((gap) => gap.repo.name !== 'SQLite'));
+  for (const gap of result.gaps) {
+    assert.ok(result.repos.includes(gap.repo));
+    assert.ok(gap.repo.sources.length);
+    for (const [key, point] of [['nearestOnMap', gap.point], ['nearestOnAxes', gap.repo.scores]]) {
+      const vectors = key === 'nearestOnMap'
+        ? result.map.points.slice(corpus.repos.length) : corpus.paradigms.map((p) => p.scores);
+      const distances = vectors.map((vector) => Math.hypot(...vector.map((value, i) => value - point[i])));
+      assert.ok(Math.abs(gap[key].distance - Math.min(...distances)) < 1e-9);
+      assert.deepEqual(gap[key].paradigm, corpus.paradigms[distances.indexOf(Math.min(...distances))]);
+    }
+  }
 });
 
 test('invalid scores and duplicate repositories cannot distort the distance', () => {
