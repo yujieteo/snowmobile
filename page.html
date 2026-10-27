@@ -156,7 +156,7 @@ function smCard(s, comps) {
   const grillable = s.status === 'survivor' || s.status === 'grilled' || s.status === 'killed';
   return `<div class="card"><div class="tag ${esc(s.status)}">${esc(s.status)}</div><b>${esc(s.name)}</b>
     ${caseOf(s)}<div class="dim">${esc(s.pitch)}</div><div>${parts}</div>
-    <p class="small dim">${s.proof_url ? `Exists: ${link(s.proof_url, s.proof_url)}. ` : ''}${esc(s.proof_note)}</p>
+    <p class="small dim">${s.status === 'graveyard' && s.proof_url ? `Exists: ${link(s.proof_url, s.proof_url)}. ` : ''}${esc(s.proof_note)}</p>
     ${grillable ? `<button class="${s.status === 'survivor' ? '' : 'ghost'}" onclick="go('#/grill/${s.id}')">${s.status === 'survivor' ? 'Grill me' : 'Open tree'}</button>` : ''}</div>`;
 }
 
