@@ -70,6 +70,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The reliability assessment uses [Erlang/OTP supervisors](https://www.erlang.org/doc/system/sup_princ.html), which restart failed processes and limit repeated restarts.
   Actors alone provide no supervisor. A documented reduction does not prove that a problem has a complete solution.
   Reason: the Stack API reported no reduction for technical debt or unreliable systems.
+  The [Rust ownership assessment](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html) links Ownership types to fewer memory faults.
+  Rust checks reject use after a move and prevent double-free faults in the documented model.
+  This assessment does not prove whole-system reliability.
+  Reason: an Ownership types trial found no reliability assessment.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

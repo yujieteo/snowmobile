@@ -41,6 +41,7 @@ test('idea problem priority uses the greatest sourced share and ignores invalid 
 
 // Reason: a changed user paradigm must not retain a seed assessment for debt or reliability.
 test('debt and reliability assessments follow only the documented seed definitions', () => {
+  const ownership = { id: 95, layer: 'language', name: 'Ownership types', url: 'https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html' };
   const injection = { id: 93, layer: 'software', name: 'Dependency injection', url: 'https://martinfowler.com/articles/injection.html' };
   const actor = { id: 94, layer: 'language', name: 'Actor model', url: 'https://en.wikipedia.org/wiki/Actor_model' };
   const assessed = practicalProblems([injection, actor]);
@@ -50,7 +51,13 @@ test('debt and reliability assessments follow only the documented seed definitio
     [[93, 'technical-debt', 'reduces'], [94, 'unreliable-tools', 'reduces']]);
   assert.match(assessed.links[0].reason, /Assessment:.*does not address all technical debt/);
   assert.match(assessed.links[1].reason, /In Erlang\/OTP.*Actors alone provide no supervisor/);
-  for (const original of [injection, actor]) {
+  const memory = practicalProblems([ownership]);
+  assert.deepStrictEqual(memory.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[95, 'unreliable-tools', 'reduces']]);
+  assert.deepStrictEqual(memory.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.strictEqual(memory.coverage.unassessedParadigms, 0);
+  assert.match(memory.links[0].reason, /In Rust.*double-free.*does not prove whole-system reliability/);
+  for (const original of [injection, actor, ownership]) {
     for (const change of [{ name: 'User definition' }, { layer: 'os' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -209,9 +216,9 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.match(problems.source.scope, /Professional Developer/);
   assert.match(problems.source.measure, /more than one/);
   assert.match(problems.source.limit, /do not measure severity/);
-  assert.strictEqual(problems.links.length, 5);
+  assert.strictEqual(problems.links.length, 6);
   assert.deepStrictEqual(problems.coverage.withoutReduction, []);
-  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 4);
+  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 5);
   for (const l of problems.links) {
     assert.ok(s.paradigms.some((p) => p.id === l.paradigm_id && p.name === l.paradigm));
     assert.ok(problems.items.some((p) => p.id === l.problem_id));
@@ -298,13 +305,11 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.strictEqual((await call('/api/hunts', { stack: [] })).status, 400);
 
   // Reason: the brainstorm omitted all source assessments, which include a harmful effect.
-  const actor = s.paradigms.find((p) => p.name === 'Actor model');
-  const broad = (await call('/api/hunts', { seed: 'reliable tools', stack: [actor.id] })).body;
+  const broad = (await call('/api/hunts', { seed: 'reliable tools', stack: [first.id] })).body;
   await until(`/api/hunts/${broad.id}`, (b) => b.hunt.status === 'created');
   const prompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
   const assessments = JSON.parse(prompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);
   assert.deepStrictEqual(assessments, s.practicalProblems.links);
-  assert.strictEqual(assessments.length, 5);
   assert.ok(assessments.some((l) => l.effect === 'worsens'));
   assert.match(prompt, /explain that cost in gain and compare it with the benefit/);
   assert.match(prompt, /No assessment means an unknown effect/);

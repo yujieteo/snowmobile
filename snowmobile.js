@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Ownership types trial found no reliability assessment.
+  {
+    paradigm: 'Ownership types', layer: 'language', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'In Rust, ownership checks reject use after a move and prevent double-free faults in the documented model. Assessment: this reduces memory-related unreliability. It does not prove whole-system reliability.',
+    source: { title: 'Rust book: ownership and memory safety', url: 'https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html' },
+  },
   // Reason: the Stack API reported no reduction for technical debt or unreliable systems.
   {
     paradigm: 'Dependency injection', layer: 'software', problem_id: 'technical-debt', effect: 'reduces',
