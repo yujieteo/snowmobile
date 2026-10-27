@@ -3,6 +3,11 @@
 let prompt = '';
 process.stdin.on('data', (d) => (prompt += d));
 process.stdin.on('end', () => {
+  if (prompt.includes('Plan: Broken.')) {
+    // Runs in the snowmobile home, so the test can count the calls.
+    require('node:fs').appendFileSync('broken-calls', 'x');
+    return process.stdout.write(JSON.stringify({ type: 'result', is_error: true, result: 'Not logged in' }));
+  }
   let out;
   if (prompt.includes('You hunt for parts')) {
     out = { sources: [

@@ -374,7 +374,7 @@ function handler(cfg) {
         const grill = db.prepare(`SELECT * FROM grills WHERE snowmobile_id = ?`).get(smId);
         const tree = JSON.parse(grill.tree);
         if (grill.status === 'open' && tree.decisions.every((d) => d.answer)
-          && !cfg.frontiers.has(frontierKey(smId, settledOf(tree)))) advance(cfg, smId);
+          && !cfg.frontiers.has(frontierKey(smId, settledOf(tree))) && !cfg.grillErrors.has(smId)) advance(cfg, smId);
         return send(res, 200, grillView(cfg, smId));
       }
       if (req.method === 'POST' && (r = m(/^\/api\/grills\/(\d+)\/(answer|retry)$/))) {

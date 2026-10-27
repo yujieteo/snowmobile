@@ -101,3 +101,21 @@ test('a kill blames only a part of the plan, and a killed verdict without a part
   assert.deepStrictEqual(h.snowmobiles.map((s) => s.status), ['killed', 'killed', 'grilled']);
   server.close();
 });
+
+test('a failed grill call shows its error and calls claude again only on retry', async () => {
+  const { server, cfg, call, until } = await lab();
+  const { ids: [sm] } = plant(cfg.db, ['Broken']);
+  const calls = () => fs.readFileSync(path.join(cfg.home, 'broken-calls'), 'utf8').length;
+  let g = await until(`/api/grills/${sm}`, (b) => b.error);
+  for (let i = 0; i < 5; i++) {
+    g = (await call(`/api/grills/${sm}`)).body;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  assert.match(g.error, /Not logged in/);
+  assert.strictEqual(g.pending, false);
+  assert.strictEqual(calls(), 1);
+  await call(`/api/grills/${sm}/retry`, {});
+  await until(`/api/grills/${sm}`, (b) => b.error);
+  assert.strictEqual(calls(), 2);
+  server.close();
+});
