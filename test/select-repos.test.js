@@ -244,6 +244,25 @@ test('the real baseline measures a coverage gain within one map', () => {
   assert.ok(baseline.radius > radius + errorBound);
 });
 
+test('gap regions retain axis separation that the first two components omit', () => {
+  // Synthetic corners share map coordinates but differ on the third axis.
+  const corners = [[0, 0], [0, 10], [10, 0], [10, 10]];
+  const input = {
+    axes: ['x', 'y', 'z'],
+    repos: corners.map((point, i) => profile(`corner-${i}`, [...point, 4])),
+    paradigms: corners.map((point, i) =>
+      ({ name: `Corner ${i}`, layer: 'hardware', scores: [...point, 6] })),
+  };
+  const result = selectRepos(input, 4);
+  assert.deepEqual(result.map.components, [[1, 0, 0], [0, 1, 0]]);
+  assert.equal(result.gaps.length, 4);
+  assert.deepEqual(new Set(result.gaps.map((gap) => gap.repo)), new Set(result.repos));
+  for (const gap of result.gaps) {
+    assert.equal(gap.nearestOnMap.distance, 0);
+    assert.equal(gap.nearestOnAxes.distance, 2);
+  }
+});
+
 test('gap regions use selected repositories and exact nearest distances in each space', () => {
   const input = {
     axes: ['state', 'parallelism'],

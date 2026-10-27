@@ -143,7 +143,7 @@ function selectRepos(data, count) {
         nearestOnMap: nearest((i) => map.points[repos.length + i], map.points[index]),
         nearestOnAxes: nearest((i) => data.paradigms[i].scores, repos[index].scores),
       };
-    }).filter((gap) => gap.nearestOnMap.distance > 1e-9 && gap.nearestOnAxes.distance > 1e-9)
+    }).filter((gap) => gap.nearestOnAxes.distance > 1e-9)
       .sort((a, b) => b.nearestOnMap.distance - a.nearestOnMap.distance);
   }
   return { axes, repos: selected.map((i) => repos[i]), minimumDistance: Math.sqrt(minimum),

@@ -103,7 +103,9 @@ Each region uses a selected repository point as its centre and retains that repo
 `nearestOnMap` gives the nearest scored paradigm and the radius of the open circle with no scored paradigm inside.
 `nearestOnAxes` gives the nearest scored paradigm across all axes. Its distance can reveal separation that the map omits.
 The nearest paradigm can differ between these spaces. Distances below or equal to 1e-9 count as zero.
-The script omits regions with zero distance in either space, so an exact profile match supplies no gap.
+The script omits regions with zero full-axis distance, so an exact profile match supplies no gap.
+It retains regions with zero map distance when another axis separates the profiles.
+Reason: a synthetic three-axis trial lost four regions because PCA omitted their two-unit separation on the third axis.
 These regions suggest places to search for real paradigms. They do not name or verify new paradigms.
 Only input paradigm profiles bound these regions. Unscored seeds can already occupy them.
 
