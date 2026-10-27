@@ -67,7 +67,18 @@ The script preserves those extra fields in its JSON output.
 The script starts with the most distant pair, then selects the repository farthest from its nearest selected repository.
 It uses Euclidean distance on the full axis scores, with equal weight per axis. Ties follow input order.
 The output includes the selected records and their minimum pair distance. The method is greedy and does not guarantee the best subset.
-This step requires scores from source evidence. It does not fetch repositories, assign scores, run joint PCA, or verify candidate paradigms.
+This step requires scores from source evidence. It does not fetch repositories, assign scores, or verify candidate paradigms.
+
+For joint PCA, add a nonempty `paradigms` array to the same file.
+Reason: repositories and paradigms need one coordinate frame for a valid map comparison.
+Each paradigm has `name`, `layer` (`language`, `hardware`, `os`, or `software`), and `scores` in the same axis order.
+Keep its definition, source links, and score reasons in the record too.
+The optional `map` output uses the Stack PCA code, with column means, two component vectors, variance shares, and point coordinates.
+Its `records` array identifies each point by `kind` and the full input `record`, at the same array index.
+PCA uses all input repositories and paradigms, so the subset count cannot change the coordinate frame.
+Scores have equal weight per axis. PCA subtracts each axis mean but does not divide by its standard deviation.
+Two components can omit distance on other components. Use the full axis scores for repository selection.
+The script reads only its input file and does not open a Snowmobile database.
 
 ## Interface
 

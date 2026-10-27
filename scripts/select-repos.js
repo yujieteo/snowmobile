@@ -3,6 +3,15 @@ const fs = require('node:fs');
 
 const distance = (a, b) => a.reduce((sum, value, i) => sum + (value - b[i]) ** 2, 0);
 
+function checkScores(records, axes) {
+  for (const record of records) {
+    if (!Array.isArray(record.scores) || record.scores.length !== axes.length ||
+        record.scores.some((score) => !Number.isFinite(score) || score < 0 || score > 10)) {
+      throw new Error('Supply one score from 0 to 10 per axis for each record.');
+    }
+  }
+}
+
 // Start with the most distant pair. Then maximize distance to the nearest selected repository.
 function selectRepos(data, count) {
   const { axes, repos } = data;
@@ -21,10 +30,31 @@ function selectRepos(data, count) {
     const key = repo.url.toLowerCase().replace(/\.git$/, '');
     if (urls.has(key)) throw new Error('Use each repository once.');
     urls.add(key);
-    if (!Array.isArray(repo.scores) || repo.scores.length !== axes.length ||
-        repo.scores.some((score) => !Number.isFinite(score) || score < 0 || score > 10)) {
-      throw new Error('Supply one score from 0 to 10 per axis for each repository.');
+  }
+  checkScores(repos, axes);
+  let map;
+  if (data.paradigms !== undefined) {
+    if (!Array.isArray(data.paradigms) || !data.paradigms.length) {
+      throw new Error('Supply at least one paradigm for joint PCA.');
     }
+    const names = new Set();
+    for (const paradigm of data.paradigms) {
+      if (!paradigm || typeof paradigm.name !== 'string' || !paradigm.name.trim() ||
+          !['language', 'hardware', 'os', 'software'].includes(paradigm.layer)) {
+        throw new Error('Supply a name and a Stack layer for each paradigm.');
+      }
+      const key = paradigm.name.trim().toLowerCase();
+      if (names.has(key)) throw new Error('Use each paradigm once.');
+      names.add(key);
+    }
+    checkScores(data.paradigms, axes);
+    // Fit all candidates, so a subset count cannot change the comparison frame.
+    const records = [
+      ...repos.map((record) => ({ kind: 'repo', record })),
+      ...data.paradigms.map((record) => ({ kind: 'paradigm', record })),
+    ];
+    const { pca } = require('../snowmobile.js');
+    map = { ...pca(records.map(({ record }) => record.scores)), records };
   }
   const selected = [0, 1];
   let farthest = -1;
@@ -45,7 +75,8 @@ function selectRepos(data, count) {
   for (let i = 0; i < selected.length; i++) for (let j = i + 1; j < selected.length; j++) {
     minimum = Math.min(minimum, distance(repos[selected[i]].scores, repos[selected[j]].scores));
   }
-  return { axes, repos: selected.map((i) => repos[i]), minimumDistance: Math.sqrt(minimum) };
+  return { axes, repos: selected.map((i) => repos[i]), minimumDistance: Math.sqrt(minimum),
+    ...(map ? { map } : {}) };
 }
 
 if (require.main === module) {

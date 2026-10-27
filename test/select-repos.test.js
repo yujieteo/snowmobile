@@ -30,6 +30,47 @@ test('ties follow input order and identical profiles remain distinct repositorie
   assert.equal(selectRepos(same, 3).minimumDistance, 0);
 });
 
+test('joint PCA uses one frame for all records and preserves axis distances in two dimensions', () => {
+  // A synthetic rectangle has variances in a 25:1 ratio and a known centre.
+  const input = {
+    axes: ['state', 'parallelism'],
+    repos: [profile('a', [0, 0]), profile('b', [0, 2]), profile('c', [10, 0])],
+    paradigms: [{ name: 'Synthetic paradigm', layer: 'software', scores: [10, 2],
+      sources: ['Synthetic fixture.'], reasons: ['Synthetic state score.', 'Synthetic parallelism score.'] }],
+  };
+  const original = structuredClone(input);
+  const result = selectRepos(input, 2);
+  const { map } = result;
+  const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} differs from ${b}`);
+  assert.deepEqual(map.mean, [5, 1]);
+  near(map.explained[0], 25 / 26);
+  near(map.explained[1], 1 / 26);
+  assert.deepEqual(map.components, [[1, 0], [0, 1]]);
+  assert.deepEqual(map.points, [[-5, -1], [-5, 1], [5, -1], [5, 1]]);
+  assert.deepEqual(map.records, [
+    ...input.repos.map((record) => ({ kind: 'repo', record })),
+    { kind: 'paradigm', record: input.paradigms[0] },
+  ]);
+  const separation = (a, b) => Math.hypot(...a.map((value, i) => value - b[i]));
+  for (let i = 0; i < map.records.length; i++) for (let j = i + 1; j < map.records.length; j++) {
+    near(separation(map.points[i], map.points[j]),
+      separation(map.records[i].record.scores, map.records[j].record.scores));
+  }
+  assert.deepEqual(selectRepos(input, 3).map, map);
+  assert.deepEqual(result.repos, selectRepos({ axes: input.axes, repos: input.repos }, 2).repos);
+  assert.deepEqual(input, original);
+});
+
+test('joint PCA rejects incomplete, duplicate and invalid paradigm profiles', () => {
+  const paradigm = { name: 'Synthetic paradigm', layer: 'software', scores: [0, 0] };
+  for (const paradigms of [[], {}, [null], [{ ...paradigm, name: ' ' }], [{ ...paradigm, layer: 'unknown' }],
+    [paradigm, { ...paradigm, name: ' SYNTHETIC PARADIGM ' }],
+    ...[[0], [0, 11], [NaN, 0], [null, 0], ['2', 0]].map((scores) => [{ ...paradigm, scores }])]) {
+    assert.throws(() => selectRepos({ ...data, paradigms }, 2), /paradigm|score/);
+  }
+  assert.equal('map' in selectRepos(data, 2), false);
+});
+
 test('invalid scores and duplicate repositories cannot distort the distance', () => {
   for (const scores of [[0], [0, 11], [NaN, 0], [null, 0], ['2', 0]]) {
     assert.throws(() => selectRepos({ ...data, repos: [profile('a', scores), data.repos[1]] }, 2), /score/);
@@ -54,7 +95,9 @@ test('the command preserves source evidence and leaves its input file intact', (
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-subset-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const file = path.join(dir, 'scores.json');
-  const input = JSON.stringify({ ...data, repos: data.repos.map((repo) => ({
+  const input = JSON.stringify({ ...data,
+    paradigms: [{ name: 'Synthetic paradigm', layer: 'hardware', scores: [2, 3] }],
+    repos: data.repos.map((repo) => ({
     ...repo, reasons: ['Synthetic state score.', 'Synthetic parallelism score.'],
     sources: ['Synthetic fixture.'],
   })) });
@@ -64,5 +107,7 @@ test('the command preserves source evidence and leaves its input file intact', (
   const output = JSON.parse(result.stdout);
   assert.equal(output.minimumDistance, 10);
   assert.deepEqual(output.repos[0], JSON.parse(input).repos[2]);
+  assert.equal(output.map.points.length, data.repos.length + 1);
+  assert.deepEqual(output.map.records.at(-1), { kind: 'paradigm', record: JSON.parse(input).paradigms[0] });
   assert.equal(fs.readFileSync(file, 'utf8'), input);
 });
