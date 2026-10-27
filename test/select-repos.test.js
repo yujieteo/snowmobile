@@ -258,7 +258,10 @@ test('the data structure server profile covers the Redis region without a duplic
 });
 
 test('seL4 increases four-repository separation and exposes an OS search region', () => {
-  const corpus = require('../data/repo-scores.json');
+  const current = require('../data/repo-scores.json');
+  // Exclude the later profile to retain the original repository discovery check.
+  const corpus = { ...current,
+    paradigms: current.paradigms.filter((p) => p.name !== 'Capability-based OS') };
   const baseline = { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'seL4') };
   const before = selectRepos(baseline, 4);
   const after = selectRepos(corpus, 4);
@@ -271,6 +274,27 @@ test('seL4 increases four-repository separation and exposes an OS search region'
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(76)) < 1e-9);
   assert.ok(region.nearestOnMap.distance > 6);
   assert.ok(region.repo.reasons[5].reason.includes('uncertain'));
+});
+
+test('the existing capability OS profile removes the duplicate seL4 search candidate', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Capability-based OS');
+  assert.ok(candidate);
+  const before = selectRepos({ ...corpus,
+    paradigms: corpus.paradigms.filter((p) => p !== candidate) }, 4);
+  const region = before.gaps.find((gap) => gap.repo.name === 'seL4');
+  assert.ok(region);
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(76)) < 1e-9);
+  assert.ok(candidate.suggestedBy.includes(region.repo.url));
+  assert.equal(candidate.scope, region.repo.scope);
+  assert.deepEqual(candidate.scores, region.repo.scores);
+  assert.ok(candidate.reasons[5].reason.includes('uncertain'));
+  const after = selectRepos(corpus, 4);
+  assert.equal(before.gaps.length, after.gaps.length + 1);
+  assert.deepEqual(after.gaps, []);
+  assert.deepEqual(selectRepos(corpus, corpus.repos.length).gaps, []);
+  assert.deepEqual(after.repos, before.repos);
+  assert.equal(after.minimumDistance, before.minimumDistance);
 });
 
 test('invalid scores and duplicate repositories cannot distort the distance', () => {

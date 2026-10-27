@@ -146,7 +146,14 @@ The [seL4 FAQ](https://sel4.systems/About/FAQ.html) describes capabilities, prot
 The four-repository subset increases its minimum axis distance from 11.96 to 12.12 and selects seL4 instead of Nix.
 Its search region lies 8.72 units from the nearest scored paradigm across all axes, and 6.35 units on the joint map.
 The build specialization score marks uncertain evidence. These scores describe one kernel and its protection domains, without higher-level file or network services.
-Check the existing **Microkernel** and **Capability-based OS** seeds before any new seed. Neither seed has a study profile yet.
+The seL4 region matches the existing **Capability-based OS** seed.
+Reason: the four-repository run exposed a region that the seed already describes.
+The study adds its profile with eight score reasons and repository provenance.
+The [seL4 FAQ](https://sel4.systems/About/FAQ.html) confirms that capabilities pair object references with access rights.
+**Microkernel** describes the kernel boundary. **Capability-based OS** describes resource authority. seL4 uses both paradigms.
+The profile covers the same seL4 scope and retains the uncertain build specialization score.
+This profile reduces search regions from one to zero for both four-repository and seven-repository subsets.
+Other capability systems can differ. This result does not establish complete seed coverage.
 
 ## Interface
 
