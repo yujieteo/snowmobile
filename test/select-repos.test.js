@@ -287,7 +287,8 @@ test('gap regions use selected repositories and exact nearest distances in each 
 // Keep prior discovery checks on the repository pool that supplied their measurements.
 function corpusBeforeKubo() {
   const corpus = require('../data/repo-scores.json');
-  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Kubo') };
+  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Kubo'),
+    paradigms: corpus.paradigms.filter((p) => p.name !== 'Peer-to-peer') };
 }
 
 function corpusBeforeAutomerge() {
@@ -913,7 +914,8 @@ test('the accelerator profile distinguishes fixed silicon from fixed runtime wor
 
 
 test('Kubo increases seven-repository separation and exposes an immutable content region', () => {
-  const corpus = require('../data/repo-scores.json');
+  const current = require('../data/repo-scores.json');
+  const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Peer-to-peer') };
   const before = selectRepos(corpusBeforeKubo(), 7);
   const after = selectRepos(corpus, 7);
   assert.ok(Math.abs(before.minimumDistance - Math.sqrt(104)) < 1e-9);
@@ -929,4 +931,33 @@ test('Kubo increases seven-repository separation and exposes an immutable conten
   assert.equal(region.repo.reasons.length, corpus.axes.length);
   assert.ok(region.repo.reasons.every(({ source }) => region.repo.sources.includes(source)));
   assert.ok(after.map.records.some(({ kind, record }) => kind === 'repo' && record === region.repo));
+});
+
+
+test('the existing peer-to-peer seed covers Kubo without a duplicate paradigm', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Peer-to-peer');
+  assert.ok(candidate);
+  assert.equal(candidate.layer, 'software');
+  assert.match(candidate.scope, /not all peer-to-peer systems/);
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  const before = selectRepos({ ...corpus, paradigms: previous }, corpus.repos.length);
+  const region = before.gaps.find((gap) => gap.repo.name === 'Kubo');
+  assert.ok(region);
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(27)) < 1e-9);
+  assert.ok(candidate.suggestedBy.includes(region.repo.url));
+  assert.deepEqual(candidate.scores, region.repo.scores);
+  assert.match(candidate.reasons[7].reason, /do not automatically guarantee permanent retention/);
+  const after = selectRepos(corpus, corpus.repos.length);
+  assert.equal(before.gaps.length, 1);
+  assert.deepEqual(after.gaps, []);
+  assert.deepEqual(selectRepos(corpus, 7).gaps, []);
+  assert.deepEqual(after.repos, before.repos);
+  assert.equal(after.minimumDistance, before.minimumDistance);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Peer-to-peer',").length - 1, 1);
+  assert.ok(source.includes(`['Peer-to-peer', '${candidate.definition}', '${candidate.sources[0]}']`));
+  const { map } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
 });

@@ -120,7 +120,7 @@ const START = {
   ],
   software: [
     ['Client-server', 'Clients send requests to a central server that owns the data.', `${W}Client%E2%80%93server_model`],
-    ['Peer-to-peer', 'Equal peers share resources directly without a central server.', `${W}Peer-to-peer`],
+    ['Peer-to-peer', 'Equal peers share resources directly without a central server.', 'https://docs.ipfs.tech/concepts/how-ipfs-works/'],
     ['Event-driven architecture', 'Components publish events and other components react to them.', `${W}Event-driven_architecture`],
     ['Pipes and filters', 'Each filter transforms a stream and passes it to the next filter.', `${W}Pipeline_(software)`],
     ['Microservices', 'Small services that each own their data talk over the network.', `${W}Microservices`],
