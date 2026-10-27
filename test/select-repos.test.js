@@ -291,7 +291,7 @@ function corpusBeforeAutomerge() {
     paradigms: corpus.paradigms.filter((p) =>
       !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)',
         'Cluster (warehouse-scale computer)', 'Multikernel', 'Hardware root of trust', 'Microservices',
-        'Logic programming', 'Distributed OS', 'Event sourcing'].includes(p.name)) };
+        'Logic programming', 'Distributed OS', 'Event sourcing', 'Constraint programming'].includes(p.name)) };
 }
 
 function corpusBeforeGforth() {
@@ -737,7 +737,7 @@ test('the hardware root of trust profile adds a distinct durable device example'
 test('the microservices profile separates mutable services from immutable replicas', () => {
   const current = require('../data/repo-scores.json');
   // Preserve the corpus for this historical measurement.
-  const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Distributed OS') };
+  const corpus = { ...current, paradigms: current.paradigms.filter((p) => !['Distributed OS', 'Constraint programming'].includes(p.name)) };
   const candidate = corpus.paradigms.find((p) => p.name === 'Microservices');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'software');
@@ -820,6 +820,31 @@ test('the event log profile preserves history without an assumed distributed dep
   const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
   assert.equal(source.split("['Event sourcing',").length - 1, 1);
   assert.ok(source.includes(`['Event sourcing', '${candidate.definition}', '${candidate.sources[0]}']`));
+  const { map, gaps } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.deepEqual(gaps, []);
+  assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
+});
+
+
+test('the constraint profile separates fixed model values from mutable solver state', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Constraint programming');
+  assert.ok(candidate);
+  assert.equal(candidate.layer, 'language');
+  assert.match(candidate.scope, /not mutable solver internals/);
+  assert.ok(candidate.scores[1] > 5);
+  assert.match(candidate.reasons[1].reason, /Solver search state lies outside/);
+  assert.ok(candidate.scores[3] < 5);
+  assert.ok(candidate.scores[5] > 5);
+  assert.match(candidate.reasons[6].reason, /uncertain evidence/);
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]))));
+  assert.ok(Math.abs(nearest - Math.sqrt(118)) < 1e-9);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Constraint programming',").length - 1, 1);
+  assert.ok(source.includes(`['Constraint programming', '${candidate.definition}', '${candidate.sources[0]}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);

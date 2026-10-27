@@ -1783,6 +1783,61 @@
           "source": "https://martinfowler.com/eaaDev/EventSourcing.html"
         }
       ]
+    },
+    {
+      "name": "Constraint programming",
+      "layer": "language",
+      "definition": "The programmer states relations between variables and a solver finds the values.",
+      "scope": "One fixed MiniZinc model and data set in a local Gecode command-line run. Scores describe model semantics, not mutable solver internals or external applications.",
+      "sources": [
+        "https://docs.minizinc.dev/en/stable/modelling.html",
+        "https://docs.minizinc.dev/en/stable/flattening.html",
+        "https://docs.minizinc.dev/en/stable/command_line.html"
+      ],
+      "scores": [
+        10,
+        9,
+        0,
+        1,
+        1,
+        8,
+        5,
+        0
+      ],
+      "reasons": [
+        {
+          "reason": "Constraints specify valid answers. The solver chooses values that satisfy those constraints.",
+          "source": "https://docs.minizinc.dev/en/stable/modelling.html"
+        },
+        {
+          "reason": "Parameters have one fixed value, and decision variables denote solution values. Solver search state lies outside this model scope.",
+          "source": "https://docs.minizinc.dev/en/stable/modelling.html"
+        },
+        {
+          "reason": "This scope uses one local command and the Gecode solver, without network nodes.",
+          "source": "https://docs.minizinc.dev/en/stable/command_line.html"
+        },
+        {
+          "reason": "The compiler fixes the model and data before the solver starts. A different model requires another compile step.",
+          "source": "https://docs.minizinc.dev/en/stable/flattening.html"
+        },
+        {
+          "reason": "The model exposes mathematical variables and relations rather than machine registers or device interfaces.",
+          "source": "https://docs.minizinc.dev/en/stable/modelling.html"
+        },
+        {
+          "reason": "The compiler substitutes instance data and emits primitive constraints for that specific model and data set.",
+          "source": "https://docs.minizinc.dev/en/stable/flattening.html"
+        },
+        {
+          "reason": "Separate compiler and solver steps do not establish independent failure recovery. The midpoint marks uncertain evidence.",
+          "source": "https://docs.minizinc.dev/en/stable/command_line.html"
+        },
+        {
+          "reason": "The command prints solution values. A durable application store lies outside this scope.",
+          "source": "https://docs.minizinc.dev/en/stable/command_line.html"
+        }
+      ]
     }
   ]
 }

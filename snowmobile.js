@@ -82,7 +82,7 @@ const START = {
     ['Functional programming', 'A program is the composition of pure functions over immutable values.', `${W}Functional_programming`],
     ['Object-oriented programming', 'Objects bundle state with the methods that change it and send messages to each other.', `${W}Object-oriented_programming`],
     ['Logic programming', 'A program is a set of facts and rules, and a search engine derives the answers.', `${W}Logic_programming`],
-    ['Constraint programming', 'The programmer states relations between variables and a solver finds the values.', `${W}Constraint_programming`],
+    ['Constraint programming', 'The programmer states relations between variables and a solver finds the values.', 'https://docs.minizinc.dev/en/stable/modelling.html'],
     ['Actor model', 'Independent actors own their state and talk only through asynchronous messages.', `${W}Actor_model`],
     ['Dataflow programming', 'Operations run when their inputs arrive, so the graph of data sets the order.', `${W}Dataflow_programming`],
     ['Functional reactive programming', 'Values that change over time are first-class and the runtime propagates each change.', `${W}Functional_reactive_programming`],
