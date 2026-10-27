@@ -377,6 +377,62 @@
           "source": "https://nix.dev/manual/nix/2.35/introduction.html"
         }
       ]
+    },
+    {
+      "name": "seL4",
+      "url": "https://github.com/seL4/seL4",
+      "revision": "653478177db9b9693d4adbb45f89154215608fe0",
+      "layer": "os",
+      "scope": "One seL4 kernel and the protection domains under its control, without higher-level file or network services.",
+      "sources": [
+        "https://github.com/seL4/seL4/blob/653478177db9b9693d4adbb45f89154215608fe0/README.md",
+        "https://sel4.systems/About/FAQ.html",
+        "https://docs.sel4.systems/projects/sel4/"
+      ],
+      "scores": [
+        2,
+        0,
+        0,
+        9,
+        9,
+        5,
+        9,
+        0
+      ],
+      "reasons": [
+        {
+          "reason": "C and assembly implement the kernel mechanisms. User code supplies explicit system calls and resource policies.",
+          "source": "https://github.com/seL4/seL4/blob/653478177db9b9693d4adbb45f89154215608fe0/README.md"
+        },
+        {
+          "reason": "System calls change capability tables, thread state, and address space maps in place.",
+          "source": "https://sel4.systems/About/FAQ.html"
+        },
+        {
+          "reason": "The kernel controls local memory, interrupts, and processor time. Network services require higher-level code.",
+          "source": "https://sel4.systems/About/FAQ.html"
+        },
+        {
+          "reason": "User code can create kernel objects and revoke capabilities after boot.",
+          "source": "https://sel4.systems/About/FAQ.html"
+        },
+        {
+          "reason": "The privileged kernel directly controls physical address space, interrupts, and processor time.",
+          "source": "https://sel4.systems/About/FAQ.html"
+        },
+        {
+          "reason": "The README identifies build tools and kernel options but does not establish task specialization. The midpoint marks uncertain evidence.",
+          "source": "https://github.com/seL4/seL4/blob/653478177db9b9693d4adbb45f89154215608fe0/README.md"
+        },
+        {
+          "reason": "Capabilities restrict access across protection domains. User code must configure those domains and their rights.",
+          "source": "https://sel4.systems/About/FAQ.html"
+        },
+        {
+          "reason": "Files require higher-level services. The kernel itself supplies memory and execution mechanisms rather than durable storage.",
+          "source": "https://sel4.systems/About/FAQ.html"
+        }
+      ]
     }
   ],
   "paradigmScope": "Each profile describes one cited example of an existing seed. Scores do not describe every implementation of that paradigm.",

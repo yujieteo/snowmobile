@@ -116,7 +116,7 @@ The profile uses the repository scope and records eight score reasons plus its `
 This profile removes the last region for the selected three repositories. It does not establish complete coverage of the seed list.
 Other actor implementations can differ. The durable state score still marks uncertain evidence.
 
-A subset of four repositories adds Nix and exposes a region 11.96 units from the nearest scored paradigm across all axes.
+The earlier four-repository study added Nix, 11.96 units from the nearest scored paradigm across all axes.
 Reason: the four-repository study run reveals a region that the three-repository subset omits.
 The [Nix manual](https://nix.dev/manual/nix/2.35/introduction.html) describes immutable packages with explicit dependencies and separate store paths.
 The study adds **Functional package management** as a software seed and a profile with eight score reasons and repository provenance.
@@ -139,6 +139,14 @@ This paradigm defines data operations. **Client-server** defines the relationshi
 The profile uses the Redis repository scope, with Redis Cluster available and persistence optional. Other implementations can differ.
 This addition reduces regions from one to zero for all six repositories, with seven to eight scored paradigms.
 Zero regions covers these repository profiles. It does not establish complete seed coverage.
+
+The corpus now includes [seL4](https://github.com/seL4/seL4), with a fixed README revision and eight score reasons.
+Reason: the prior corpus had only one OS repository, whose internal libraries share an address space.
+The [seL4 FAQ](https://sel4.systems/About/FAQ.html) describes capabilities, protection domains, and user control of kernel resources.
+The four-repository subset increases its minimum axis distance from 11.96 to 12.12 and selects seL4 instead of Nix.
+Its search region lies 8.72 units from the nearest scored paradigm across all axes, and 6.35 units on the joint map.
+The build specialization score marks uncertain evidence. These scores describe one kernel and its protection domains, without higher-level file or network services.
+Check the existing **Microkernel** and **Capability-based OS** seeds before any new seed. Neither seed has a study profile yet.
 
 ## Interface
 

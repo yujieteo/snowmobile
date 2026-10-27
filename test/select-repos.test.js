@@ -194,18 +194,18 @@ test('the verified hardware generator profile closes the Rocket Chip search regi
   assert.deepEqual(after.repos, before.repos);
 });
 
-test('functional package management covers the Nix region in a four-repository subset', () => {
+test('functional package management covers the Nix region in the full repository pool', () => {
   const corpus = require('../data/repo-scores.json');
   const candidate = corpus.paradigms.find((p) => p.name === 'Functional package management');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
-    paradigms: corpus.paradigms.filter((p) => p !== candidate) }, 4);
+    paradigms: corpus.paradigms.filter((p) => p !== candidate) }, corpus.repos.length);
   const region = before.gaps.find((gap) => gap.repo.name === 'Nix');
   assert.ok(region);
   assert.ok(region.nearestOnAxes.distance > 11);
   assert.ok(candidate.suggestedBy.includes(region.repo.url));
   assert.deepEqual(candidate.scores, region.repo.scores);
-  const after = selectRepos(corpus, 4);
+  const after = selectRepos(corpus, corpus.repos.length);
   assert.equal(before.gaps.length, after.gaps.length + 1);
   assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Nix'));
   assert.deepEqual(after.repos, before.repos);
@@ -252,9 +252,25 @@ test('the data structure server profile covers the Redis region without a duplic
   assert.ok(candidate.suggestedBy.includes(region.repo.url));
   assert.deepEqual(candidate.scores, region.repo.scores);
   const after = selectRepos(corpus, corpus.repos.length);
-  assert.equal(before.gaps.length, 1);
-  assert.deepEqual(after.gaps, []);
+  assert.equal(before.gaps.length, after.gaps.length + 1);
+  assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Redis'));
   assert.deepEqual(after.repos, before.repos);
+});
+
+test('seL4 increases four-repository separation and exposes an OS search region', () => {
+  const corpus = require('../data/repo-scores.json');
+  const baseline = { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'seL4') };
+  const before = selectRepos(baseline, 4);
+  const after = selectRepos(corpus, 4);
+  assert.ok(after.minimumDistance > before.minimumDistance);
+  assert.ok(Math.abs(after.minimumDistance - Math.sqrt(147)) < 1e-9);
+  assert.equal(baseline.repos.filter((repo) => repo.layer === 'os').length, 1);
+  assert.equal(corpus.repos.filter((repo) => repo.layer === 'os').length, 2);
+  const region = after.gaps.find((gap) => gap.repo.name === 'seL4');
+  assert.ok(region);
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(76)) < 1e-9);
+  assert.ok(region.nearestOnMap.distance > 6);
+  assert.ok(region.repo.reasons[5].reason.includes('uncertain'));
 });
 
 test('invalid scores and duplicate repositories cannot distort the distance', () => {
