@@ -48,9 +48,12 @@ function openDb(file) {
       db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${column === 'paradigm_id' ? 'INTEGER' : 'TEXT'}`);
     }
   }
-  if (!db.prepare(`SELECT 1 FROM paradigms LIMIT 1`).get()) {
-    const add = db.prepare(`INSERT INTO paradigms (layer, name, summary, url) VALUES (?, ?, ?, ?)`);
-    for (const [layer, list] of Object.entries(START)) for (const p of list) add.run(layer, ...p);
+  // Add absent seeds on each start. Keep user rows, IDs and scores intact.
+  const names = new Set(db.prepare(`SELECT name FROM paradigms`).all().map((p) => p.name.toLowerCase()));
+  const add = db.prepare(`INSERT INTO paradigms (layer, name, summary, url) VALUES (?, ?, ?, ?)`);
+  for (const [layer, list] of Object.entries(START)) for (const p of list) {
+    const name = p[0].toLowerCase();
+    if (!names.has(name)) { add.run(layer, ...p); names.add(name); }
   }
   // A run that stopped mid-job leaves a status that no job will finish.
   db.prepare(`UPDATE hunts SET status = 'failed', error = 'snowmobile stopped during this step'

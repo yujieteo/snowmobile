@@ -65,6 +65,50 @@ test('an old database keeps its data and gains the stack tables, columns and sta
   again.server.close();
 });
 
+test('a seed update adds absent seeds and preserves user data on each start', async (t) => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-'));
+  let app;
+  t.after(async () => {
+    if (app) {
+      await new Promise((resolve) => app.server.close(resolve));
+      app.cfg.db.close();
+    }
+    fs.rmSync(home, { recursive: true, force: true });
+  });
+  app = await start({ home, port: 0, claude: 'false' });
+  const db = app.cfg.db;
+  const before = db.prepare(`SELECT * FROM paradigms ORDER BY id`).all();
+  // Remove one seed to represent a database from before that seed was added.
+  const absent = before[0], edited = before[1];
+  db.prepare(`DELETE FROM paradigms WHERE id = ?`).run(absent.id);
+  db.prepare(`UPDATE paradigms SET name = ?, summary = ?, url = ? WHERE id = ?`)
+    .run(edited.name.toUpperCase(), 'My definition.', 'https://example.com/my-source', edited.id);
+  db.prepare(`INSERT INTO axes (name, low, high) VALUES ('My axis', 'low', 'high')`).run();
+  db.prepare(`INSERT INTO scores VALUES (?, 1, 7, 'My score.')`).run(edited.id);
+  const kept = db.prepare(`SELECT * FROM paradigms ORDER BY id`).all();
+  const axes = db.prepare(`SELECT * FROM axes`).all();
+  const scores = db.prepare(`SELECT * FROM scores`).all();
+  const token = app.cfg.token;
+  await new Promise((resolve) => app.server.close(resolve));
+  db.close();
+  app = null;
+
+  for (let pass = 0; pass < 2; pass++) {
+    app = await start({ home, port: 0, claude: 'false' });
+    const current = app.cfg.db;
+    assert.strictEqual(current.prepare(`SELECT COUNT(*) AS n FROM paradigms`).get().n, before.length);
+    const restored = current.prepare(`SELECT * FROM paradigms WHERE name = ?`).get(absent.name);
+    assert.deepStrictEqual([restored.layer, restored.summary, restored.url], [absent.layer, absent.summary, absent.url]);
+    assert.deepStrictEqual(current.prepare(`SELECT * FROM paradigms WHERE id != ? ORDER BY id`).all(restored.id), kept);
+    assert.deepStrictEqual(current.prepare(`SELECT * FROM axes`).all(), axes);
+    assert.deepStrictEqual(current.prepare(`SELECT * FROM scores`).all(), scores);
+    assert.strictEqual(app.cfg.token, token);
+    await new Promise((resolve) => app.server.close(resolve));
+    current.close();
+    app = null;
+  }
+});
+
 test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief with the mismatch line', async (t) => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-'));
   const { server, cfg, port } = await start({ home, port: 0, claude: path.join(__dirname, 'fake-claude.js') });
