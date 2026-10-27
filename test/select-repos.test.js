@@ -291,7 +291,7 @@ function corpusBeforeAutomerge() {
     paradigms: corpus.paradigms.filter((p) =>
       !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)',
         'Cluster (warehouse-scale computer)', 'Multikernel', 'Hardware root of trust', 'Microservices',
-        'Logic programming'].includes(p.name)) };
+        'Logic programming', 'Distributed OS'].includes(p.name)) };
 }
 
 function corpusBeforeGforth() {
@@ -662,7 +662,9 @@ test('the FPGA profile adds hardware flexibility without a duplicate seed', () =
 });
 
 test('the cluster profile adds a distributed hardware example without a duplicate seed', () => {
-  const corpus = require('../data/repo-scores.json');
+  const current = require('../data/repo-scores.json');
+  // Preserve the corpus for this historical measurement.
+  const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Distributed OS') };
   const candidate = corpus.paradigms.find((p) => p.name === 'Cluster (warehouse-scale computer)');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'hardware');
@@ -683,7 +685,9 @@ test('the cluster profile adds a distributed hardware example without a duplicat
 });
 
 test('the multikernel profile adds a distributed OS example without false isolation', () => {
-  const corpus = require('../data/repo-scores.json');
+  const current = require('../data/repo-scores.json');
+  // Preserve the corpus for this historical measurement.
+  const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Distributed OS') };
   const candidate = corpus.paradigms.find((p) => p.name === 'Multikernel');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'os');
@@ -731,7 +735,9 @@ test('the hardware root of trust profile adds a distinct durable device example'
 
 
 test('the microservices profile separates mutable services from immutable replicas', () => {
-  const corpus = require('../data/repo-scores.json');
+  const current = require('../data/repo-scores.json');
+  // Preserve the corpus for this historical measurement.
+  const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Distributed OS') };
   const candidate = corpus.paradigms.find((p) => p.name === 'Microservices');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'software');
@@ -768,6 +774,31 @@ test('the logic profile distinguishes mutable clauses from immutable functional 
   assert.ok(Math.abs(nearest - Math.sqrt(38)) < 1e-9);
   const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
   assert.equal(source.split("['Logic programming',").length - 1, 1);
+  const { map, gaps } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.deepEqual(gaps, []);
+  assert.equal(map.coverage.radius, map.coverage.baseline.radius);
+});
+
+
+test('the distributed OS profile preserves private namespaces and mutable active files', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Distributed OS');
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  assert.equal(candidate.layer, 'os');
+  assert.match(candidate.scope, /private per-process namespaces/);
+  assert.match(candidate.reasons[1].reason, /change active files/);
+  assert.ok(candidate.scores[1] < 5);
+  assert.equal(candidate.scores[2], 10);
+  assert.equal(candidate.scores[7], 10);
+  assert.match(candidate.reasons[5].reason, /uncertain evidence/);
+  assert.match(candidate.reasons[6].reason, /uncertain evidence/);
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]))));
+  assert.ok(Math.abs(nearest - Math.sqrt(18)) < 1e-9);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Distributed OS',").length - 1, 1);
+  assert.ok(source.includes(`['Distributed OS', '${candidate.definition}', '${candidate.sources[0]}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);

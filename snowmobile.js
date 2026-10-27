@@ -112,7 +112,7 @@ const START = {
     ['Hypervisor', 'A thin layer runs several complete operating systems on virtual hardware.', `${W}Hypervisor`],
     ['Capability-based OS', 'A process can use a resource only through an unforgeable capability that names it.', `${W}Capability-based_security`],
     ['Real-time OS', 'The scheduler guarantees that each task meets its deadline.', `${W}Real-time_operating_system`],
-    ['Distributed OS', 'Many machines appear to the user as one system with one namespace.', `${W}Distributed_operating_system`],
+    ['Distributed OS', 'Networked machines provide system resources through common interfaces and a unified resource view.', 'https://9p.io/sys/doc/9.html'],
     ['Multikernel', 'Independent kernels on each core coordinate through explicit messages and replicate state rather than share it.', 'https://barrelfish.org/publications/barrelfish_sosp09.pdf'],
     ['Splitkernel', 'Separate monitors manage processor, memory and storage components across a network instead of one complete server.', 'https://www.usenix.org/conference/osdi18/presentation/shan'],
     ['Separation kernel', 'The kernel isolates applications through fixed resource partitions and explicit controls on information flow.', 'https://www.lynx.com/products/lynxsecure-separation-kernel-hypervisor'],

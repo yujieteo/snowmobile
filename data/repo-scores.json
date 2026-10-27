@@ -1677,6 +1677,59 @@
           "source": "https://www.swi-prolog.org/pldoc/man?section=db"
         }
       ]
+    },
+    {
+      "name": "Distributed OS",
+      "layer": "os",
+      "definition": "Networked machines provide system resources through common interfaces and a unified resource view.",
+      "scope": "The Plan 9 installation in the Bell Labs paper, with terminals, CPU servers, file servers, and private per-process namespaces. One global namespace is not required.",
+      "sources": [
+        "https://9p.io/sys/doc/9.html"
+      ],
+      "scores": [
+        2,
+        2,
+        10,
+        9,
+        3,
+        5,
+        5,
+        10
+      ],
+      "reasons": [
+        {
+          "reason": "Clients use explicit open, read, and write requests through 9P rather than desired-result queries.",
+          "source": "https://9p.io/sys/doc/9.html"
+        },
+        {
+          "reason": "Applications can change active files. Daily read-only snapshots preserve earlier file states but do not make all system state immutable.",
+          "source": "https://9p.io/sys/doc/9.html"
+        },
+        {
+          "reason": "Terminals, CPU servers, and file servers cooperate across network connections through 9P.",
+          "source": "https://9p.io/sys/doc/9.html"
+        },
+        {
+          "reason": "Processes can mount, bind, and remove file hierarchies after they start, so their resource view can change at runtime.",
+          "source": "https://9p.io/sys/doc/9.html"
+        },
+        {
+          "reason": "File interfaces expose devices and remote resources through the same protocol, so applications need few machine-specific details.",
+          "source": "https://9p.io/sys/doc/9.html"
+        },
+        {
+          "reason": "The paper describes several machine architectures but does not establish task-specific build composition. The midpoint marks uncertain evidence.",
+          "source": "https://9p.io/sys/doc/9.html"
+        },
+        {
+          "reason": "Separate servers and private namespaces do not establish independent failure recovery. The midpoint marks uncertain evidence.",
+          "source": "https://9p.io/sys/doc/9.html"
+        },
+        {
+          "reason": "The file server stores active files and daily snapshots on disk and write-once media.",
+          "source": "https://9p.io/sys/doc/9.html"
+        }
+      ]
     }
   ]
 }
