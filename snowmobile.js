@@ -115,7 +115,7 @@ const START = {
     ['Distributed OS', 'Networked machines provide system resources through common interfaces and a unified resource view.', 'https://9p.io/sys/doc/9.html'],
     ['Multikernel', 'Independent kernels on each core coordinate through explicit messages and replicate state rather than share it.', 'https://barrelfish.org/publications/barrelfish_sosp09.pdf'],
     ['Splitkernel', 'Separate monitors manage processor, memory and storage components across a network instead of one complete server.', 'https://www.usenix.org/conference/osdi18/presentation/shan'],
-    ['Separation kernel', 'The kernel isolates applications through fixed resource partitions and explicit controls on information flow.', 'https://www.lynx.com/products/lynxsecure-separation-kernel-hypervisor'],
+    ['Separation kernel', 'The kernel isolates applications through fixed resource partitions and explicit controls on information flow.', 'https://muen.sk/'],
     ['Single-level store', 'The OS extends memory addresses to persistent storage, so applications use memory objects instead of separate file operations.', 'https://www.usenix.org/legacy/event/usenix02/shapiro.html'],
   ],
   software: [

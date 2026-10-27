@@ -1838,6 +1838,61 @@
           "source": "https://docs.minizinc.dev/en/stable/command_line.html"
         }
       ]
+    },
+    {
+      "name": "Separation kernel",
+      "layer": "os",
+      "definition": "The kernel isolates applications through fixed resource partitions and explicit controls on information flow.",
+      "scope": "One static Muen x86/64 system, with subject memory and resource boundaries. Dynamic Tau0, guest application behavior, and optional storage services lie outside this scope.",
+      "sources": [
+        "https://muen.sk/",
+        "https://muen.sk/muen-system-spec.pdf",
+        "https://muen.sk/tau0.html"
+      ],
+      "scores": [
+        9,
+        0,
+        0,
+        0,
+        10,
+        10,
+        9,
+        0
+      ],
+      "reasons": [
+        {
+          "reason": "The XML policy declares components, resources, channels, and access rights. The toolchain creates the system image.",
+          "source": "https://muen.sk/muen-system-spec.pdf"
+        },
+        {
+          "reason": "Channels use shared memory with writer and reader access rights. Fixed resource assignments do not make channel data immutable.",
+          "source": "https://muen.sk/muen-system-spec.pdf"
+        },
+        {
+          "reason": "This scope covers subjects on one x86/64 machine. Shared memory channels connect local subjects.",
+          "source": "https://muen.sk/"
+        },
+        {
+          "reason": "Static Tau0 fixes resource assignments before boot. The documented dynamic mode lies outside this scope.",
+          "source": "https://muen.sk/tau0.html"
+        },
+        {
+          "reason": "The kernel uses VT-x to isolate subjects and VT-d to assign devices and restrict DMA.",
+          "source": "https://muen.sk/"
+        },
+        {
+          "reason": "The toolchain combines selected component binaries, hardware resources, and policy into one specific system image.",
+          "source": "https://muen.sk/muen-system-spec.pdf"
+        },
+        {
+          "reason": "The kernel isolates subjects through hardware virtualization and policy-controlled channels. Subjects still share the kernel and physical machine.",
+          "source": "https://muen.sk/"
+        },
+        {
+          "reason": "The kernel supplies isolation and resource control. Optional storage driver subjects and guest data stores lie outside this scope.",
+          "source": "https://muen.sk/"
+        }
+      ]
     }
   ]
 }

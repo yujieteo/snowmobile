@@ -291,7 +291,7 @@ function corpusBeforeAutomerge() {
     paradigms: corpus.paradigms.filter((p) =>
       !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)',
         'Cluster (warehouse-scale computer)', 'Multikernel', 'Hardware root of trust', 'Microservices',
-        'Logic programming', 'Distributed OS', 'Event sourcing', 'Constraint programming'].includes(p.name)) };
+        'Logic programming', 'Distributed OS', 'Event sourcing', 'Constraint programming', 'Separation kernel'].includes(p.name)) };
 }
 
 function corpusBeforeGforth() {
@@ -845,6 +845,32 @@ test('the constraint profile separates fixed model values from mutable solver st
   const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
   assert.equal(source.split("['Constraint programming',").length - 1, 1);
   assert.ok(source.includes(`['Constraint programming', '${candidate.definition}', '${candidate.sources[0]}']`));
+  const { map, gaps } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.deepEqual(gaps, []);
+  assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
+});
+
+test('the separation kernel profile distinguishes fixed resources from immutable channel data', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Separation kernel');
+  assert.ok(candidate);
+  assert.equal(candidate.layer, 'os');
+  const capability = corpus.paradigms.find((p) => p.name === 'Capability-based OS');
+  assert.ok(candidate.scores[3] < capability.scores[3]);
+  assert.ok(candidate.scores[5] > capability.scores[5]);
+  assert.equal(candidate.scores[1], 0);
+  assert.match(candidate.reasons[1].reason, /do not make channel data immutable/);
+  assert.match(candidate.scope, /Dynamic Tau0.*lie outside/);
+  assert.match(candidate.reasons[6].reason, /share the kernel and physical machine/);
+  assert.equal(candidate.scores[7], 0);
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]))));
+  assert.ok(Math.abs(nearest - Math.sqrt(23)) < 1e-9);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Separation kernel',").length - 1, 1);
+  assert.ok(source.includes(`['Separation kernel', '${candidate.definition}', '${candidate.sources[0]}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
