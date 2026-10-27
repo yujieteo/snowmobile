@@ -98,7 +98,7 @@ const START = {
     ['GPU (SIMT)', 'Thousands of threads run in lockstep groups and hide memory latency by switching groups.', `${W}Single_instruction,_multiple_threads`],
     ['Shared-memory multiprocessor', 'Several cores share one coherent address space through caches.', `${W}Symmetric_multiprocessing`],
     ['Cluster (warehouse-scale computer)', 'Many cheap servers connected by a network act as one computer.', `${W}Computer_cluster`],
-    ['Domain-specific accelerator', 'Hardware built for one class of work, such as the systolic arrays of a TPU.', `${W}Tensor_Processing_Unit`],
+    ['Domain-specific accelerator', 'Hardware built for one class of work, such as the systolic arrays of a TPU.', 'https://research.google/pubs/in-datacenter-performance-analysis-of-a-tensor-processing-unit/'],
     ['Reconfigurable logic (FPGA)', 'Configurable logic blocks and interconnect form circuits rather than execute a fixed instruction stream.', 'https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw'],
     ['Neuromorphic hardware', 'Artificial neurons exchange sparse events, with memory and computation close together.', 'https://www.intel.com/content/www/us/en/research/neuromorphic-computing.html'],
     ['Hardware root of trust', 'Dedicated secure silicon provides a trust anchor for boot verification and device attestation.', 'https://opentitan.org/book/doc/introduction.html'],

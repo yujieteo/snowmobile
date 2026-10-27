@@ -291,7 +291,7 @@ function corpusBeforeAutomerge() {
     paradigms: corpus.paradigms.filter((p) =>
       !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)',
         'Cluster (warehouse-scale computer)', 'Multikernel', 'Hardware root of trust', 'Microservices',
-        'Logic programming', 'Distributed OS', 'Event sourcing', 'Constraint programming', 'Separation kernel'].includes(p.name)) };
+        'Logic programming', 'Distributed OS', 'Event sourcing', 'Constraint programming', 'Separation kernel', 'Domain-specific accelerator'].includes(p.name)) };
 }
 
 function corpusBeforeGforth() {
@@ -643,7 +643,9 @@ test('the verified CRDT profile covers the Automerge region without a duplicate 
 });
 
 test('the FPGA profile adds hardware flexibility without a duplicate seed', () => {
-  const corpus = require('../data/repo-scores.json');
+  const current = require('../data/repo-scores.json');
+  // Preserve the corpus for this historical measurement.
+  const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Domain-specific accelerator') };
   const candidate = corpus.paradigms.find((p) => p.name === 'Reconfigurable logic (FPGA)');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   const hardware = previous.filter((p) => p.layer === 'hardware');
@@ -875,4 +877,31 @@ test('the separation kernel profile distinguishes fixed resources from immutable
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
+});
+
+
+test('the accelerator profile distinguishes fixed silicon from fixed runtime work', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Domain-specific accelerator');
+  assert.ok(candidate);
+  assert.equal(candidate.layer, 'hardware');
+  assert.match(candidate.scope, /first-generation TPU ASIC/);
+  assert.ok(candidate.scores[3] > 5);
+  assert.ok(candidate.scores[5] > 5);
+  assert.match(candidate.reasons[1].reason, /overwrite accumulators/);
+  assert.match(candidate.reasons[3].reason, /fixed instruction set/);
+  assert.match(candidate.reasons[5].reason, /same circuit serves multiple model types/);
+  assert.match(candidate.reasons[6].reason, /uncertain evidence/);
+  assert.equal(candidate.scores[7], 0);
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]))));
+  assert.ok(Math.abs(nearest - Math.sqrt(27)) < 1e-9);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Domain-specific accelerator',").length - 1, 1);
+  assert.ok(source.includes(`['Domain-specific accelerator', '${candidate.definition}', '${candidate.sources[0]}']`));
+  const { map, gaps } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.deepEqual(gaps, []);
+  assert.equal(map.coverage.radius, map.coverage.baseline.radius);
 });

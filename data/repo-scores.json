@@ -1893,6 +1893,60 @@
           "source": "https://muen.sk/"
         }
       ]
+    },
+    {
+      "name": "Domain-specific accelerator",
+      "layer": "hardware",
+      "definition": "Hardware built for one class of work, such as the systolic arrays of a TPU.",
+      "scope": "One first-generation TPU ASIC for neural network inference, at its instruction and memory interface. Host applications, later TPU generations, and distributed deployments lie outside this scope.",
+      "sources": [
+        "https://research.google/pubs/in-datacenter-performance-analysis-of-a-tensor-processing-unit/",
+        "https://arxiv.org/pdf/1704.04760"
+      ],
+      "scores": [
+        2,
+        1,
+        0,
+        7,
+        10,
+        8,
+        5,
+        0
+      ],
+      "reasons": [
+        {
+          "reason": "The host sends explicit instructions for memory transfers, matrix operations, and activation functions.",
+          "source": "https://arxiv.org/pdf/1704.04760"
+        },
+        {
+          "reason": "Inference weights are read-only, but instructions overwrite accumulators and the unified buffer.",
+          "source": "https://arxiv.org/pdf/1704.04760"
+        },
+        {
+          "reason": "One local coprocessor receives host commands over PCIe. Network coordination lies outside this scope.",
+          "source": "https://arxiv.org/pdf/1704.04760"
+        },
+        {
+          "reason": "Host commands and model images change runtime work within the fixed instruction set.",
+          "source": "https://arxiv.org/pdf/1704.04760"
+        },
+        {
+          "reason": "The ASIC defines a dedicated matrix multiply unit and software-managed memory.",
+          "source": "https://research.google/pubs/in-datacenter-performance-analysis-of-a-tensor-processing-unit/"
+        },
+        {
+          "reason": "The ASIC specializes in neural network inference, but the same circuit serves multiple model types.",
+          "source": "https://research.google/pubs/in-datacenter-performance-analysis-of-a-tensor-processing-unit/"
+        },
+        {
+          "reason": "The paper does not establish independent recovery boundaries between internal units. The midpoint marks uncertain evidence.",
+          "source": "https://arxiv.org/pdf/1704.04760"
+        },
+        {
+          "reason": "Buffers, accumulators, and weight DRAM hold execution data. Durable application storage lies outside this scope.",
+          "source": "https://arxiv.org/pdf/1704.04760"
+        }
+      ]
     }
   ]
 }
