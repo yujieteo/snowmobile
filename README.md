@@ -57,189 +57,47 @@ Stack mode makes consumer apps from a stack of 4 paradigms: one programming lang
 
 ## Repository subset
 
-Use `node scripts/select-repos.js <scores.json> <count>` to select distant repositories from a score file.
-Reason: a distant subset supplies distinct sources for the paradigm search.
-The file has `axes`, an array of distinct axis names, and `repos`, an array of repository records.
-Each record has a GitHub `url` and a `scores` array, with one value from 0 to 10 per axis.
-Use the same axis order and definitions as the Stack map. Keep source links and score reasons in each record.
-The script preserves those extra fields in its JSON output.
+Select distant repositories and inspect their joint PCA map with the scored paradigms:
 
-The script tries each initial pair, then selects the repository farthest from its nearest selected repository.
-Reason: the nine-repository trial found a four-repository subset with minimum distance 14.63, versus 13.30 from the farthest pair alone.
-It keeps the subset with the greatest minimum pair distance. It tests the farthest pair first and keeps earlier results on ties.
-It uses Euclidean distance on the full axis scores, with equal weight per axis. Equal candidate distances follow input order.
-With two repositories or the full input count, one start suffices. Other counts require one greedy trial per initial pair.
-The current corpus gains distance for subset counts of three, four, and five. Joint PCA and coverage stay the same.
-Earlier discovery results below describe the former farthest-pair method.
-The output includes the selected records and their minimum pair distance. The method is greedy and does not guarantee the best subset.
-This step requires scores from source evidence. It does not fetch repositories, assign scores, or verify candidate paradigms.
+```sh
+node scripts/select-repos.js data/repo-scores.json 4
+```
 
-For joint PCA, add a nonempty `paradigms` array to the same file.
-Reason: repositories and paradigms need one coordinate frame for a valid map comparison.
-Each paradigm has `name`, `layer` (`language`, `hardware`, `os`, or `software`), and `scores` in the same axis order.
-Keep its definition, source links, and score reasons in the record too.
-The optional `map` output uses the Stack PCA code, with column means, two component vectors, variance shares, and point coordinates.
-Its `records` array identifies each point by `kind` and the full input `record`, at the same array index.
-PCA uses all input repositories and paradigms, so the subset count cannot change the coordinate frame.
-Scores have equal weight per axis. PCA subtracts each axis mean but does not divide by its standard deviation.
-Two components can omit distance on other components. Use the full axis scores for repository selection.
-The script reads only its input file and does not open a Snowmobile database.
+Reason: the source-backed corpus supplies distinct repository examples for the paradigm search.
+The corpus records manual scores, axis definitions, profile scopes, source links, score reasons, and fixed README revisions.
+Scores describe the stated scope. They do not measure performance or code quality.
+Some reasons mark uncertain evidence. Review those scores before a conclusion.
+These study axes do not replace your Stack axes or change your database.
 
-Try `node scripts/select-repos.js data/repo-scores.json 3` for a source-backed subset.
-Reason: synthetic profiles cannot supply real sources for the paradigm search.
-The file records manual estimates, axis endpoints, per-score reasons, and source links, with a fixed Git revision for each README.
-Scores describe each record's stated scope. They do not measure performance or code quality.
-Some midpoint scores mark uncertain evidence. Review their reasons before a conclusion.
-These study axes do not replace your Stack axes.
-The same file includes source-backed profiles of existing seeds from all 4 layers for joint PCA.
-Reason: the repository-only corpus produced no joint map in the regression test.
-Each profile describes the cited example within its stated scope, rather than every implementation of that paradigm.
-The Unikernel and Unikraft profiles both score the libraries within one image, with no separate component failure boundaries.
-The output retains profile scopes and their reasons. Review them before a conclusion.
-Use `map.explained` to check how much variance the first 2 components retain.
-With paradigm profiles, the output also has `gaps`, ordered by distance on the map.
-Reason: the real corpus returned a joint map but no search regions near the selected repositories.
-Each region uses a selected repository point as its centre and retains that repository's source evidence.
-`nearestOnMap` gives the nearest scored paradigm and the radius of the open circle with no scored paradigm inside.
-`nearestOnAxes` gives the nearest scored paradigm across all axes. Its distance can reveal separation that the map omits.
-The nearest paradigm can differ between these spaces. Distances below or equal to 1e-9 count as zero.
-The script omits regions with zero full-axis distance, so an exact profile match supplies no gap.
-It retains regions with zero map distance when another axis separates the profiles.
-Reason: a synthetic three-axis trial lost four regions because PCA omitted their two-unit separation on the third axis.
-These regions suggest places to search for real paradigms. They do not name or verify new paradigms.
-Only input paradigm profiles bound these regions. Unscored seeds can already occupy them.
+The script tries each initial pair, then adds the repository farthest from its nearest selected repository.
+It retains the subset with the greatest minimum pair distance across equally weighted axes.
+Reason: a corpus trial found a better subset than the farthest initial pair alone.
+The method is greedy and does not guarantee the best subset. Ties retain the earlier result.
+Two repositories or the full input count need only one trial. Other counts use one trial per initial pair.
 
-The joint map also reports `map.coverage`, an estimate of the largest empty circle within the rectangle around all input points.
-Reason: the nine-repository run has zero repository search regions but still has empty space between scored paradigms.
-The circle centre uses a 41 by 41 grid. Its radius measures distance to the nearest scored paradigm, not the nearest repository.
-The true maximum radius lies between `radius` and `radius + errorBound`. The error bound equals half a grid cell diagonal.
-The result includes the rectangle bounds and circle centre. It covers this rectangle only, which can include space outside the point cloud.
-Compare radii only within the same PCA frame and rectangle. New profiles can change both.
-The current corpus has a radius of 7.68 map units and an error bound of 0.34 units.
-This measure does not establish a real paradigm in that space or complete coverage of unscored seeds.
+The JSON output contains the selected `repos`, their `minimumDistance`, a joint `map`, and repository search regions in `gaps`.
+PCA subtracts axis means without variance normalization and uses every input profile, regardless of the selected subset count.
+Reason: all points need the same coordinate frame for a valid comparison.
+`map.records` preserves each input record at the same index as its point. `map.explained` reports the retained variance shares.
+Each gap retains repository evidence and the nearest scored paradigm on the map and across all axes.
+An exact full-axis match supplies no gap. PCA can hide separation, so map coincidence does not remove a gap.
+Reason: a synthetic trial lost four distinct regions under the former map-distance filter.
+Search regions suggest source research. Unscored seeds can already describe them, so check seeds and sources before a new entry.
+The corpus retains verified discoveries as scored profiles, with `suggestedBy` links where repositories supplied the candidates.
 
-Add a `coverageBaseline` array of distinct paradigm names from the file to compare coverage before and after profile additions.
-Reason: separate PCA runs can change the frame and rectangle, which prevents a valid coverage comparison.
-The script fits all profiles once, then measures the baseline subset within that same frame, rectangle, and grid.
-`map.coverage.baseline` reports the baseline names, centre, and radius. Both radii share `bounds`, `gridSteps`, and `errorBound` from `map.coverage`.
-The corpus names its first four profiles as the baseline. The radius decreases from 14.55 to 7.68 with all twelve profiles.
-The baseline lower bound exceeds the current upper bound of 8.02, so the grid error cannot explain this gain.
-This comparison measures profile additions with current scores. It does not reconstruct an earlier PCA map or earlier score estimates.
+`map.coverage` estimates the largest empty-circle radius on a 41 by 41 grid within the rectangle around all input points.
+It measures distance to scored paradigms. The true maximum lies between `radius` and `radius + errorBound`.
+An optional `coverageBaseline` compares a named subset of paradigms within the same PCA frame, rectangle, and grid.
+Reason: separate PCA runs can change the frame and prevent a valid coverage comparison.
+Use the output for current measurements. Empty space does not prove that a real paradigm exists there.
 
-The Rocket Chip region supplied the **Hardware generators** seed and its profile, with eight score reasons and a `suggestedBy` repository link.
-Reason: the study run placed Rocket Chip 6.71 units from its nearest paradigm across all eight axes.
-The [Rocket Chip report](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html) confirms that a generator composes components and emits a circuit description.
-This paradigm covers the circuit generator, while **Pipelined RISC processor** covers one core architecture.
-The profile uses the repository scope and scores, so the joint map now omits that covered region.
-These scores remain manual estimates. The component isolation score still marks uncertain evidence.
-
-The Erlang/OTP region matches the **Actor model** seed, so the study adds its profile instead of a duplicate seed.
-Reason: the study run placed Erlang/OTP 16.58 units from the nearest scored paradigm across all eight axes.
-The [Erlang tutorial](https://www.erlang.org/doc/system/conc_prog.html) describes private process data, message queues, and messages across computers.
-The profile uses the repository scope and records eight score reasons plus its `suggestedBy` link.
-This profile removes the last region for the selected three repositories. It does not establish complete coverage of the seed list.
-Other actor implementations can differ. The durable state score still marks uncertain evidence.
-
-The earlier four-repository study added Nix, 11.96 units from the nearest scored paradigm across all axes.
-Reason: the four-repository study run reveals a region that the three-repository subset omits.
-The [Nix manual](https://nix.dev/manual/nix/2.35/introduction.html) describes immutable packages with explicit dependencies and separate store paths.
-The study adds **Functional package management** as a software seed and a profile with eight score reasons and repository provenance.
-This paradigm applies functional values to package deployment. The language seed **Functional programming** describes program composition.
-The profile covers the Nix region. Its distributed operation score still marks uncertain evidence.
-Its component isolation score concerns package dependencies, rather than process faults.
-
-The six-repository run exposed a false region near Unikraft, 7.07 units from the Unikernel profile across all axes.
-Reason: two uncertain midpoint scores separated two profiles of the same image model.
-The [Unikraft concepts](https://unikraft.org/docs/concepts) source confirms one address space for the application and OS libraries.
-Both profiles now use the same scope: one image and its internal libraries.
-The repository profile now scores distributed operation and component isolation at zero, with source reasons.
-This correction reduced regions from two to one, without a duplicate seed. Redis supplied the last region.
-The immutable state and durable state scores still mark uncertain evidence.
-
-The Redis region supplies the **Data structure server** seed and a profile with eight score reasons and repository provenance.
-Reason: the six-repository run placed Redis nine units from its nearest scored paradigm across all eight axes.
-The [Redis data types](https://redis.io/docs/latest/develop/data-types/) source describes native data structures with commands that operate on their contents.
-This paradigm defines data operations. **Client-server** defines the relationship between a client and a server.
-The profile uses the Redis repository scope, with Redis Cluster available and persistence optional. Other implementations can differ.
-This addition reduces regions from one to zero for all six repositories, with seven to eight scored paradigms.
-Zero regions covers these repository profiles. It does not establish complete seed coverage.
-
-The corpus now includes [seL4](https://github.com/seL4/seL4), with a fixed README revision and eight score reasons.
-Reason: the prior corpus had only one OS repository, whose internal libraries share an address space.
-The [seL4 FAQ](https://sel4.systems/About/FAQ.html) describes capabilities, protection domains, and user control of kernel resources.
-The four-repository subset increases its minimum axis distance from 11.96 to 12.12 and selects seL4 instead of Nix.
-Its search region lies 8.72 units from the nearest scored paradigm across all axes, and 6.35 units on the joint map.
-The build specialization score marks uncertain evidence. These scores describe one kernel and its protection domains, without higher-level file or network services.
-The seL4 region matches the existing **Capability-based OS** seed.
-Reason: the four-repository run exposed a region that the seed already describes.
-The study adds its profile with eight score reasons and repository provenance.
-The [seL4 FAQ](https://sel4.systems/About/FAQ.html) confirms that capabilities pair object references with access rights.
-**Microkernel** describes the kernel boundary. **Capability-based OS** describes resource authority. seL4 uses both paradigms.
-The profile covers the same seL4 scope and retains the uncertain build specialization score.
-This profile reduces search regions from one to zero for both four-repository and seven-repository subsets.
-Other capability systems can differ. This result does not establish complete seed coverage.
-
-The corpus also includes the GHC repository, with a profile for one local GHCi session and eight source reasons.
-Reason: this profile raises six-repository minimum distance from 9.00 to 11.96 in the study run.
-The [GHCi manual](https://downloads.haskell.org/ghc/latest/docs/users_guide/ghci.html) describes expression evaluation, module reload, and temporary session values.
-This profile includes IO actions but excludes external services and foreign code. It does not score the compiler implementation.
-The region lies 11.96 axis units from the nearest scored paradigm and 3.79 units on the joint map.
-The first two components retain 68.64% of variance. The four-repository subset stays the same.
-The region matches the existing **Functional programming** seed.
-Reason: the eight-repository run exposed a search candidate that the seed already describes.
-The [Haskell report](https://www.haskell.org/onlinereport/haskell2010/haskellch1.html) identifies Haskell as a purely functional language.
-The study adds its profile with eight score reasons and the GHC repository link.
-The profile uses the GHCi session scope, with IO actions, rather than pure expressions alone.
-These scores are manual estimates. Other Haskell execution scopes can differ.
-This profile reduces search regions from one to zero for both six-repository and eight-repository subsets.
-Scored profiles increase from nine to ten. The first two components now retain 65.20% of joint variance.
-Zero regions covers these repository profiles. It does not establish complete seed coverage.
-
-
-The corpus also includes Gforth, with a profile for one local interpreter and eight source reasons.
-Reason: the seven-repository run raises minimum axis distance from 9.00 to 10.20 with this profile.
-The [Gforth manual](https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Your-first-definition.html) describes new word definitions within the same session.
-The profile includes direct memory operations. It excludes network services and external applications.
-The Gforth region lies 10.20 axis units from the nearest scored paradigm and 2.72 units on the joint map.
-The first two components retain 65.00% of joint variance. Scores remain manual estimates.
-The new initial pair also changes smaller subsets. A larger corpus does not guarantee better separation for every subset size.
-The region matches the existing **Concatenative programming** seed.
-Reason: the nine-repository run exposed a search candidate that the seed already describes.
-The [concatenative language source](https://concatenative.org/wiki/view/Concatenative%20language) identifies Forth as a language whose adjacent fragments compose functions.
-The study adds a profile with eight score reasons and the Gforth repository link, without a duplicate seed.
-The profile uses the same local interpreter scope as the repository. Other concatenative languages can differ.
-The source distinguishes concatenative languages from stack languages. A concatenative language need not use a stack.
-This profile reduces search regions from one to zero for both seven-repository and nine-repository subsets.
-Scored profiles increase from ten to eleven. The first two components now retain 66.10% of joint variance.
-Zero regions covers these repository profiles. It does not establish complete seed coverage.
-
-The study also adds the **Single-level store** OS seed and its EROS profile, with eight source reasons.
-Reason: its nearest current profile lies 10 units away across the eight axes, and prior OS profiles lack a confirmed durable-state example.
-The [EROS store paper](https://www.usenix.org/legacy/event/usenix02/shapiro.html) describes memory objects with consistent persistence across restart.
-This paradigm describes the storage model. **Capability-based OS** describes resource authority. EROS uses both paradigms.
-The seed count rises from 47 to 48, with 11 language, 12 hardware, 12 OS, and 13 software entries.
-The OS profile count rises from two to three. The build specialization score still marks uncertain evidence.
-Within the new shared frame, the added profile leaves the largest empty-circle radius unchanged at 7.01 units.
-The changed frame prevents a direct comparison with the earlier 7.22-unit radius. Repository scores and selected subsets stay the same.
-
-The corpus also includes **Automerge**, with a fixed README revision and eight source reasons.
-Reason: its profile raises four-repository minimum distance from 14.63 to 14.87 axis units in the study run.
-The [Automerge introduction](https://automerge.org/docs/hello/) describes immutable snapshots, independent offline replicas, and automatic conflict resolution.
-The profile covers JavaScript documents with core sync and save APIs. Host network and disk adapters lie outside this scope.
-The [save API](https://automerge.org/automerge/api-docs/js/functions/save.html) returns bytes. The host must write those bytes to durable storage.
-The search region lies 4.80 axis units from **Actor model**, its nearest scored paradigm, and 1.70 units on the joint map.
-The region supplies the **Conflict-free replicated data types** software seed and a profile with eight source reasons.
-Reason: the ten-repository run exposes one region, 4.80 axis units from the nearest prior profile.
-The [CRDT source](https://crdt.tech/) confirms independent replica updates and automatic convergence without a central coordinator.
-CRDTs define data convergence. **Local-first software** defines where the primary data copy resides. Automerge uses both paradigms.
-The profile retains the Automerge scope. Immutable snapshots and save bytes describe this implementation, rather than every CRDT.
-The seed count rises from 48 to 49, with 11 language, 12 hardware, 12 OS, and 14 software entries.
-Scored profiles rise from 12 to 13. All five profile source links opened, and no duplicate seed names exist.
-The profile reduces search regions from one to zero for both four-repository and ten-repository subsets.
-Within one shared PCA frame, the empty-circle estimate falls from 7.93 to 7.76 units, with a 0.34-unit error bound.
-This small estimate change does not prove a coverage gain beyond grid error. Repository selection stays the same.
-Two-repository minimum distance rises from 21.56 to 22.09. Eight-repository minimum distance rises from 9 to 10.
-The first two components retain 64.78% of joint variance. All scores remain manual estimates.
+For your own score file, supply at least two distinct `axes` names and two `repos` with distinct GitHub repository URLs.
+Each repository needs `url` and `scores`, with one value from 0 to 10 per axis in the same order.
+For joint PCA, add a nonempty `paradigms` array. Each paradigm needs `name`, `layer`, and `scores` on those same axes.
+Use `language`, `hardware`, `os`, or `software` for `layer`. Keep definitions, source links, scopes, and score reasons in the records.
+The script preserves extra record fields. Set `coverageBaseline` to distinct paradigm names from the same file.
+Reason: mismatched axes or duplicate profiles can distort distances and coverage.
+The script reads only the score file. It does not fetch repositories, assign scores, verify sources, or open a Snowmobile database.
 
 ## Interface
 
