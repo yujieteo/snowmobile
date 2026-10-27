@@ -234,9 +234,27 @@ test('consistent Unikraft evidence removes a false region from the full reposito
   }
   const after = selectRepos(corpus, corpus.repos.length);
   assert.equal(before.gaps.length, after.gaps.length + 1);
-  assert.deepEqual(after.gaps.map((gap) => gap.repo.name), ['Redis']);
+  assert.deepEqual(after.gaps.map((gap) => gap.repo.name),
+    before.gaps.filter((gap) => gap.repo.name !== 'Unikraft').map((gap) => gap.repo.name));
   assert.deepEqual(new Set(after.repos.map((record) => record.url)),
     new Set(before.repos.map((record) => record.url)));
+});
+
+test('the data structure server profile covers the Redis region without a duplicate seed', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Data structure server');
+  assert.ok(candidate);
+  const before = selectRepos({ ...corpus,
+    paradigms: corpus.paradigms.filter((p) => p !== candidate) }, corpus.repos.length);
+  const region = before.gaps.find((gap) => gap.repo.name === 'Redis');
+  assert.ok(region);
+  assert.equal(region.nearestOnAxes.distance, 9);
+  assert.ok(candidate.suggestedBy.includes(region.repo.url));
+  assert.deepEqual(candidate.scores, region.repo.scores);
+  const after = selectRepos(corpus, corpus.repos.length);
+  assert.equal(before.gaps.length, 1);
+  assert.deepEqual(after.gaps, []);
+  assert.deepEqual(after.repos, before.repos);
 });
 
 test('invalid scores and duplicate repositories cannot distort the distance', () => {

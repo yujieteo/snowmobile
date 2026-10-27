@@ -129,8 +129,16 @@ Reason: two uncertain midpoint scores separated two profiles of the same image m
 The [Unikraft concepts](https://unikraft.org/docs/concepts) source confirms one address space for the application and OS libraries.
 Both profiles now use the same scope: one image and its internal libraries.
 The repository profile now scores distributed operation and component isolation at zero, with source reasons.
-This correction reduces regions from two to one, without a duplicate seed. Redis supplies the region that remains.
+This correction reduced regions from two to one, without a duplicate seed. Redis supplied the last region.
 The immutable state and durable state scores still mark uncertain evidence.
+
+The Redis region supplies the **Data structure server** seed and a profile with eight score reasons and repository provenance.
+Reason: the six-repository run placed Redis nine units from its nearest scored paradigm across all eight axes.
+The [Redis data types](https://redis.io/docs/latest/develop/data-types/) source describes native data structures with commands that operate on their contents.
+This paradigm defines data operations. **Client-server** defines the relationship between a client and a server.
+The profile uses the Redis repository scope, with Redis Cluster available and persistence optional. Other implementations can differ.
+This addition reduces regions from one to zero for all six repositories, with seven to eight scored paradigms.
+Zero regions covers these repository profiles. It does not establish complete seed coverage.
 
 ## Interface
 

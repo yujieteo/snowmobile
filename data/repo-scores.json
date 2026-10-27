@@ -764,6 +764,65 @@
       "suggestedBy": [
         "https://github.com/NixOS/nix"
       ]
+    },
+    {
+      "name": "Data structure server",
+      "layer": "software",
+      "definition": "A server stores native data structures and exposes commands that operate on their contents directly.",
+      "scope": "The data structure server, with Redis Cluster available.",
+      "sources": [
+        "https://redis.io/docs/latest/develop/data-types/",
+        "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md",
+        "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/",
+        "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/"
+      ],
+      "scores": [
+        3,
+        1,
+        9,
+        9,
+        2,
+        3,
+        6,
+        6
+      ],
+      "reasons": [
+        {
+          "reason": "Commands operate directly on native data structures, although the server also supports queries.",
+          "source": "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md"
+        },
+        {
+          "reason": "Commands change the contents of lists, sets, hashes, and other stored values.",
+          "source": "https://redis.io/docs/latest/develop/data-types/"
+        },
+        {
+          "reason": "Redis Cluster divides the data across network nodes.",
+          "source": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/"
+        },
+        {
+          "reason": "Runtime commands control data, expiration policies, and optional modules.",
+          "source": "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md"
+        },
+        {
+          "reason": "Clients use a server interface rather than direct hardware controls.",
+          "source": "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md"
+        },
+        {
+          "reason": "The same server supports caches, queues, and queries.",
+          "source": "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md"
+        },
+        {
+          "reason": "Separate nodes tolerate some failures, but larger failures make the cluster unavailable.",
+          "source": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/"
+        },
+        {
+          "reason": "Snapshots and an append-only log can preserve data, but a cache can disable persistence.",
+          "source": "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/"
+        }
+      ],
+      "suggestedBy": [
+        "https://github.com/redis/redis"
+      ]
     }
   ]
 }

@@ -130,6 +130,7 @@ const START = {
     ['Embedded database', 'The database engine executes inside the application process and accesses files without a separate server.', 'https://www.sqlite.org/serverless.html'],
     ['Functional package management', 'Packages are immutable values with explicit dependencies, so new versions coexist without changes to old versions.', 'https://nix.dev/manual/nix/2.35/introduction.html'],
     ['Dependency injection', 'External configuration supplies component dependencies, so each component can use an interface without a fixed implementation.', 'https://martinfowler.com/articles/injection.html'],
+    ['Data structure server', 'A server stores native data structures and exposes commands that operate on their contents directly.', 'https://redis.io/docs/latest/develop/data-types/'],
   ],
 };
 
