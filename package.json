@@ -1,0 +1,10 @@
+{
+  "name": "snowmobile",
+  "version": "0.1.0",
+  "description": "Hunt real software for parts, recombine them into new tools, and get grilled on the result as a visual tree.",
+  "license": "MIT",
+  "bin": { "snowmobile": "snowmobile.js" },
+  "files": ["snowmobile.js", "page.html"],
+  "scripts": { "start": "node snowmobile.js", "test": "node --test test/*.test.js" },
+  "engines": { "node": ">=22.13" }
+}

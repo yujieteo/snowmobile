@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>snowmobile</title>
+<style>
+:root {
+  --bg: #f6f7f9; --card: #fff; --ink: #15181d; --dim: #5d6673; --line: #d9dee5;
+  --accent: #0b6bcb; --accent-ink: #fff; --good: #1a7f37; --bad: #c62828; --soft: #e8f1fb;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1216; --card: #181c22; --ink: #e8ecf1; --dim: #96a0ad; --line: #2b323c;
+    --accent: #4c9eff; --accent-ink: #061322; --good: #4cc26a; --bad: #ff6b6b; --soft: #13263a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+a { color: var(--accent); }
+main { max-width: 1100px; margin: 0 auto; padding: 16px 16px 120px; }
+header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+header a.brand { font-weight: 700; font-size: 20px; color: var(--ink); text-decoration: none; }
+header nav a { margin-right: 12px; }
+h1 { font-size: 24px; margin: 20px 0 6px; } h2 { font-size: 18px; margin: 24px 0 8px; }
+.dim { color: var(--dim); } .small { font-size: 13px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.steps { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; font-size: 14px; }
+.steps span { background: var(--soft); border-radius: 999px; padding: 4px 10px; }
+form.seed { display: flex; gap: 8px; margin: 12px 0; }
+input[type=text], textarea { flex: 1; min-width: 0; font: inherit; color: var(--ink); background: var(--card);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+textarea { width: 100%; resize: vertical; min-height: 40px; font-size: 14px; }
+button { font: inherit; border: 0; border-radius: 8px; padding: 10px 14px; background: var(--accent);
+  color: var(--accent-ink); font-weight: 600; cursor: pointer; }
+button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+button:disabled { opacity: .5; cursor: default; }
+.chip { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px;
+  padding: 2px 9px; margin: 3px 4px 0 0; }
+.chip.bad { border-color: var(--bad); color: var(--bad); }
+.status { margin: 8px 0; } .err { color: var(--bad); white-space: pre-wrap; }
+.spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line);
+  border-top-color: var(--accent); border-radius: 50%; animation: s 0.8s linear infinite; vertical-align: -1px; }
+@keyframes s { to { transform: rotate(360deg); } }
+.tag { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.tag.survivor, .tag.grilled { color: var(--good); } .tag.graveyard, .tag.killed { color: var(--bad); }
+/* grill tree */
+.tree { position: relative; }
+.tree svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.tree svg path { fill: none; stroke: var(--line); stroke-width: 2; }
+.level { position: relative; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 0 0 28px; }
+.node { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  padding: 8px 10px; max-width: 260px; font-size: 14px; }
+.node .q { font-weight: 600; } .node .a { color: var(--good); }
+.node.root { background: var(--soft); max-width: 520px; text-align: center; }
+.node.open { max-width: 100%; width: 100%; border-color: var(--accent); padding: 12px; }
+.opts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); margin: 8px 0; }
+.opt { text-align: left; background: var(--bg); color: var(--ink); border: 2px solid var(--line); font-weight: 400;
+  padding: 10px; }
+.opt b { display: block; margin-bottom: 2px; } .opt .why { font-size: 13px; color: var(--dim); }
+.opt.on { border-color: var(--accent); background: var(--soft); }
+.opt .rec { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+.opt.kills { border-style: dashed; } .opt.kills .rec { color: var(--bad); }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: var(--card); border-top: 1px solid var(--line); display: flex; gap: 12px; align-items: center;
+  justify-content: center; }
+.bar button { min-width: 220px; }
+.brief { white-space: pre-wrap; }
+@media (max-width: 600px) {
+  .level { gap: 8px; } .node:not(.open):not(.root) { max-width: calc(50% - 4px); font-size: 12px; padding: 6px 8px; }
+}
+.banner { border: 2px solid var(--bad); border-radius: 10px; padding: 12px; margin: 12px 0; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const T = new URLSearchParams(location.search).get('token') || '';
+const app = document.getElementById('app');
+let timer = null, view = 0, lastTree = null, shownRound = null;
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const link = (url, text) => /^https?:\/\//i.test(url || '') ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text)}</a>` : esc(text);
+const go = (h) => { location.hash = h; };
+
+async function api(path, body) {
+  const res = await fetch(path, { method: body ? 'POST' : 'GET', headers: { 'x-token': T, 'content-type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function shell(inner) {
+  app.innerHTML = `<header><a class="brand" href="#/">snowmobile</a>
+    <nav><a href="#/">new hunt</a><a href="#/library">library</a></nav></header>${inner}`;
+}
+
+function poll(fn, ms) { clearTimeout(timer); const v = view; timer = setTimeout(() => v === view && fn(), ms); }
+
+// ---------- home ----------
+const EXAMPLES = ['flaky end-to-end tests', 'code review takes days', 'CRDTs', 'spreadsheets', 'make', 'feature flags'];
+
+async function home() {
+  shell(`<h1>Build new dev tools from parts of old ones.</h1>
+    <p class="dim">Name a pain, a domain, a tool or a paradigm. An LLM hunts real software for its parts,
+    recombines distant parts into new tools, kills the ones that already exist,
+    and grills you on a survivor as a tree: one tap per decision.</p>
+    <div class="steps"><span>1 hunt parts</span><span>2 recombine</span><span>3 prior-art check</span><span>4 grill tree</span><span>5 build brief</span></div>
+    <form class="seed" id="f"><input type="text" id="seed" placeholder="seed, e.g. flaky end-to-end tests" autocomplete="off">
+      <button>Hunt</button></form>
+    <div>${EXAMPLES.map((e) => `<button type="button" class="ghost chip ex">${esc(e)}</button>`).join('')}</div>
+    <h2>Recent hunts</h2><div id="recent" class="dim">…</div>`);
+  const seed = document.getElementById('seed');
+  document.querySelectorAll('.ex').forEach((b) => (b.onclick = () => { seed.value = b.textContent; seed.focus(); }));
+  document.getElementById('f').onsubmit = async (e) => {
+    e.preventDefault();
+    try { const { id } = await api('/api/hunts', { seed: seed.value }); go(`#/hunt/${id}`); } catch (err) { alert(err.message); }
+  };
+  const { hunts } = await api('/api/search?q=');
+  document.getElementById('recent').innerHTML = hunts.length
+    ? hunts.slice(0, 20).map((h) => `<div><a href="#/hunt/${h.id}">${esc(h.seed)}</a> <span class="small dim">${esc(h.status)} · ${esc(h.created_at)}</span></div>`).join('')
+    : 'None yet.';
+}
+
+// ---------- hunt ----------
+const STEP = { hunting: 'Hunting real software for parts. This takes a few minutes of web search.',
+  creating: 'Recombining parts and searching for prior art. This takes a few minutes.' };
+
+function smCard(s, comps) {
+  const parts = s.component_ids.map((i) => comps[i]).filter(Boolean).map((c) => `<span class="chip">${esc(c.name)}</span>`).join('');
+  const grillable = s.status === 'survivor' || s.status === 'grilled' || s.status === 'killed';
+  return `<div class="card"><div class="tag ${esc(s.status)}">${esc(s.status)}</div><b>${esc(s.name)}</b>
+    <div>${esc(s.pitch)}</div><div>${parts}</div>
+    <p class="small dim">${s.status === 'graveyard' ? `Exists: ${link(s.proof_url, s.proof_url || 'proof')}. ` : ''}${esc(s.proof_note)}</p>
+    ${grillable ? `<button class="${s.status === 'survivor' ? '' : 'ghost'}" onclick="go('#/grill/${s.id}')">${s.status === 'survivor' ? 'Grill me' : 'Open tree'}</button>` : ''}</div>`;
+}
+
+async function hunt(id) {
+  const { hunt: h, sources, snowmobiles } = await api(`/api/hunts/${id}`);
+  const comps = {};
+  sources.forEach((s) => s.components.forEach((c) => (comps[c.id] = { ...c, source: s.name })));
+  const busy = h.status === 'hunting' || h.status === 'creating';
+  const groups = ['survivor', 'grilled', 'killed', 'graveyard'].map((st) => [st, snowmobiles.filter((s) => s.status === st)]);
+  shell(`<h1>${esc(h.seed)}</h1>
+    <div class="status">${busy ? `<span class="spin"></span> ${STEP[h.status]}` : ''}
+      ${h.error ? `<div class="err">${esc(h.error)}</div>` : ''}</div>
+    <button id="create" ${busy || !sources.length ? 'disabled' : ''}>Create snowmobiles</button>
+    <button id="more" class="ghost" ${busy ? 'disabled' : ''}>Hunt more parts</button>
+    ${groups.map(([st, list]) => list.length ? `<h2>${{ survivor: 'Survivors', grilled: 'Grilled', killed: 'Killed in the grill', graveyard: 'Graveyard: already exists' }[st]}</h2>
+      <div class="grid">${list.map((s) => smCard(s, comps)).join('')}</div>` : '').join('')}
+    <h2>Parts found in the wild</h2>
+    <div class="grid">${sources.map((s) => `<div class="card"><span class="tag dim">${esc(s.kind)}</span>
+      <div><b>${link(s.url, s.name)}</b></div><div class="small dim">${esc(s.summary)}</div>
+      ${s.components.map((c) => `<div style="margin-top:8px"><span class="chip ${c.bad_reason ? 'bad' : ''}">${link(c.url, c.name)}</span>
+        <div class="small">${esc(c.mechanism)}</div>${c.bad_reason ? `<div class="small err">Bad part: ${esc(c.bad_reason)}</div>` : ''}</div>`).join('')}
+    </div>`).join('') || `<p class="dim">${busy ? '…' : 'No parts yet.'}</p>`}</div>`);
+  const step = (s) => async () => { try { await api(`/api/hunts/${id}/${s}`, {}); hunt(id); } catch (e) { alert(e.message); } };
+  document.getElementById('create').onclick = step('create');
+  document.getElementById('more').onclick = step('hunt');
+  if (busy) poll(() => hunt(id), 2000);
+}
+
+// ---------- grill ----------
+const picks = {};  // decision id -> { choice, note } while the round is open
+
+function md(s) {
+  return esc(s).split('\n').map((l) => {
+    const h = l.match(/^(#{1,4})\s+(.*)/);
+    if (h) return `<b style="font-size:${20 - h[1].length * 1.5}px">${h[2]}</b>`;
+    return l.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  }).join('\n');
+}
+
+function drawEdges(tree) {
+  const box = document.querySelector('.tree');
+  if (!box) return;
+  const at = box.getBoundingClientRect();
+  const paths = [];
+  const pt = (el, top) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2 - at.left, (top ? r.top : r.bottom) - at.top]; };
+  // Open cards fill the width, so an edge into one crosses the others. They name their parents instead.
+  for (const d of tree.decisions.filter((d) => d.answer)) {
+    const child = box.querySelector(`[data-id="${CSS.escape(d.id)}"]`);
+    const parents = d.depends_on.length ? d.depends_on : ['__root'];
+    for (const pid of parents) {
+      const parent = box.querySelector(`[data-id="${CSS.escape(pid)}"]`);
+      if (!child || !parent) continue;
+      const [x1, y1] = pt(parent, false), [x2, y2] = pt(child, true);
+      const my = (y1 + y2) / 2;
+      paths.push(`<path d="M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}"/>`);
+    }
+  }
+  box.querySelector('svg').innerHTML = paths.join('');
+}
+
+async function grill(id, data) {
+  const g = data || await api(`/api/grills/${id}`);
+  const { snowmobile: sm, tree } = g;
+  const comps = Object.fromEntries(g.components.map((c) => [c.id, c]));
+  const open = tree.decisions.filter((d) => !d.answer);
+  for (const d of open) if (!picks[d.id]) picks[d.id] = { choice: d.recommended, note: '' };
+  const rounds = [];
+  tree.decisions.forEach((d) => (rounds[d.round] ||= []).push(d));
+  const answered = (d) => {
+    const a = d.answer;
+    return `<div class="node" data-id="${esc(d.id)}"><div class="q">${esc(d.question)}</div>
+      <div class="a">${a.choice >= 0 ? esc(d.options[a.choice].label) : '(own answer)'}</div>
+      ${a.note ? `<div class="small dim">“${esc(a.note)}”</div>` : ''}</div>`;
+  };
+  const names = Object.fromEntries(tree.decisions.map((d) => [d.id, d.question]));
+  const asking = (d) => `<div class="node open" data-id="${esc(d.id)}"><div class="q">${esc(d.question)}</div>
+    ${d.depends_on.length ? `<div class="small dim">builds on: ${d.depends_on.map((i) => esc(names[i] || i)).join(' · ')}</div>` : ''}
+    <div class="opts">${d.options.map((o, i) => `<button class="opt ${picks[d.id].choice === i ? 'on' : ''} ${o.kills_component_id ? 'kills' : ''}" data-d="${esc(d.id)}" data-i="${i}">
+      ${i === d.recommended ? '<span class="rec">recommended</span>' : ''}${o.kills_component_id ? '<span class="rec">kills the idea</span>' : ''}
+      <b>${esc(o.label)}</b><span class="why">${esc(o.why)}</span></button>`).join('')}</div>
+    <textarea data-note="${esc(d.id)}" rows="1" placeholder="optional note, or your own answer (tap the selected card to clear it)">${esc(picks[d.id].note)}</textarea></div>`;
+  shell(`<h1>${esc(sm.name)}</h1><div class="dim">${esc(sm.pitch)}</div>
+    <div>${g.components.map((c) => `<span class="chip ${c.bad_reason ? 'bad' : ''}">${link(c.url, c.name)} <span class="dim">· ${esc(c.source)}</span></span>`).join('')}</div>
+    <p class="small"><a href="#/hunt/${sm.hunt_id}">← back to the hunt</a></p>
+    ${g.status === 'killed' ? `<div class="banner"><b>Killed.</b> ${esc(tree.killed?.reason)}<br>
+      Bad part: <b>${esc(comps[tree.killed?.component_id]?.name || '?')}</b>. It is marked on the hunt and left out of the next creation.
+      <p><button onclick="go('#/hunt/${sm.hunt_id}')">Back to the hunt</button></p></div>` : ''}
+    <div class="tree"><svg></svg>
+      <div class="level"><div class="node root" data-id="__root"><b>${esc(sm.name)}</b></div></div>
+      ${rounds.filter(Boolean).map((list) => `<div class="level">${list.map((d) => d.answer ? answered(d) : asking(d)).join('')}</div>`).join('')}
+      ${g.pending ? `<div class="level"><div class="node"><span class="spin"></span> next round…</div></div>` : ''}
+      ${g.error ? `<div class="err">${esc(g.error)}</div><button id="retry">Retry</button>` : ''}
+    </div>
+    ${g.status === 'done' ? `<h2>Build brief</h2><div class="card brief">${md(g.brief)}</div>` : ''}
+    ${open.length ? `<div class="bar"><button id="accept">Answer ${open.length} decision${open.length > 1 ? 's' : ''}</button></div>` : ''}`);
+  lastTree = tree;
+  drawEdges(tree);
+  // A new round: bring its first question into view.
+  const key = `${id}:${tree.round}`;
+  if (open.length && shownRound !== key && shownRound?.startsWith(`${id}:`)) document.querySelector('.node.open').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  shownRound = key;
+  document.querySelectorAll('.opt').forEach((b) => (b.onclick = () => {
+    const p = picks[b.dataset.d], i = Number(b.dataset.i);
+    p.choice = p.choice === i ? -1 : i;
+    document.querySelectorAll(`.opt[data-d="${CSS.escape(b.dataset.d)}"]`).forEach((o) => o.classList.toggle('on', Number(o.dataset.i) === p.choice));
+  }));
+  document.querySelectorAll('[data-note]').forEach((t) => (t.oninput = () => (picks[t.dataset.note].note = t.value)));
+  const accept = document.getElementById('accept');
+  if (accept) accept.onclick = async () => {
+    const missing = open.find((d) => picks[d.id].choice < 0 && !picks[d.id].note.trim());
+    if (missing) return alert(`Pick a card or write an answer for: ${missing.question}`);
+    accept.disabled = true;
+    try { grill(id, await api(`/api/grills/${id}/answer`, { answers: Object.fromEntries(open.map((d) => [d.id, picks[d.id]])) })); }
+    catch (e) { alert(e.message); accept.disabled = false; }
+  };
+  const retry = document.getElementById('retry');
+  if (retry) retry.onclick = async () => grill(id, await api(`/api/grills/${id}/retry`, {}));
+  if (g.pending) poll(() => grill(id), 600);
+}
+// Mobile Safari fires resize on scroll, so only the edges are drawn again.
+window.addEventListener('resize', () => lastTree && drawEdges(lastTree));
+
+// ---------- library ----------
+async function library(q = '') {
+  shell(`<h1>Library</h1><form class="seed" id="f"><input type="text" id="q" placeholder="search parts, ideas, briefs, trees" value="${esc(q)}"><button>Search</button></form><div id="r" class="dim">…</div>`);
+  document.getElementById('f').onsubmit = (e) => { e.preventDefault(); library(document.getElementById('q').value); };
+  const r = await api(`/api/search?q=${encodeURIComponent(q)}`);
+  document.getElementById('r').innerHTML = `
+    <h2>Ideas (${r.snowmobiles.length})</h2>${r.snowmobiles.map((s) => `<div><span class="tag ${esc(s.status)}">${esc(s.status)}</span>
+      <a href="${s.status === 'graveyard' ? `#/hunt/${s.hunt_id}` : `#/grill/${s.id}`}">${esc(s.name)}</a> <span class="small dim">${esc(s.pitch)} · seed: ${esc(s.seed)}</span></div>`).join('')}
+    <h2>Parts (${r.components.length})</h2>${r.components.map((c) => `<div><span class="chip ${c.bad_reason ? 'bad' : ''}">${link(c.url, c.name)}</span>
+      <span class="small dim">${esc(c.source)} · ${esc(c.mechanism)}</span> <a class="small" href="#/hunt/${c.hunt_id}">hunt</a></div>`).join('')}
+    <h2>Hunts (${r.hunts.length})</h2>${r.hunts.map((h) => `<div><a href="#/hunt/${h.id}">${esc(h.seed)}</a></div>`).join('')}`;
+}
+
+// ---------- routing ----------
+async function route() {
+  view++;
+  lastTree = null;
+  clearTimeout(timer);
+  const [, page, id] = location.hash.split('/');
+  try {
+    if (page === 'hunt') await hunt(id);
+    else if (page === 'grill') await grill(id);
+    else if (page === 'library') await library();
+    else await home();
+  } catch (e) { shell(`<p class="err">${esc(e.message)}</p>`); }
+}
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>
