@@ -228,7 +228,16 @@ The [Automerge introduction](https://automerge.org/docs/hello/) describes immuta
 The profile covers JavaScript documents with core sync and save APIs. Host network and disk adapters lie outside this scope.
 The [save API](https://automerge.org/automerge/api-docs/js/functions/save.html) returns bytes. The host must write those bytes to durable storage.
 The search region lies 4.80 axis units from **Actor model**, its nearest scored paradigm, and 1.70 units on the joint map.
-Review conflict-free replicated data types against real sources before a new seed. The repository profile alone does not establish a distinct paradigm.
+The region supplies the **Conflict-free replicated data types** software seed and a profile with eight source reasons.
+Reason: the ten-repository run exposes one region, 4.80 axis units from the nearest prior profile.
+The [CRDT source](https://crdt.tech/) confirms independent replica updates and automatic convergence without a central coordinator.
+CRDTs define data convergence. **Local-first software** defines where the primary data copy resides. Automerge uses both paradigms.
+The profile retains the Automerge scope. Immutable snapshots and save bytes describe this implementation, rather than every CRDT.
+The seed count rises from 48 to 49, with 11 language, 12 hardware, 12 OS, and 14 software entries.
+Scored profiles rise from 12 to 13. All five profile source links opened, and no duplicate seed names exist.
+The profile reduces search regions from one to zero for both four-repository and ten-repository subsets.
+Within one shared PCA frame, the empty-circle estimate falls from 7.93 to 7.76 units, with a 0.34-unit error bound.
+This small estimate change does not prove a coverage gain beyond grid error. Repository selection stays the same.
 Two-repository minimum distance rises from 21.56 to 22.09. Eight-repository minimum distance rises from 9 to 10.
 The first two components retain 64.78% of joint variance. All scores remain manual estimates.
 

@@ -287,7 +287,8 @@ test('gap regions use selected repositories and exact nearest distances in each 
 // Keep prior discovery checks on the repository pool that supplied their measurements.
 function corpusBeforeAutomerge() {
   const corpus = require('../data/repo-scores.json');
-  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Automerge') };
+  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Automerge'),
+    paradigms: corpus.paradigms.filter((p) => p.name !== 'Conflict-free replicated data types') };
 }
 
 function corpusBeforeGforth() {
@@ -595,7 +596,8 @@ test('the single-level store profile adds a distinct durable OS example', () => 
 });
 
 test('Automerge improves repository separation and exposes a replicated data region', () => {
-  const corpus = require('../data/repo-scores.json');
+  const current = require('../data/repo-scores.json');
+  const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Conflict-free replicated data types') };
   const baseline = corpusBeforeAutomerge();
   for (const [count, beforeSquared, afterSquared] of [[2, 465, 488], [4, 214, 221], [8, 81, 100]]) {
     const before = selectRepos(baseline, count);
@@ -613,4 +615,26 @@ test('Automerge improves repository separation and exposes a replicated data reg
   assert.equal(region.repo.layer, 'software');
   assert.ok(region.repo.reasons.every(({ source }) => region.repo.sources.includes(source)));
   assert.ok(selectRepos(corpus, corpus.repos.length).gaps.some((gap) => gap.repo === region.repo));
+});
+
+test('the verified CRDT profile covers the Automerge region without a duplicate seed', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Conflict-free replicated data types');
+  assert.ok(candidate);
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  const before = selectRepos({ ...corpus, paradigms: previous }, corpus.repos.length);
+  const region = before.gaps.find((gap) => gap.repo.name === 'Automerge');
+  assert.ok(region);
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(23)) < 1e-9);
+  assert.equal(candidate.scope, region.repo.scope);
+  assert.deepEqual(candidate.scores, region.repo.scores);
+  assert.ok(candidate.suggestedBy.includes(region.repo.url));
+  const after = selectRepos(corpus, corpus.repos.length);
+  assert.equal(before.gaps.length, 1);
+  assert.deepEqual(after.gaps, []);
+  assert.deepEqual(selectRepos(corpus, 4).gaps, []);
+  assert.deepEqual(after.repos, before.repos);
+  assert.equal(after.minimumDistance, before.minimumDistance);
+  const { map } = selectRepos({ ...corpus, coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
 });

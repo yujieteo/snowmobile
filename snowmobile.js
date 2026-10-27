@@ -132,6 +132,7 @@ const START = {
     ['Functional package management', 'Packages are immutable values with explicit dependencies, so new versions coexist without changes to old versions.', 'https://nix.dev/manual/nix/2.35/introduction.html'],
     ['Dependency injection', 'External configuration supplies component dependencies, so each component can use an interface without a fixed implementation.', 'https://martinfowler.com/articles/injection.html'],
     ['Data structure server', 'A server stores native data structures and exposes commands that operate on their contents directly.', 'https://redis.io/docs/latest/develop/data-types/'],
+    ['Conflict-free replicated data types', 'Replicas accept independent updates and merge concurrent changes into the same state without a central coordinator.', 'https://crdt.tech/'],
   ],
 };
 
