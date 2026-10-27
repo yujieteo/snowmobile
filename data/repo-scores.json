@@ -1352,6 +1352,61 @@
       "suggestedBy": [
         "https://github.com/automerge/automerge"
       ]
+    },
+    {
+      "name": "Reconfigurable logic (FPGA)",
+      "layer": "hardware",
+      "definition": "Configurable logic blocks and interconnect form circuits rather than execute a fixed instruction stream.",
+      "scope": "One AMD 7 series FPGA with dynamic partial reconfiguration. External networks, configuration flash, and host software lie outside this scope.",
+      "sources": [
+        "https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw",
+        "https://docs.amd.com/r/en-US/ug909-vivado-partial-reconfiguration/Introduction-to-Dynamic-Function-eXchange",
+        "https://www.amd.com/en/products/adaptive-socs-and-fpgas/technologies/dynamic-function-exchange.html"
+      ],
+      "scores": [
+        8,
+        0,
+        0,
+        9,
+        10,
+        10,
+        5,
+        0
+      ],
+      "reasons": [
+        {
+          "reason": "Logic tables and interconnect specify a circuit rather than a sequence of processor instructions.",
+          "source": "https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw"
+        },
+        {
+          "reason": "Flip-flops and distributed RAM hold mutable circuit state.",
+          "source": "https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw"
+        },
+        {
+          "reason": "This profile covers one device and its local logic regions, without external network nodes.",
+          "source": "https://docs.amd.com/r/en-US/ug909-vivado-partial-reconfiguration/Introduction-to-Dynamic-Function-eXchange"
+        },
+        {
+          "reason": "Partial configuration files replace circuit functions while static logic continues to operate.",
+          "source": "https://docs.amd.com/r/en-US/ug909-vivado-partial-reconfiguration/Introduction-to-Dynamic-Function-eXchange"
+        },
+        {
+          "reason": "The configuration directly defines hardware logic, memory elements, and interconnect.",
+          "source": "https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw"
+        },
+        {
+          "reason": "Each partial configuration file implements a selected circuit function for a device region.",
+          "source": "https://docs.amd.com/r/en-US/ug909-vivado-partial-reconfiguration/Introduction-to-Dynamic-Function-eXchange"
+        },
+        {
+          "reason": "Optional decoupler logic isolates undefined outputs during reconfiguration. General fault containment remains uncertain evidence, so this score uses the midpoint.",
+          "source": "https://www.amd.com/en/products/adaptive-socs-and-fpgas/technologies/dynamic-function-exchange.html"
+        },
+        {
+          "reason": "This scope covers logic, flip-flops, and RAM rather than an external persistent store.",
+          "source": "https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw"
+        }
+      ]
     }
   ]
 }

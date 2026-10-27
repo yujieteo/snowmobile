@@ -288,7 +288,8 @@ test('gap regions use selected repositories and exact nearest distances in each 
 function corpusBeforeAutomerge() {
   const corpus = require('../data/repo-scores.json');
   return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Automerge'),
-    paradigms: corpus.paradigms.filter((p) => p.name !== 'Conflict-free replicated data types') };
+    paradigms: corpus.paradigms.filter((p) =>
+      !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)'].includes(p.name)) };
 }
 
 function corpusBeforeGforth() {
@@ -637,4 +638,23 @@ test('the verified CRDT profile covers the Automerge region without a duplicate 
   assert.equal(after.minimumDistance, before.minimumDistance);
   const { map } = selectRepos({ ...corpus, coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
+});
+
+test('the FPGA profile adds hardware flexibility without a duplicate seed', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Reconfigurable logic (FPGA)');
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  const hardware = previous.filter((p) => p.layer === 'hardware');
+  assert.equal(candidate.layer, 'hardware');
+  assert.ok(candidate.scores[3] > Math.max(...hardware.map((p) => p.scores[3])));
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]))));
+  assert.ok(Math.abs(nearest - Math.sqrt(69)) < 1e-9);
+  assert.match(candidate.reasons[6].reason, /uncertain evidence/);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Reconfigurable logic (FPGA)',").length - 1, 1);
+  const { map, gaps } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.deepEqual(gaps, []);
+  assert.equal(map.coverage.radius, map.coverage.baseline.radius);
 });
