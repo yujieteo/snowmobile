@@ -16,13 +16,36 @@ process.stdin.on('end', () => {
       { name: 'Erlang/OTP', kind: 'paradigm', url: 'https://erlang.org', summary: 'Actors.',
         components: [{ name: 'supervision trees', mechanism: 'A parent restarts failed children.', url: 'https://erlang.org/doc' }] },
     ] };
-  } else if (prompt.includes('candidate snowmobiles')) {
-    const ids = [...prompt.matchAll(/^(\d+) \|/gm)].map((m) => Number(m[1]));
+  } else if (prompt.includes('candidate snowmobiles') || prompt.includes('candidate consumer apps')) {
+    let ids = [...prompt.matchAll(/^(\d+) \|/gm)].map((m) => Number(m[1]));
+    // A stack: the first paradigm of each layer.
+    if (prompt.includes('candidate consumer apps')) {
+      const seen = new Set();
+      ids = [...prompt.split('Paradigms (')[1].matchAll(/^(\d+) \| (\w+) \|/gm)].filter((m) => !seen.has(m[2]) && seen.add(m[2])).map((m) => Number(m[1]));
+    }
+    const mismatch = prompt.includes('candidate consumer apps') ? 'Hardware and software disagree on where state lives.' : '';
+    const why = { problem: 'Testers lose a day to flaky tests.', evidence_url: 'https://example.com/thread', conventional: 'Retry plugins',
+      gain_axis: 'effort', gain: 'Restarts only changed tests; saves 50% of reruns.', mismatch };
     out = { candidates: [
-      { name: 'Hashvisor', pitch: 'Restart tests by content hash.', component_ids: ids, exists: false, proof_url: '', proof_note: 'Nothing close.' },
-      { name: 'Killme', pitch: 'A plan with a weak part.', component_ids: ids, exists: false, proof_url: '', proof_note: '' },
-      { name: 'Oldnews', pitch: 'Already exists.', component_ids: ids, exists: true, proof_url: 'https://example.com', proof_note: 'Same thing.' },
+      { name: 'Hashvisor', pitch: 'Restart tests by content hash.', component_ids: ids, ...why, verdict: 'survives', proof_url: '', proof_note: 'Nothing close.' },
+      { name: 'Killme', pitch: 'A plan with a weak part.', component_ids: ids, ...why, verdict: 'survives', proof_url: '', proof_note: '' },
+      { name: 'Oldnews', pitch: 'Already exists.', component_ids: ids, ...why, verdict: 'exists', proof_url: 'https://example.com', proof_note: 'Same thing.' },
+      { name: 'Nosource', pitch: 'A pain without a source.', component_ids: ids, ...why, evidence_url: '', verdict: 'survives', proof_url: '', proof_note: 'Sounds good.' },
+      { name: 'Nobetter', pitch: 'No better than today.', component_ids: ids, ...why, verdict: 'no clear gain', proof_url: 'https://example.com', proof_note: 'Retry plugins do the same.' },
     ] };
+  } else if (prompt.includes('design axes')) {
+    out = { axes: ['state', 'binding', 'scheduling', 'parallelism'].map((n) => ({ name: n, low: `${n} low`, high: `${n} high` })) };
+  } else if (prompt.includes('Score each paradigm')) {
+    const ps = [...prompt.split('Paradigms (')[1].matchAll(/^(\d+) \|/gm)].map((m) => Number(m[1]));
+    const as = [...prompt.split('Paradigms (')[0].matchAll(/^(\d+) \|/gm)].map((m) => Number(m[1]));
+    out = { scores: ps.flatMap((p) => as.map((a) => ({ paradigm_id: p, axis_id: a, score: (p * 7 + a * a * 3) % 11, reason: 'fake' }))) };
+  } else if (prompt.includes('You hunt for paradigms')) {
+    out = { paradigms: [
+      { layer: 'os', name: 'Microkernel', summary: 'A copy of one that exists.', url: 'https://example.com/a' },
+      { layer: 'hardware', name: 'Processing in memory', summary: 'Compute next to the DRAM.', url: 'https://example.com/pim' },
+    ] };
+  } else if (prompt.includes('Which paradigm would live')) {
+    out = { layer: 'os', name: 'Gap OS', exists: false, url: '', why: 'Nothing lives here.' };
   } else {
     const id = Number(prompt.match(/^(\d+) \|/m)[1]);
     // A part that is not in the plan: the plan's parts are inserted first in the tests.

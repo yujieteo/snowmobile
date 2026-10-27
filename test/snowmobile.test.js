@@ -46,7 +46,11 @@ test('hunt, create, grill to a build brief, and kill', async () => {
   assert.strictEqual(h.sources.length, 2);
   await call(`/api/hunts/${id}/create`, {});
   h = await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'created');
-  assert.deepStrictEqual(h.snowmobiles.map((s) => s.status), ['survivor', 'survivor', 'graveyard']);
+  assert.deepStrictEqual(h.snowmobiles.map((s) => s.status), ['survivor', 'survivor', 'graveyard', 'graveyard', 'graveyard']);
+  // A candidate without a real source for its problem, or without a clear gain, goes to the graveyard like prior art.
+  assert.match(h.snowmobiles[3].proof_note, /^No clear problem: /);
+  assert.match(h.snowmobiles[4].proof_note, /^No clear gain: /);
+  assert.strictEqual(h.snowmobiles[4].proof_url, '');
   const [good, weak] = h.snowmobiles;
 
   let g = await until(`/api/grills/${good.id}`, (b) => !b.pending);
@@ -55,7 +59,8 @@ test('hunt, create, grill to a build brief, and kill', async () => {
   assert.strictEqual((await call(`/api/grills/${good.id}/answer`, { answers: { scope: { choice: 0 } } })).status, 400);
   await call(`/api/grills/${good.id}/answer`, { answers: { scope: { choice: 0 }, lang: { choice: -1, note: 'Zig' } } });
   g = await until(`/api/grills/${good.id}`, (b) => b.status === 'done');
-  assert.match(g.brief, /Build/);
+  assert.match(g.brief, /^\*\*Problem:\*\* Testers lose a day[^]*\*\*Evidence:\*\* https:\/\/example.com\/thread\n\*\*Conventional solution:\*\* Retry plugins\n\*\*Why better \(effort\):\*\*[^]*Build/);
+  assert.doesNotMatch(g.brief, /Layer mismatch/);
 
   await until(`/api/grills/${weak.id}`, (b) => !b.pending);
   g = (await call(`/api/grills/${weak.id}/answer`, { answers: { scope: { choice: 1 }, lang: { choice: 0 } } })).body;
