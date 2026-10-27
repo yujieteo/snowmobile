@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the CQRS trial found no assessment of its cost for technical debt.
+  {
+    paradigm: 'CQRS', layer: 'software', problem_id: 'technical-debt', effect: 'worsens',
+    reason: 'Fowler reports extra complexity, lower productivity and greater risk when CQRS does not fit the domain. Assessment: needless separate models can add technical debt. This does not apply to every CQRS use.',
+    source: { title: 'Martin Fowler: CQRS suitability and complexity', url: 'https://martinfowler.com/bliki/CQRS.html' },
+  },
   // Reason: the Ownership types trial found no reliability assessment.
   {
     paradigm: 'Ownership types', layer: 'language', problem_id: 'unreliable-tools', effect: 'reduces',

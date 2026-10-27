@@ -74,6 +74,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Rust checks reject use after a move and prevent double-free faults in the documented model.
   This assessment does not prove whole-system reliability.
   Reason: an Ownership types trial found no reliability assessment.
+  The [CQRS assessment](https://martinfowler.com/bliki/CQRS.html) identifies a cost when separate models do not fit the domain.
+  Fowler reports extra complexity, lower productivity and greater risk in that case.
+  The assessment infers a technical debt cost. It does not apply to every CQRS use.
+  Reason: a CQRS trial found no assessment of its cost for technical debt.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.
