@@ -238,8 +238,8 @@ test('the real baseline measures a coverage gain within one map', () => {
   const { map } = selectRepos(corpus, corpus.repos.length);
   const { baseline, radius, errorBound } = map.coverage;
   assert.deepEqual(baseline.names, corpus.coverageBaseline);
-  assert.ok(Math.abs(baseline.radius - 12.606452182367823) < 1e-6);
-  assert.ok(Math.abs(radius - 7.217918844023843) < 1e-6);
+  assert.ok(Math.abs(baseline.radius - 12.5426810167518) < 1e-6);
+  assert.ok(Math.abs(radius - 7.009006074009566) < 1e-6);
   // The lower bound before exceeds the upper bound after.
   assert.ok(baseline.radius > radius + errorBound);
 });
@@ -290,7 +290,7 @@ test('gap regions use selected repositories and exact nearest distances in each 
 function corpusBeforeGforth() {
   const corpus = require('../data/repo-scores.json');
   return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Gforth'),
-    paradigms: corpus.paradigms.filter((p) => p.name !== 'Concatenative programming') };
+    paradigms: corpus.paradigms.filter((p) => !['Concatenative programming', 'Single-level store'].includes(p.name)) };
 }
 
 test('Gforth improves seven-repository separation and retains a source-backed search region', () => {
@@ -574,4 +574,19 @@ test('the command preserves source evidence and leaves its input file intact', (
   assert.deepEqual(output.map.records.at(-1), { kind: 'paradigm', record: JSON.parse(input).paradigms[0] });
   assert.equal(output.map.coverage.baseline.radius, output.map.coverage.radius);
   assert.equal(fs.readFileSync(file, 'utf8'), input);
+});
+
+test('the single-level store profile adds a distinct durable OS example', () => {
+  const corpus = require('../data/repo-scores.json');
+  const profile = corpus.paradigms.find((p) => p.name === 'Single-level store');
+  assert.equal(profile.layer, 'os');
+  const previous = corpus.paradigms.filter((p) => p !== profile);
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((score, axis) => score - profile.scores[axis]))));
+  assert.equal(nearest, 10);
+  assert.ok(profile.scores[7] > Math.max(...previous.filter((p) => p.layer === 'os').map((p) => p.scores[7])));
+  assert.match(profile.reasons[5].reason, /uncertain evidence/);
+  // Compare only reference sets within one map, rectangle, and grid.
+  const { map } = selectRepos({ ...corpus, coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.equal(map.coverage.baseline.radius, map.coverage.radius);
 });

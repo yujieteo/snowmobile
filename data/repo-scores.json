@@ -1180,6 +1180,61 @@
       "suggestedBy": [
         "https://github.com/forthy42/gforth"
       ]
+    },
+    {
+      "name": "Single-level store",
+      "layer": "os",
+      "definition": "The OS extends memory addresses to persistent storage, so applications use memory objects instead of separate file operations.",
+      "scope": "One EROS system, its persistent objects, and its protection domains. External network services lie outside this scope.",
+      "sources": [
+        "https://www.usenix.org/legacy/event/usenix02/shapiro.html",
+        "https://www.usenix.org/legacy/event/usenix02/full_papers/shapiro/shapiro.pdf",
+        "https://www.princeton.edu/~rblee/ELE572Papers/Fall04Readings/Eros.pdf"
+      ],
+      "scores": [
+        2,
+        0,
+        0,
+        9,
+        9,
+        5,
+        9,
+        10
+      ],
+      "reasons": [
+        {
+          "reason": "Applications invoke explicit capability operations on objects rather than declare a desired result.",
+          "source": "https://www.princeton.edu/~rblee/ELE572Papers/Fall04Readings/Eros.pdf"
+        },
+        {
+          "reason": "Applications change memory objects in place. The kernel preserves consistent checkpoints, rather than immutable application values.",
+          "source": "https://www.usenix.org/legacy/event/usenix02/full_papers/shapiro/shapiro.pdf"
+        },
+        {
+          "reason": "This profile covers one local memory and disk store. External network services lie outside this scope.",
+          "source": "https://www.usenix.org/legacy/event/usenix02/full_papers/shapiro/shapiro.pdf"
+        },
+        {
+          "reason": "User-level code allocates objects and controls address spaces and fault policies at runtime.",
+          "source": "https://www.usenix.org/legacy/event/usenix02/full_papers/shapiro/shapiro.pdf"
+        },
+        {
+          "reason": "The kernel manages hardware memory maps and processor state through its machine layer.",
+          "source": "https://www.usenix.org/legacy/event/usenix02/full_papers/shapiro/shapiro.pdf"
+        },
+        {
+          "reason": "The papers do not establish task-specific build specialization. The midpoint marks uncertain evidence.",
+          "source": "https://www.usenix.org/legacy/event/usenix02/full_papers/shapiro/shapiro.pdf"
+        },
+        {
+          "reason": "Separate protection domains restrict access through capabilities and contain component faults.",
+          "source": "https://www.princeton.edu/~rblee/ELE572Papers/Fall04Readings/Eros.pdf"
+        },
+        {
+          "reason": "The kernel checkpoints data, processes, and communication channels for recovery after restart.",
+          "source": "https://www.usenix.org/legacy/event/usenix02/full_papers/shapiro/shapiro.pdf"
+        }
+      ]
     }
   ]
 }

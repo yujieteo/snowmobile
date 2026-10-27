@@ -79,7 +79,7 @@ test('a seed update adds absent seeds and preserves user data on each start', as
   const db = app.cfg.db;
   const before = db.prepare(`SELECT * FROM paradigms ORDER BY id`).all();
   for (const profile of require('../data/repo-scores.json').paradigms
-    .filter((p) => ['Hardware generators', 'Actor model', 'Functional package management', 'Data structure server'].includes(p.name))) {
+    .filter((p) => ['Hardware generators', 'Actor model', 'Functional package management', 'Data structure server', 'Single-level store'].includes(p.name))) {
     const seeds = before.filter((p) => p.name === profile.name);
     assert.strictEqual(seeds.length, 1);
     assert.strictEqual(seeds[0].layer, profile.layer);

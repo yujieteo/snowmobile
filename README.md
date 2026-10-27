@@ -115,15 +115,15 @@ The circle centre uses a 41 by 41 grid. Its radius measures distance to the near
 The true maximum radius lies between `radius` and `radius + errorBound`. The error bound equals half a grid cell diagonal.
 The result includes the rectangle bounds and circle centre. It covers this rectangle only, which can include space outside the point cloud.
 Compare radii only within the same PCA frame and rectangle. New profiles can change both.
-The current corpus has a radius of 7.22 map units and an error bound of 0.33 units, despite zero repository search regions.
+The current corpus has a radius of 7.01 map units and an error bound of 0.32 units, despite zero repository search regions.
 This measure does not establish a real paradigm in that space or complete coverage of unscored seeds.
 
 Add a `coverageBaseline` array of distinct paradigm names from the file to compare coverage before and after profile additions.
 Reason: separate PCA runs can change the frame and rectangle, which prevents a valid coverage comparison.
 The script fits all profiles once, then measures the baseline subset within that same frame, rectangle, and grid.
 `map.coverage.baseline` reports the baseline names, centre, and radius. Both radii share `bounds`, `gridSteps`, and `errorBound` from `map.coverage`.
-The corpus names its first four profiles as the baseline. The radius decreases from 12.61 to 7.22 with all eleven profiles.
-The baseline lower bound exceeds the current upper bound of 7.54, so the grid error cannot explain this gain.
+The corpus names its first four profiles as the baseline. The radius decreases from 12.54 to 7.01 with all twelve profiles.
+The baseline lower bound exceeds the current upper bound of 7.33, so the grid error cannot explain this gain.
 This comparison measures profile additions with current scores. It does not reconstruct an earlier PCA map or earlier score estimates.
 
 The Rocket Chip region supplied the **Hardware generators** seed and its profile, with eight score reasons and a `suggestedBy` repository link.
@@ -212,6 +212,15 @@ The source distinguishes concatenative languages from stack languages. A concate
 This profile reduces search regions from one to zero for both seven-repository and nine-repository subsets.
 Scored profiles increase from ten to eleven. The first two components now retain 66.10% of joint variance.
 Zero regions covers these repository profiles. It does not establish complete seed coverage.
+
+The study also adds the **Single-level store** OS seed and its EROS profile, with eight source reasons.
+Reason: its nearest current profile lies 10 units away across the eight axes, and prior OS profiles lack a confirmed durable-state example.
+The [EROS store paper](https://www.usenix.org/legacy/event/usenix02/shapiro.html) describes memory objects with consistent persistence across restart.
+This paradigm describes the storage model. **Capability-based OS** describes resource authority. EROS uses both paradigms.
+The seed count rises from 47 to 48, with 11 language, 12 hardware, 12 OS, and 13 software entries.
+The OS profile count rises from two to three. The build specialization score still marks uncertain evidence.
+Within the new shared frame, the added profile leaves the largest empty-circle radius unchanged at 7.01 units.
+The changed frame prevents a direct comparison with the earlier 7.22-unit radius. Repository scores and selected subsets stay the same.
 
 ## Interface
 
