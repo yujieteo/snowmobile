@@ -47,6 +47,7 @@ process.stdin.on('end', () => {
     const as = [...prompt.split('Paradigms (')[0].matchAll(/^(\d+) \|/gm)].map((m) => Number(m[1]));
     out = { scores: ps.flatMap((p) => as.map((a) => ({ paradigm_id: p, axis_id: a, score: (p * 7 + a * a * 3) % 11, reason: 'fake' }))) };
   } else if (prompt.includes('You hunt for paradigms')) {
+    require('node:fs').writeFileSync('paradigm-prompt', prompt);
     out = { paradigms: [
       { layer: 'os', name: 'Microkernel', summary: 'A copy of one that exists.', url: 'https://example.com/a' },
       { layer: 'hardware', name: 'Processing in memory', summary: 'Compute next to the DRAM.', url: 'https://example.com/pim' },

@@ -236,6 +236,15 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.strictEqual(s.paradigms.length, n + 1);
   assert.strictEqual(s.map.ids.length, n + 1);
 
+  // Reason: the paradigm hunt had no practical problems or source assessments.
+  const huntPrompt = fs.readFileSync(path.join(home, 'paradigm-prompt'), 'utf8');
+  const huntProblems = JSON.parse(huntPrompt.split('Practical problems and source assessments (JSON):\n')[1].split('\n')[0]);
+  assert.deepStrictEqual(huntProblems, problems);
+  assert.match(huntPrompt, /Order candidates by the greatest respondent share of a problem they can reduce/);
+  assert.match(huntPrompt, /Do not add shares or equate prevalence with severity/);
+  assert.match(huntPrompt, /Prefer evidence of practical benefit over map distance/);
+  assert.match(huntPrompt, /Use source links to explain each benefit, harm and limit in the summary/);
+
   // The owner edits an axis and a score; a later scoring run keeps the edit.
   const [a1] = s.axes;
   const first = s.paradigms.find((p) => p.layer === 'hardware');

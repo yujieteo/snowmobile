@@ -469,8 +469,20 @@ function paradigmPrompt(paradigms) {
 The map has these already:
 ${paradigms.map((p) => `${p.layer} | ${p.name}`).join('\n')}
 
-Use web search and fetch to find 8 more real paradigms, 2 in each layer, that are far from the ones above: from research, history or niche practice.
-Each has a one-sentence summary of its mechanism and a URL that you found and that shows it: docs, a paper or a talk. Do not invent paradigms or URLs.`;
+Use web search and fetch to find 8 more real paradigms, 2 in each layer.
+Search research, history and niche practice for mechanisms that reduce practical problems.
+Each paradigm needs a URL that you opened: documentation, a paper or a talk.
+Do not invent paradigms or URLs.
+
+Practical problems and source assessments (JSON):
+${JSON.stringify(practicalProblems(paradigms))}
+Prefer evidence of practical benefit over map distance.
+Order candidates by the greatest respondent share of a problem they can reduce, when evidence and benefit are comparable.
+Do not add shares or equate prevalence with severity.
+For comparable priorities, prefer problems without a documented reduction, then mechanisms absent from the map.
+Use source links to explain each benefit, harm and limit in the summary.
+Name the problem that each mechanism can reduce, or state that its effect is unknown.
+An absent assessment does not prove an absent benefit. A survey source alone does not prove a paradigm's benefit.`;
 }
 
 const POINT_SCHEMA = {
