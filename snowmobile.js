@@ -611,10 +611,11 @@ async function advance(cfg, smId) {
 function kill(cfg, sm, componentId, reason, tree) {
   const { db } = cfg;
   if (!JSON.parse(sm.component_ids).includes(componentId)) componentId = 0;
+  const badReason = componentId ? db.prepare(`SELECT bad_reason FROM components WHERE id = ?`).get(componentId).bad_reason : null;
   if (componentId) db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`).run(`${sm.name}: ${reason}`, componentId);
   db.prepare(`UPDATE snowmobiles SET status = 'killed', proof_note = ? WHERE id = ?`).run(reason, sm.id);
-  // The note that the kill replaces, so that an undo can put it back.
-  tree.killed = { component_id: componentId, reason, note: sm.proof_note };
+  // The note and the part mark that the kill replaces, so that an undo can put them back.
+  tree.killed = { component_id: componentId, reason, note: sm.proof_note, bad_reason: badReason };
   db.prepare(`UPDATE grills SET tree = ?, status = 'killed', updated_at = CURRENT_TIMESTAMP WHERE snowmobile_id = ?`)
     .run(JSON.stringify(tree), sm.id);
 }
@@ -633,11 +634,12 @@ function undoRound(cfg, smId) {
   let note = sm.proof_note;
   if (tree.killed) {
     const { component_id: cid, reason } = tree.killed;
-    if (cid) db.prepare(`UPDATE components SET bad_reason = NULL WHERE id = ? AND bad_reason = ?`).run(cid, `${sm.name}: ${reason}`);
+    if (cid) db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ? AND bad_reason = ?`)
+      .run(tree.killed.bad_reason ?? null, cid, `${sm.name}: ${reason}`);
     note = tree.killed.note ?? note;
     delete tree.killed;
   }
-  db.prepare(`UPDATE snowmobiles SET status = 'survivor', proof_note = ? WHERE id = ?`).run(note, smId);
+  db.prepare(`UPDATE snowmobiles SET status = 'survivor', proof_note = ? WHERE id = ? AND status IN ('killed', 'grilled')`).run(note, smId);
   db.prepare(`UPDATE grills SET tree = ?, status = 'open', brief = NULL, updated_at = CURRENT_TIMESTAMP WHERE snowmobile_id = ?`)
     .run(JSON.stringify(tree), smId);
   cfg.grillErrors.delete(smId);
@@ -774,13 +776,13 @@ function handler(cfg) {
         return ok ? send(res, 200, {}) : send(res, 404, { error: 'no such part' });
       }
       if (req.method === 'POST' && (r = m(/^\/api\/snowmobiles\/(\d+)$/))) {
-        // The owner buries a survivor, or restores an idea from the graveyard.
-        const { status } = await readBody(req);
+        // The owner buries a survivor, or restores an idea from the graveyard. An undo sends the earlier note.
+        const { status, proof_note } = await readBody(req);
         const sm = db.prepare(`SELECT * FROM snowmobiles WHERE id = ?`).get(Number(r[1]));
         if (!sm) return send(res, 404, { error: 'no such idea' });
         const from = { graveyard: 'survivor', survivor: 'graveyard' }[status];
         if (!from || sm.status !== from) return send(res, 409, { error: `only a ${from || 'survivor'} can become ${status}` });
-        const note = status === 'graveyard' ? BURIED + (sm.proof_note || '') : String(sm.proof_note || '').replace(BURIED, '');
+        const note = proof_note !== undefined ? proof_note === null ? null : String(proof_note) : status === 'graveyard' ? BURIED + (sm.proof_note || '') : String(sm.proof_note || '').replace(BURIED, '');
         db.prepare(`UPDATE snowmobiles SET status = ?, proof_note = ? WHERE id = ?`).run(status, note, sm.id);
         return send(res, 200, {});
       }

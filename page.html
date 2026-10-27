@@ -393,10 +393,11 @@ async function hunt(id, tab) {
   if (more) more.onclick = async () => { try { await api(`/api/hunts/${id}/hunt`, {}); hunt(id, 'parts'); } catch (e) { fail(e); } };
   const name = (sid) => snowmobiles.find((s) => s.id === sid).name;
   const move = async (sid, status) => {
+    const { proof_note } = snowmobiles.find((s) => s.id === sid);
     try { await api(`/api/snowmobiles/${sid}`, { status }); } catch (e) { fail(e); return hunt(id, tab); }
     hunt(id, tab);
     toast(`${status === 'graveyard' ? 'Buried' : 'Restored'} ${name(sid)}.`, async () => {
-      try { await api(`/api/snowmobiles/${sid}`, { status: status === 'graveyard' ? 'survivor' : 'graveyard' }); } catch (e) { fail(e); }
+      try { await api(`/api/snowmobiles/${sid}`, { status: status === 'graveyard' ? 'survivor' : 'graveyard', proof_note }); } catch (e) { fail(e); }
       hunt(id, tab);
     });
   };
