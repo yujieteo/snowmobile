@@ -116,6 +116,14 @@ The profile uses the repository scope and records eight score reasons plus its `
 This profile removes the last region for the selected three repositories. It does not establish complete coverage of the seed list.
 Other actor implementations can differ. The durable state score still marks uncertain evidence.
 
+A subset of four repositories adds Nix and exposes a region 11.96 units from the nearest scored paradigm across all axes.
+Reason: the four-repository study run reveals a region that the three-repository subset omits.
+The [Nix manual](https://nix.dev/manual/nix/2.35/introduction.html) describes immutable packages with explicit dependencies and separate store paths.
+The study adds **Functional package management** as a software seed and a profile with eight score reasons and repository provenance.
+This paradigm applies functional values to package deployment. The language seed **Functional programming** describes program composition.
+The profile covers the Nix region. Its distributed operation score still marks uncertain evidence.
+Its component isolation score concerns package dependencies, rather than process faults.
+
 ## Interface
 
 The interface comes from a conceptual model: the objects, their relationships, their actions and their attributes. [docs/concepts.md](docs/concepts.md) has the model and the object-action matrix. The content fills the screen. The navigation and the primary action of each screen float above it at the bottom, within reach of your thumb. [docs/screens](docs/screens) has a screenshot of each screen at 375, 430 and 1280 px.

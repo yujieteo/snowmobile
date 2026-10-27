@@ -706,6 +706,63 @@
       "suggestedBy": [
         "https://github.com/erlang/otp"
       ]
+    },
+    {
+      "name": "Functional package management",
+      "layer": "software",
+      "definition": "Packages are immutable values with explicit dependencies, so new versions coexist without changes to old versions.",
+      "scope": "The Nix package manager and its package model, with the same scope as the repository profile.",
+      "sources": [
+        "https://nix.dev/manual/nix/2.35/introduction.html",
+        "https://edolstra.github.io/pubs/phd-thesis.pdf"
+      ],
+      "scores": [
+        10,
+        10,
+        5,
+        5,
+        2,
+        9,
+        8,
+        10
+      ],
+      "reasons": [
+        {
+          "reason": "Nix expressions specify dependencies and package build tasks.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "Package contents never change after the build.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "Binary caches supply packages but do not establish coordination across nodes. The midpoint marks uncertain evidence.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "Profiles select package versions at runtime while package contents stay fixed.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "The package model exposes store paths and dependencies rather than hardware controls.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "Expressions select package dependencies and variants before the build.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "Separate store paths preserve dependencies across upgrades. This score concerns dependency isolation, not process faults.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "The store preserves old package versions for rollback.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        }
+      ],
+      "suggestedBy": [
+        "https://github.com/NixOS/nix"
+      ]
     }
   ]
 }

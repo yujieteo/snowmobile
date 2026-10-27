@@ -128,6 +128,7 @@ const START = {
     ['Event sourcing', 'The state is the result of replaying an append-only log of events.', 'https://martinfowler.com/eaaDev/EventSourcing.html'],
     ['CQRS', 'Separate models handle commands that change data and queries that read data.', 'https://martinfowler.com/bliki/CQRS.html'],
     ['Embedded database', 'The database engine executes inside the application process and accesses files without a separate server.', 'https://www.sqlite.org/serverless.html'],
+    ['Functional package management', 'Packages are immutable values with explicit dependencies, so new versions coexist without changes to old versions.', 'https://nix.dev/manual/nix/2.35/introduction.html'],
     ['Dependency injection', 'External configuration supplies component dependencies, so each component can use an interface without a fixed implementation.', 'https://martinfowler.com/articles/injection.html'],
   ],
 };

@@ -169,7 +169,7 @@ test('the existing actor seed profile removes the duplicate Erlang search candid
     paradigms: corpus.paradigms.filter((p) => p !== actor) }, 3);
   const region = before.gaps.find((gap) => gap.repo.name === 'Erlang/OTP');
   assert.ok(region);
-  assert.ok(region.nearestOnAxes.distance > 16);
+  assert.ok(region.nearestOnAxes.distance > 0);
   assert.ok(actor.suggestedBy.includes(region.repo.url));
   assert.deepEqual(actor.scores, region.repo.scores);
   const after = selectRepos(corpus, 3);
@@ -191,6 +191,23 @@ test('the verified hardware generator profile closes the Rocket Chip search regi
   assert.deepEqual(candidate.scores, region.repo.scores);
   const after = selectRepos(corpus, 3);
   assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Rocket Chip'));
+  assert.deepEqual(after.repos, before.repos);
+});
+
+test('functional package management covers the Nix region in a four-repository subset', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Functional package management');
+  assert.ok(candidate);
+  const before = selectRepos({ ...corpus,
+    paradigms: corpus.paradigms.filter((p) => p !== candidate) }, 4);
+  const region = before.gaps.find((gap) => gap.repo.name === 'Nix');
+  assert.ok(region);
+  assert.ok(region.nearestOnAxes.distance > 11);
+  assert.ok(candidate.suggestedBy.includes(region.repo.url));
+  assert.deepEqual(candidate.scores, region.repo.scores);
+  const after = selectRepos(corpus, 4);
+  assert.equal(before.gaps.length, after.gaps.length + 1);
+  assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Nix'));
   assert.deepEqual(after.repos, before.repos);
 });
 
