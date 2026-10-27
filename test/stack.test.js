@@ -78,12 +78,14 @@ test('a seed update adds absent seeds and preserves user data on each start', as
   app = await start({ home, port: 0, claude: 'false' });
   const db = app.cfg.db;
   const before = db.prepare(`SELECT * FROM paradigms ORDER BY id`).all();
-  const profile = require('../data/repo-scores.json').paradigms.find((p) => p.name === 'Hardware generators');
-  const seeds = before.filter((p) => p.name === profile.name);
-  assert.strictEqual(seeds.length, 1);
-  assert.strictEqual(seeds[0].layer, profile.layer);
-  assert.strictEqual(seeds[0].summary, profile.definition);
-  assert.ok(profile.sources.includes(seeds[0].url));
+  for (const profile of require('../data/repo-scores.json').paradigms
+    .filter((p) => ['Hardware generators', 'Actor model'].includes(p.name))) {
+    const seeds = before.filter((p) => p.name === profile.name);
+    assert.strictEqual(seeds.length, 1);
+    assert.strictEqual(seeds[0].layer, profile.layer);
+    assert.strictEqual(seeds[0].summary, profile.definition);
+    assert.ok(profile.sources.includes(seeds[0].url));
+  }
   // Remove two seeds per layer to represent the previous seed list.
   const absent = [...new Set(before.map((p) => p.layer))]
     .flatMap((layer) => before.filter((p) => p.layer === layer).slice(-2));

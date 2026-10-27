@@ -141,7 +141,9 @@ test('gap regions use selected repositories and exact nearest distances in each 
 
 test('real gap regions exclude an exact profile match and retain source evidence', () => {
   const corpus = require('../data/repo-scores.json');
-  const result = selectRepos(corpus, 3);
+  // Omit the actor profile to retain a real uncovered region for this distance check.
+  const result = selectRepos({ ...corpus,
+    paradigms: corpus.paradigms.filter((p) => p.name !== 'Actor model') }, 3);
   assert.ok(result.gaps.length > 0);
   assert.ok(result.gaps.every((gap) => !['SQLite', 'Rocket Chip'].includes(gap.repo.name)));
   for (const gap of result.gaps) {
@@ -149,12 +151,31 @@ test('real gap regions exclude an exact profile match and retain source evidence
     assert.ok(gap.repo.sources.length);
     for (const [key, point] of [['nearestOnMap', gap.point], ['nearestOnAxes', gap.repo.scores]]) {
       const vectors = key === 'nearestOnMap'
-        ? result.map.points.slice(corpus.repos.length) : corpus.paradigms.map((p) => p.scores);
+        ? result.map.points.slice(corpus.repos.length)
+        : result.map.records.filter(({ kind }) => kind === 'paradigm').map(({ record }) => record.scores);
       const distances = vectors.map((vector) => Math.hypot(...vector.map((value, i) => value - point[i])));
       assert.ok(Math.abs(gap[key].distance - Math.min(...distances)) < 1e-9);
-      assert.deepEqual(gap[key].paradigm, corpus.paradigms[distances.indexOf(Math.min(...distances))]);
+      const paradigms = result.map.records.filter(({ kind }) => kind === 'paradigm').map(({ record }) => record);
+      assert.deepEqual(gap[key].paradigm, paradigms[distances.indexOf(Math.min(...distances))]);
     }
   }
+});
+
+test('the existing actor seed profile removes the duplicate Erlang search candidate', () => {
+  const corpus = require('../data/repo-scores.json');
+  const actor = corpus.paradigms.find((p) => p.name === 'Actor model');
+  assert.ok(actor);
+  const before = selectRepos({ ...corpus,
+    paradigms: corpus.paradigms.filter((p) => p !== actor) }, 3);
+  const region = before.gaps.find((gap) => gap.repo.name === 'Erlang/OTP');
+  assert.ok(region);
+  assert.ok(region.nearestOnAxes.distance > 16);
+  assert.ok(actor.suggestedBy.includes(region.repo.url));
+  assert.deepEqual(actor.scores, region.repo.scores);
+  const after = selectRepos(corpus, 3);
+  assert.equal(before.gaps.length, after.gaps.length + 1);
+  assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Erlang/OTP'));
+  assert.deepEqual(after.repos, before.repos);
 });
 
 test('the verified hardware generator profile closes the Rocket Chip search region', () => {

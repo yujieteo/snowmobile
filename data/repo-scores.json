@@ -649,6 +649,63 @@
       "suggestedBy": [
         "https://github.com/chipsalliance/rocket-chip"
       ]
+    },
+    {
+      "name": "Actor model",
+      "layer": "language",
+      "definition": "Independent actors own their state and talk only through asynchronous messages.",
+      "scope": "The Erlang runtime and its process model, with the same scope as the repository profile. Other actor implementations can differ.",
+      "sources": [
+        "https://www.erlang.org/doc/system/conc_prog.html",
+        "https://en.wikipedia.org/wiki/Actor_model"
+      ],
+      "scores": [
+        5,
+        9,
+        10,
+        9,
+        1,
+        2,
+        9,
+        5
+      ],
+      "reasons": [
+        {
+          "reason": "Patterns select messages, while functions specify process actions.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "Processes exchange values without shared data.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "The tutorial sends messages between processes on separate computers.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "Processes create new processes through spawn at runtime.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "The interface exposes processes and messages rather than hardware details.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "The tutorial reuses process functions across examples rather than task-specific circuit or kernel artifacts.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "Each process has private data and its own message queue.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "The tutorial does not establish durability. The midpoint marks uncertain evidence.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        }
+      ],
+      "suggestedBy": [
+        "https://github.com/erlang/otp"
+      ]
     }
   ]
 }

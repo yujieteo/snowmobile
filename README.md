@@ -109,6 +109,13 @@ This paradigm covers the circuit generator, while **Pipelined RISC processor** c
 The profile uses the repository scope and scores, so the joint map now omits that covered region.
 These scores remain manual estimates. The component isolation score still marks uncertain evidence.
 
+The Erlang/OTP region matches the **Actor model** seed, so the study adds its profile instead of a duplicate seed.
+Reason: the study run placed Erlang/OTP 16.58 units from the nearest scored paradigm across all eight axes.
+The [Erlang tutorial](https://www.erlang.org/doc/system/conc_prog.html) describes private process data, message queues, and messages across computers.
+The profile uses the repository scope and records eight score reasons plus its `suggestedBy` link.
+This profile removes the last region for the selected three repositories. It does not establish complete coverage of the seed list.
+Other actor implementations can differ. The durable state score still marks uncertain evidence.
+
 ## Interface
 
 The interface comes from a conceptual model: the objects, their relationships, their actions and their attributes. [docs/concepts.md](docs/concepts.md) has the model and the object-action matrix. The content fills the screen. The navigation and the primary action of each screen float above it at the bottom, within reach of your thumb. [docs/screens](docs/screens) has a screenshot of each screen at 375, 430 and 1280 px.
