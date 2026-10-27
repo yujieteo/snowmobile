@@ -189,11 +189,12 @@ test('an undo puts back the exact earlier part mark, idea status and note', asyn
   const [good, weak, old] = h.snowmobiles;
   const mark = async () => (await call(`/api/hunts/${id}`)).body.sources[0].components[0].bad_reason;
 
+  const killOne = async (sm) => {
+    await until(`/api/grills/${sm.id}`, (b) => !b.pending);
+    await call(`/api/grills/${sm.id}/answer`, { answers: { scope: { choice: 1 }, lang: { choice: 0 } } });
+  };
   const killBoth = async () => {
-    for (const sm of [good, weak]) {
-      await until(`/api/grills/${sm.id}`, (b) => !b.pending);
-      await call(`/api/grills/${sm.id}/answer`, { answers: { scope: { choice: 1 }, lang: { choice: 0 } } });
-    }
+    for (const sm of [good, weak]) await killOne(sm);
     assert.match(await mark(), /^Killme: /);
   };
 
@@ -211,6 +212,21 @@ test('an undo puts back the exact earlier part mark, idea status and note', asyn
   assert.match(await mark(), /^Hashvisor: /);
   await call(`/api/grills/${good.id}/undo`, {});
   assert.strictEqual(await mark(), 'left out by you');
+
+  // An undo in the order of the kills on a part that you left out: the part gets back your mark.
+  await killBoth();
+  await call(`/api/grills/${good.id}/undo`, {});
+  await call(`/api/grills/${weak.id}/undo`, {});
+  assert.strictEqual(await mark(), 'left out by you');
+
+  // You bring the part back between 2 kills: an undo of the second kill keeps your bring-back.
+  await killOne(good);
+  await call(`/api/components/${part.id}`, { out: false });
+  await killOne(weak);
+  await call(`/api/grills/${weak.id}/undo`, {});
+  assert.strictEqual(await mark(), null);
+  await call(`/api/grills/${good.id}/undo`, {});
+  assert.strictEqual(await mark(), null);
 
   // An idea that you bury while its grill is open stays buried after an undo of the grill round.
   const { ids: [sm] } = plant(cfg.db, ['Buried']);

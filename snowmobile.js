@@ -608,14 +608,28 @@ async function advance(cfg, smId) {
   frontier(cfg, sm, guess).catch(() => {});
 }
 
+// The saved kill of a grill that still stands on the part with this mark.
+function standingKill(db, componentId, mark) {
+  const g = db.prepare(`SELECT g.tree FROM grills g JOIN snowmobiles s ON s.id = g.snowmobile_id
+    WHERE g.status = 'killed' AND json_extract(g.tree, '$.killed.component_id') = ?
+    AND s.name || ': ' || json_extract(g.tree, '$.killed.reason') = ?`).get(componentId, mark);
+  return g && JSON.parse(g.tree).killed;
+}
+
 function kill(cfg, sm, componentId, reason, tree) {
   const { db } = cfg;
   if (!JSON.parse(sm.component_ids).includes(componentId)) componentId = 0;
-  const badReason = componentId ? db.prepare(`SELECT bad_reason FROM components WHERE id = ?`).get(componentId).bad_reason : null;
-  if (componentId) db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`).run(`${sm.name}: ${reason}`, componentId);
+  let under = [], badReason = null;
+  if (componentId) {
+    const now = db.prepare(`SELECT bad_reason FROM components WHERE id = ?`).get(componentId).bad_reason;
+    const below = now && standingKill(db, componentId, now);
+    if (below) [under, badReason] = [[...(below.under || []), now], below.bad_reason];
+    else badReason = now;
+    db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`).run(`${sm.name}: ${reason}`, componentId);
+  }
   db.prepare(`UPDATE snowmobiles SET status = 'killed', proof_note = ? WHERE id = ?`).run(reason, sm.id);
-  // The note and the part mark that the kill replaces, so that an undo can put them back.
-  tree.killed = { component_id: componentId, reason, note: sm.proof_note, bad_reason: badReason };
+  // The note that the kill replaces, the marks of the kills under it, and your own mark under them, so that an undo can put them back.
+  tree.killed = { component_id: componentId, reason, note: sm.proof_note, bad_reason: badReason, under };
   db.prepare(`UPDATE grills SET tree = ?, status = 'killed', updated_at = CURRENT_TIMESTAMP WHERE snowmobile_id = ?`)
     .run(JSON.stringify(tree), sm.id);
 }
@@ -634,13 +648,11 @@ function undoRound(cfg, smId) {
   let note = sm.proof_note;
   if (tree.killed) {
     const { component_id: cid, reason } = tree.killed;
-    // The part keeps the mark of the most recent kill that still stands on it.
+    // The part gets the mark of the most recent kill under this one that still stands, else your own mark.
     if (cid && db.prepare(`SELECT bad_reason FROM components WHERE id = ?`).get(cid).bad_reason === `${sm.name}: ${reason}`) {
-      const other = db.prepare(`SELECT s.name, json_extract(g.tree, '$.killed.reason') AS reason FROM grills g
-        JOIN snowmobiles s ON s.id = g.snowmobile_id WHERE g.status = 'killed' AND g.snowmobile_id != ?
-        AND json_extract(g.tree, '$.killed.component_id') = ? ORDER BY g.updated_at DESC, g.id DESC`).get(smId, cid);
+      const back = (tree.killed.under || []).findLast((m) => standingKill(db, cid, m));
       db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`)
-        .run(other ? `${other.name}: ${other.reason}` : tree.killed.bad_reason === LEFT_OUT ? LEFT_OUT : null, cid);
+        .run(back || (tree.killed.bad_reason === LEFT_OUT ? LEFT_OUT : null), cid);
     }
     note = tree.killed.note ?? note;
     delete tree.killed;
