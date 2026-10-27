@@ -8,10 +8,12 @@
 :root {
   --bg: #f6f7f9; --card: #fff; --ink: #15181d; --dim: #5d6673; --line: #d9dee5;
   --accent: #0b6bcb; --accent-ink: #fff; --good: #1a7f37; --bad: #c62828; --soft: #e8f1fb;
+  --l-language: #2a78d6; --l-hardware: #eb6834; --l-os: #1baf7a; --l-software: #52514e;
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #0f1216; --card: #181c22; --ink: #e8ecf1; --dim: #96a0ad; --line: #2b323c;
-    --accent: #4c9eff; --accent-ink: #061322; --good: #4cc26a; --bad: #ff6b6b; --soft: #13263a; }
+    --accent: #4c9eff; --accent-ink: #061322; --good: #4cc26a; --bad: #ff6b6b; --soft: #13263a;
+    --l-language: #3987e5; --l-hardware: #d95926; --l-os: #199e70; --l-software: #c3c2b7; }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink);
@@ -69,6 +71,28 @@ button:disabled { opacity: .5; cursor: default; }
 @media (max-width: 600px) {
   .level { gap: 8px; } .node:not(.open):not(.root) { max-width: calc(50% - 4px); font-size: 12px; padding: 6px 8px; }
 }
+/* stack map */
+.map { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 10px; touch-action: manipulation; }
+.map svg { display: block; width: 100%; }
+.map text { font-size: 10px; fill: var(--dim); paint-order: stroke; stroke: var(--card); stroke-width: 3px; stroke-linejoin: round; }
+.map text.on { fill: var(--ink); font-weight: 700; font-size: 12px; }
+.map .mark { stroke: var(--card); stroke-width: 2; }
+.map .ring { fill: none; stroke: var(--ink); stroke-width: 2; }
+.map .zero { stroke: var(--line); stroke-dasharray: 3 4; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; margin: 8px 0; }
+.legend svg { vertical-align: -2px; margin-right: 4px; }
+.slots { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.gaps { width: 100%; border-collapse: collapse; font-size: 14px; }
+.gaps td, .gaps th { border-bottom: 1px solid var(--line); padding: 6px 4px; text-align: left; vertical-align: top; }
+.gaps input { width: 52px; font: inherit; padding: 4px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; }
+.gaps .m { color: var(--bad); font-weight: 700; }
+.gapbar { height: 6px; border-radius: 3px; background: var(--dim); margin-top: 4px; }
+.gapbar.m { background: var(--bad); }
+.scroll { overflow-x: auto; }
+.axis { display: grid; gap: 6px; grid-template-columns: 1fr 1fr 1fr auto; margin: 6px 0; }
+@media (max-width: 600px) { .axis { grid-template-columns: 1fr; } }
+.chip.pick { cursor: pointer; background: var(--bg); color: var(--ink); font-weight: 400; padding: 6px 10px; }
+.chip.pick.on { border-color: var(--accent); background: var(--soft); font-weight: 700; }
 .banner { border: 2px solid var(--bad); border-radius: 10px; padding: 12px; margin: 12px 0; }
 </style>
 </head>
@@ -93,7 +117,7 @@ async function api(path, body) {
 
 function shell(inner) {
   app.innerHTML = `<header><a class="brand" href="#/">snowmobile</a>
-    <nav><a href="#/">new hunt</a><a href="#/library">library</a></nav></header>${inner}`;
+    <nav><a href="#/">new hunt</a><a href="#/stack">stack</a><a href="#/library">library</a></nav></header>${inner}`;
 }
 
 function poll(fn, ms) { clearTimeout(timer); const v = view; timer = setTimeout(() => v === view && fn(), ms); }
@@ -131,9 +155,19 @@ function smCard(s, comps) {
   const parts = s.component_ids.map((i) => comps[i]).filter(Boolean).map((c) => `<span class="chip">${esc(c.name)}</span>`).join('');
   const grillable = s.status === 'survivor' || s.status === 'grilled' || s.status === 'killed';
   return `<div class="card"><div class="tag ${esc(s.status)}">${esc(s.status)}</div><b>${esc(s.name)}</b>
-    <div>${esc(s.pitch)}</div><div>${parts}</div>
-    <p class="small dim">${s.status === 'graveyard' ? `Exists: ${link(s.proof_url, s.proof_url || 'proof')}. ` : ''}${esc(s.proof_note)}</p>
+    ${caseOf(s)}<div class="dim">${esc(s.pitch)}</div><div>${parts}</div>
+    <p class="small dim">${s.status === 'graveyard' && s.proof_url ? `Exists: ${link(s.proof_url, s.proof_url)}. ` : ''}${esc(s.proof_note)}</p>
     ${grillable ? `<button class="${s.status === 'survivor' ? '' : 'ghost'}" onclick="go('#/grill/${s.id}')">${s.status === 'survivor' ? 'Grill me' : 'Open tree'}</button>` : ''}</div>`;
+}
+
+// The case for an idea comes first: the problem, its evidence, today's solution and the gain over it.
+function caseOf(s) {
+  if (!s.problem) return '';
+  return `<div class="small" style="margin:6px 0">
+    <div><b>Problem:</b> ${esc(s.problem)} ${link(s.evidence_url, '(evidence)')}</div>
+    <div><b>Today:</b> ${esc(s.conventional)}</div>
+    <div><b>Better on ${esc(s.gain_axis)}:</b> ${esc(s.gain)}</div>
+    ${s.mismatch ? `<div><b>Layer mismatch:</b> ${esc(s.mismatch)}</div>` : ''}</div>`;
 }
 
 async function hunt(id) {
@@ -145,11 +179,11 @@ async function hunt(id) {
   shell(`<h1>${esc(h.seed)}</h1>
     <div class="status">${busy ? `<span class="spin"></span> ${STEP[h.status]}` : ''}
       ${h.error ? `<div class="err">${esc(h.error)}</div>` : ''}</div>
-    <button id="create" ${busy || !sources.length ? 'disabled' : ''}>Create snowmobiles</button>
-    <button id="more" class="ghost" ${busy ? 'disabled' : ''}>Hunt more parts</button>
-    ${groups.map(([st, list]) => list.length ? `<h2>${{ survivor: 'Survivors', grilled: 'Grilled', killed: 'Killed in the grill', graveyard: 'Graveyard: already exists' }[st]}</h2>
+    <button id="create" ${busy || !sources.length ? 'disabled' : ''}>${h.stack ? 'Create more apps' : 'Create snowmobiles'}</button>
+    ${h.stack ? '<a class="small" href="#/stack">← back to the stack map</a>' : `<button id="more" class="ghost" ${busy ? 'disabled' : ''}>Hunt more parts</button>`}
+    ${groups.map(([st, list]) => list.length ? `<h2>${{ survivor: 'Survivors', grilled: 'Grilled', killed: 'Killed in the grill', graveyard: 'Graveyard' }[st]}</h2>
       <div class="grid">${list.map((s) => smCard(s, comps)).join('')}</div>` : '').join('')}
-    <h2>Parts found in the wild</h2>
+    <h2>${h.stack ? 'The stack' : 'Parts found in the wild'}</h2>
     <div class="grid">${sources.map((s) => `<div class="card"><span class="tag dim">${esc(s.kind)}</span>
       <div><b>${link(s.url, s.name)}</b></div><div class="small dim">${esc(s.summary)}</div>
       ${s.components.map((c) => `<div style="margin-top:8px"><span class="chip ${c.bad_reason ? 'bad' : ''}">${link(c.url, c.name)}</span>
@@ -157,7 +191,7 @@ async function hunt(id) {
     </div>`).join('') || `<p class="dim">${busy ? '…' : 'No parts yet.'}</p>`}</div>`);
   const step = (s) => async () => { try { await api(`/api/hunts/${id}/${s}`, {}); hunt(id); } catch (e) { alert(e.message); } };
   document.getElementById('create').onclick = step('create');
-  document.getElementById('more').onclick = step('hunt');
+  if (!h.stack) document.getElementById('more').onclick = step('hunt');
   if (busy) poll(() => hunt(id), 2000);
 }
 
@@ -256,6 +290,148 @@ async function grill(id, data) {
 // Mobile Safari fires resize on scroll, so only the edges are drawn again.
 window.addEventListener('resize', () => lastTree && drawEdges(lastTree));
 
+// ---------- stack ----------
+const stackPick = {};  // layer -> paradigm id
+let tapped = null;     // the last empty point that the owner tapped, and its answer
+const SHAPE = {
+  language: (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}"/>`,
+  hardware: (x, y, r) => `<rect x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" rx="1.5"/>`,
+  os: (x, y, r) => `<path d="M${x},${y - r * 1.2} L${x + r * 1.1},${y + r * 0.8} L${x - r * 1.1},${y + r * 0.8}Z"/>`,
+  software: (x, y, r) => `<path d="M${x},${y - r * 1.3} L${x + r * 1.3},${y} L${x},${y + r * 1.3} L${x - r * 1.3},${y}Z"/>`,
+};
+const mark = (layer, x, y, r, cls = 'mark') => `<g class="${cls}" style="fill:var(--l-${layer})">${SHAPE[layer](x, y, r)}</g>`;
+const JOB = { axes: 'Proposing the design axes.', scoring: 'Scoring each paradigm on each axis.', hunting: 'Hunting the web for more paradigms.' };
+
+// Names the strongest axes in a component, so that each direction of the map means something.
+function pcLabel(s, i) {
+  const v = s.map.components[i];
+  const top = s.axes.map((a, j) => [a, v[j]]).sort((p, q) => Math.abs(q[1]) - Math.abs(p[1])).slice(0, 3);
+  return `${i ? 'Up' : 'Across'} (PC${i + 1}, ${Math.round(100 * s.map.explained[i])}% of the spread): ${top.map(([a, w]) => `${esc(a.name)} ${w >= 0 ? '+' : '−'}${Math.abs(w).toFixed(2)}`).join(', ')}`;
+}
+
+async function stack() {
+  const ids = Object.values(stackPick);
+  const s = await api(`/api/stack?pick=${ids.join(',')}`);
+  const byId = Object.fromEntries(s.paradigms.map((p) => [p.id, p]));
+  const busy = s.job && !s.job.error;
+  const unscored = s.paradigms.filter((p) => s.axes.some((a) => !s.scores[p.id]?.[a.id])).length;
+  const picked = ids.map((id) => byId[id]).filter(Boolean);
+  shell(`<h1>Stack</h1>
+    <p class="dim">Paradigms of 4 layers on one map. The axes run through all layers. Principal component analysis puts each paradigm at a point.
+    Tap a mark to pick it for its layer. Tap an empty area to ask which paradigm would live there.
+    A large gap between the layers of your stack is a mismatch: a chance for a consumer app that a conventional stack cannot give.</p>
+    <div class="status">${busy ? `<span class="spin"></span> ${JOB[s.job.step]}` : ''}${s.job?.error ? `<div class="err">${esc(s.job.error)}</div>` : ''}</div>
+    ${!s.axes.length || unscored ? `<button id="prep" ${busy ? 'disabled' : ''}>${s.axes.length ? `Score ${unscored} paradigm${unscored > 1 ? 's' : ''}` : 'Propose axes and score the paradigms'}</button>` : ''}
+    <button id="more" class="ghost" ${busy ? 'disabled' : ''}>Hunt more paradigms</button>
+    <div class="legend">${Object.entries(s.layers).map(([k, v]) => `<span><svg width="14" height="14">${mark(k, 7, 7, 5)}</svg>${esc(v)}</span>`).join('')}</div>
+    ${s.map ? `<div class="map" id="map"></div><p class="small dim">${pcLabel(s, 0)}<br>${pcLabel(s, 1)}</p>`
+      : `<p class="dim">The map needs axes and a score for each paradigm.</p>`}
+    <div id="point"></div>
+    <h2>Your stack</h2>
+    <div class="slots">${Object.entries(s.layers).map(([k, v]) => {
+      const p = byId[stackPick[k]];
+      return `<div class="card"><div class="tag dim">${esc(v)}</div>${p ? `<b>${link(p.url, p.name)}</b>
+        <button class="ghost small" data-clear="${k}" style="padding:2px 8px;margin-left:6px">clear</button>
+        <div class="small dim">${esc(p.summary)}</div>` : '<span class="dim">any (the LLM chooses)</span>'}</div>`;
+    }).join('')}</div>
+    ${s.gaps.length ? `<h2>Gaps on each axis</h2><div class="scroll"><table class="gaps"><tr><th>axis</th><th>gap</th>${picked.map((p) => `<th>${esc(p.name)}</th>`).join('')}</tr>
+      ${[...s.gaps].sort((a, b) => b.gap - a.gap).map((g) => {
+        const a = s.axes.find((x) => x.id === g.axis_id);
+        return `<tr><td><b>${esc(a.name)}</b><div class="small dim">0 ${esc(a.low)} · 10 ${esc(a.high)}</div></td>
+          <td class="${g.mismatch ? 'm' : ''}">${g.gap}${g.mismatch ? ' mismatch' : ''}<div class="gapbar ${g.mismatch ? 'm' : ''}" style="width:${g.gap * 10}%"></div></td>
+          ${picked.map((p) => { const sc = s.scores[p.id]?.[a.id];
+            return `<td><input type="number" min="0" max="10" inputmode="numeric" data-p="${p.id}" data-a="${a.id}" value="${sc ? sc.score : ''}">
+              <div class="small dim">${esc(sc?.reason)}</div></td>`; }).join('')}</tr>`;
+      }).join('')}</table></div>` : ''}
+    <h2>Create apps</h2>
+    <form class="seed" id="f"><input type="text" id="pain" placeholder="a consumer pain (optional with a stack)" autocomplete="off">
+      <button>Create apps</button></form>
+    <p class="small dim">With a pain and no stack, the LLM chooses a paradigm for each layer.</p>
+    <h2>Paradigms</h2>
+    ${Object.entries(s.layers).map(([k, v]) => `<div style="margin-bottom:10px"><div class="tag dim">${esc(v)}</div>
+      ${s.paradigms.filter((p) => p.layer === k).map((p) => `<button type="button" class="chip pick ${stackPick[k] === p.id ? 'on' : ''}" data-pick="${p.id}">${esc(p.name)}</button>`).join('')}</div>`).join('')}
+    ${s.axes.length ? `<details><summary>Axes (${s.axes.length})</summary>${s.axes.map((a) => `<form class="axis" data-axis="${a.id}">
+      <input type="text" name="name" value="${esc(a.name)}" aria-label="name"><input type="text" name="low" value="${esc(a.low)}" aria-label="0 means">
+      <input type="text" name="high" value="${esc(a.high)}" aria-label="10 means"><button class="ghost">Save</button></form>`).join('')}</details>` : ''}`);
+
+  const choose = (id) => { const p = byId[id]; stackPick[p.layer] = stackPick[p.layer] === id ? undefined : id; if (!stackPick[p.layer]) delete stackPick[p.layer]; stack(); };
+  document.querySelectorAll('[data-pick]').forEach((b) => (b.onclick = () => choose(Number(b.dataset.pick))));
+  document.querySelectorAll('[data-clear]').forEach((b) => (b.onclick = () => { delete stackPick[b.dataset.clear]; stack(); }));
+  const job = (step) => async () => { try { await api(`/api/stack/${step}`, {}); stack(); } catch (e) { alert(e.message); } };
+  if (document.getElementById('prep')) document.getElementById('prep').onclick = job('axes');
+  document.getElementById('more').onclick = job('hunting');
+  document.querySelectorAll('.gaps input').forEach((i) => (i.onchange = async () => {
+    if (i.value !== '') try { await api('/api/scores', { paradigm_id: Number(i.dataset.p), axis_id: Number(i.dataset.a), score: Number(i.value) }); } catch (e) { alert(e.message); }
+    stack();
+  }));
+  document.querySelectorAll('[data-axis]').forEach((f) => (f.onsubmit = async (e) => {
+    e.preventDefault();
+    try { await api(`/api/axes/${f.dataset.axis}`, Object.fromEntries(new FormData(f))); stack(); } catch (err) { alert(err.message); }
+  }));
+  document.getElementById('f').onsubmit = async (e) => {
+    e.preventDefault();
+    try { const { id } = await api('/api/hunts', { seed: document.getElementById('pain').value, stack: Object.values(stackPick) }); go(`#/hunt/${id}`); }
+    catch (err) { alert(err.message); }
+  };
+  if (s.map) drawMap(s, byId);
+  if (busy) poll(stack, 1500);
+}
+
+function drawMap(s, byId) {
+  const box = document.getElementById('map');
+  const W = box.clientWidth, H = Math.round(Math.min(520, Math.max(300, W * 0.75))), pad = 28;
+  const xs = s.map.points.map((p) => p[0]), ys = s.map.points.map((p) => p[1]);
+  const [x0, x1] = [Math.min(...xs), Math.max(...xs)], [y0, y1] = [Math.min(...ys), Math.max(...ys)];
+  const sx = (W - 2 * pad) / ((x1 - x0) || 1), sy = (H - 2 * pad) / ((y1 - y0) || 1);
+  const px = (x) => pad + (x - x0) * sx, py = (y) => H - pad - (y - y0) * sy;
+  const on = new Set(Object.values(stackPick));
+  const dots = s.map.ids.map((id, i) => ({ p: byId[id], x: px(s.map.points[i][0]), y: py(s.map.points[i][1]) }));
+  // Picked marks draw last, so they stay on top.
+  dots.sort((a, b) => on.has(a.p.id) - on.has(b.p.id));
+  // A label that would cover another label stays off. Picked labels go first; the list below names each mark.
+  const boxes = [];
+  for (const d of [...dots].reverse()) {
+    const w = d.p.name.length * (on.has(d.p.id) ? 7 : 5.6), left = d.x > W / 2 ? d.x - 9 - w : d.x + 9;
+    const b = [left, d.y - 8, left + w, d.y + 6];
+    d.label = !boxes.some((o) => b[0] < o[2] && o[0] < b[2] && b[1] < o[3] && o[1] < b[3]);
+    if (d.label) boxes.push(b);
+  }
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Map of the paradigms on the first two principal components">
+    <line class="zero" x1="${px(0)}" y1="0" x2="${px(0)}" y2="${H}"/><line class="zero" x1="0" y1="${py(0)}" x2="${W}" y2="${py(0)}"/>
+    ${dots.map((d) => `${mark(d.p.layer, d.x, d.y, on.has(d.p.id) ? 7 : 5)}${on.has(d.p.id) ? `<circle class="ring" cx="${d.x}" cy="${d.y}" r="12"/>` : ''}
+      ${d.label ? `<text class="${on.has(d.p.id) ? 'on' : ''}" ${d.x > W / 2 ? `text-anchor="end" x="${d.x - 9}"` : `x="${d.x + 9}"`} y="${d.y + 4}">${esc(d.p.name)}</text>` : ''}`).join('')}
+    ${tapped ? `<circle class="ring" cx="${px(tapped.x)}" cy="${py(tapped.y)}" r="9" stroke-dasharray="3 3"/>` : ''}</svg>`;
+  showPoint();
+  box.querySelector('svg').onclick = async (e) => {
+    const r = box.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    // A finger is wide: the nearest mark within 22px is the one that the owner meant.
+    const hit = dots.map((d) => ({ d, dist: Math.hypot(d.x - mx, d.y - my) })).sort((a, b) => a.dist - b.dist)[0];
+    if (hit && hit.dist <= 22) {
+      const p = hit.d.p;
+      if (stackPick[p.layer] === p.id) delete stackPick[p.layer]; else stackPick[p.layer] = p.id;
+      return stack();
+    }
+    const v = view;
+    tapped = { x: x0 + (mx - pad) / sx, y: y0 + (H - pad - my) / sy, busy: true };
+    drawMap(s, byId);
+    const mine = tapped;
+    try { Object.assign(mine, await api('/api/stack/point', { x: mine.x, y: mine.y }), { busy: false }); }
+    catch (err) { Object.assign(mine, { busy: false, error: err.message }); }
+    if (v === view && tapped === mine) showPoint();
+  };
+}
+
+function showPoint() {
+  const el = document.getElementById('point');
+  if (!el || !tapped) return;
+  const t = tapped, a = t.answer;
+  el.innerHTML = `<div class="card" style="margin-top:8px">${t.busy ? '<span class="spin"></span> Asking which paradigm would live at this point…'
+    : t.error ? `<span class="err">${esc(t.error)}</span>`
+    : `<div class="tag dim">${esc(a.layer)} · ${a.exists ? 'exists' : 'missing from the map'}</div><b>${link(a.url, a.name)}</b>
+      <div class="small">${esc(a.why)}</div>`}</div>`;
+}
+
 // ---------- library ----------
 async function library(q = '') {
   shell(`<h1>Library</h1><form class="seed" id="f"><input type="text" id="q" placeholder="search parts, ideas, briefs, trees" value="${esc(q)}"><button>Search</button></form><div id="r" class="dim">…</div>`);
@@ -277,6 +453,7 @@ async function route() {
   const [, page, id] = location.hash.split('/');
   try {
     if (page === 'hunt') await hunt(id);
+    else if (page === 'stack') await stack();
     else if (page === 'grill') await grill(id);
     else if (page === 'library') await library();
     else await home();
