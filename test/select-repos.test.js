@@ -53,7 +53,7 @@ test('the real corpus maps source-backed paradigms from all Stack layers with re
   assert.ok(selected.map.explained.every((share) => share > 0 && share <= 1));
   assert.deepEqual(selected.map.records.filter(({ kind }) => kind === 'paradigm').map(({ record }) => record),
     corpus.paradigms);
-  const { paradigms, ...reposOnly } = corpus;
+  const { paradigms, coverageBaseline, ...reposOnly } = corpus;
   assert.deepEqual(selected.repos, selectRepos(reposOnly, 3).repos);
 });
 
@@ -152,6 +152,42 @@ test('map coverage remains finite on coincident and collinear profiles', () => {
   }
 });
 
+test('coverage compares a baseline within the full PCA frame and rectangle', () => {
+  const input = {
+    axes: ['x', 'y'],
+    repos: [[0, 0], [0, 10], [10, 0], [10, 10]].map((scores, i) => profile(`corner-${i}`, scores)),
+    paradigms: [[3, 4], [0, 0], [0, 10], [10, 0], [10, 10]].map((scores, i) =>
+      ({ name: `Point ${i}`, layer: 'software', scores })),
+    coverageBaseline: [' POINT 0 '],
+  };
+  const original = structuredClone(input);
+  const { map } = selectRepos(input, 2);
+  const { baseline, ...coverage } = map.coverage;
+  const { coverageBaseline, ...withoutBaseline } = input;
+  assert.deepEqual(coverage, selectRepos(withoutBaseline, 2).map.coverage);
+  const point = map.points[input.repos.length];
+  const { min, max } = map.coverage.bounds;
+  const corners = [min[0], max[0]].flatMap((x) => [min[1], max[1]].map((y) => [x, y]));
+  const exact = Math.max(...corners.map((corner) => Math.hypot(...corner.map((v, i) => v - point[i]))));
+  assert.ok(Math.abs(baseline.radius - exact) < 1e-9);
+  assert.deepEqual(baseline.names, ['Point 0']);
+  assert.ok(baseline.radius > coverage.radius);
+  assert.deepEqual(selectRepos(input, 4).map, map);
+  assert.notDeepEqual(selectRepos({ ...withoutBaseline, paradigms: [input.paradigms[0]] }, 2).map.mean, map.mean);
+  assert.deepEqual(input, original);
+  const all = selectRepos({ ...input, coverageBaseline: input.paradigms.map((p) => p.name) }, 2).map.coverage;
+  assert.equal(all.baseline.radius, all.radius);
+  assert.deepEqual(all.baseline.center, all.center);
+});
+
+test('coverage baselines reject absent, empty, duplicate and unknown profiles', () => {
+  assert.throws(() => selectRepos({ ...data, coverageBaseline: ['Absent'] }, 2), /paradigm/);
+  const input = { ...data, paradigms: [{ name: 'Centre', layer: 'software', scores: [5, 5] }] };
+  for (const coverageBaseline of [[], null, {}, ['Absent'], [null], ['Centre', ' CENTRE ']]) {
+    assert.throws(() => selectRepos({ ...input, coverageBaseline }, 2), /baseline/);
+  }
+});
+
 test('the error bound includes an empty-circle centre between grid nodes', () => {
   const input = { axes: ['x', 'y'], repos: [profile('a', [0, 0]), profile('b', [10, 0])],
     paradigms: [0, 3.1, 10].map((x, i) => ({ name: `Point ${i}`, layer: 'software', scores: [x, 0] })) };
@@ -173,6 +209,17 @@ test('the real map has empty space despite zero repository search regions', () =
   assert.ok(Math.abs(nearest - radius) < 1e-9);
   assert.ok(radius > 7);
   assert.ok(errorBound < 0.33);
+});
+
+test('the real baseline measures a coverage gain within one map', () => {
+  const corpus = require('../data/repo-scores.json');
+  const { map } = selectRepos(corpus, corpus.repos.length);
+  const { baseline, radius, errorBound } = map.coverage;
+  assert.deepEqual(baseline.names, corpus.coverageBaseline);
+  assert.ok(Math.abs(baseline.radius - 12.606452182367823) < 1e-6);
+  assert.ok(Math.abs(radius - 7.217918844023843) < 1e-6);
+  // The lower bound before exceeds the upper bound after.
+  assert.ok(baseline.radius > radius + errorBound);
 });
 
 test('gap regions use selected repositories and exact nearest distances in each space', () => {
@@ -473,6 +520,7 @@ test('the command preserves source evidence and leaves its input file intact', (
   const file = path.join(dir, 'scores.json');
   const input = JSON.stringify({ ...data,
     paradigms: [{ name: 'Synthetic paradigm', layer: 'hardware', scores: [2, 3] }],
+    coverageBaseline: ['Synthetic paradigm'],
     repos: data.repos.map((repo) => ({
     ...repo, reasons: ['Synthetic state score.', 'Synthetic parallelism score.'],
     sources: ['Synthetic fixture.'],
@@ -485,5 +533,6 @@ test('the command preserves source evidence and leaves its input file intact', (
   assert.deepEqual(output.repos[0], JSON.parse(input).repos[2]);
   assert.equal(output.map.points.length, data.repos.length + 1);
   assert.deepEqual(output.map.records.at(-1), { kind: 'paradigm', record: JSON.parse(input).paradigms[0] });
+  assert.equal(output.map.coverage.baseline.radius, output.map.coverage.radius);
   assert.equal(fs.readFileSync(file, 'utf8'), input);
 });

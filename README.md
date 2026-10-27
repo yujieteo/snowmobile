@@ -111,6 +111,14 @@ Compare radii only within the same PCA frame and rectangle. New profiles can cha
 The current corpus has a radius of 7.22 map units and an error bound of 0.33 units, despite zero repository search regions.
 This measure does not establish a real paradigm in that space or complete coverage of unscored seeds.
 
+Add a `coverageBaseline` array of distinct paradigm names from the file to compare coverage before and after profile additions.
+Reason: separate PCA runs can change the frame and rectangle, which prevents a valid coverage comparison.
+The script fits all profiles once, then measures the baseline subset within that same frame, rectangle, and grid.
+`map.coverage.baseline` reports the baseline names, centre, and radius. Both radii share `bounds`, `gridSteps`, and `errorBound` from `map.coverage`.
+The corpus names its first four profiles as the baseline. The radius decreases from 12.61 to 7.22 with all eleven profiles.
+The baseline lower bound exceeds the current upper bound of 7.54, so the grid error cannot explain this gain.
+This comparison measures profile additions with current scores. It does not reconstruct an earlier PCA map or earlier score estimates.
+
 The Rocket Chip region supplied the **Hardware generators** seed and its profile, with eight score reasons and a `suggestedBy` repository link.
 Reason: the study run placed Rocket Chip 6.71 units from its nearest paradigm across all eight axes.
 The [Rocket Chip report](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html) confirms that a generator composes components and emits a circuit description.

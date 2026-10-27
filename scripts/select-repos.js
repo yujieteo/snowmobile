@@ -3,8 +3,7 @@ const fs = require('node:fs');
 
 const distance = (a, b) => a.reduce((sum, value, i) => sum + (value - b[i]) ** 2, 0);
 
-function mapCoverage(map) {
-  const points = map.points.slice(map.records.filter(({ kind }) => kind === 'repo').length);
+function mapCoverage(map, points = map.points.slice(map.records.filter(({ kind }) => kind === 'repo').length)) {
   const bounds = {
     min: [0, 1].map((axis) => Math.min(...map.points.map((point) => point[axis]))),
     max: [0, 1].map((axis) => Math.max(...map.points.map((point) => point[axis]))),
@@ -50,6 +49,9 @@ function selectRepos(data, count) {
     urls.add(key);
   }
   checkScores(repos, axes);
+  if (data.coverageBaseline !== undefined && data.paradigms === undefined) {
+    throw new Error('Supply paradigm profiles for a coverage baseline.');
+  }
   let map;
   if (data.paradigms !== undefined) {
     if (!Array.isArray(data.paradigms) || !data.paradigms.length) {
@@ -74,6 +76,20 @@ function selectRepos(data, count) {
     const { pca } = require('../snowmobile.js');
     map = { ...pca(records.map(({ record }) => record.scores)), records };
     map.coverage = mapCoverage(map);
+    if (data.coverageBaseline !== undefined) {
+      const baseline = data.coverageBaseline;
+      if (!Array.isArray(baseline) || !baseline.length ||
+          baseline.some((name) => typeof name !== 'string' || !names.has(name.trim().toLowerCase())) ||
+          new Set(baseline.map((name) => name.trim().toLowerCase())).size !== baseline.length) {
+        throw new Error('Use distinct existing paradigm names for the coverage baseline.');
+      }
+      const keys = new Set(baseline.map((name) => name.trim().toLowerCase()));
+      const indices = records.flatMap(({ kind, record }, i) =>
+        kind === 'paradigm' && keys.has(record.name.trim().toLowerCase()) ? [i] : []);
+      // Reuse the full map and rectangle. Only the reference paradigm set changes.
+      const { center, radius } = mapCoverage(map, indices.map((i) => map.points[i]));
+      map.coverage.baseline = { names: indices.map((i) => records[i].record.name), center, radius };
+    }
   }
   const selected = [0, 1];
   let farthest = -1;

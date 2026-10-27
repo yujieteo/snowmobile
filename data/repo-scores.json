@@ -47,6 +47,12 @@
   "uncertainty": "A score of 5 can mark uncertain evidence, as its reason states. Review those scores before a substantive conclusion.",
   "compatibility": "These study axes do not replace user axes. Joint PCA requires paradigm scores on these exact axis definitions.",
   "sourceCheckDate": "2026-10-27",
+  "coverageBaseline": [
+    "Ownership types",
+    "Pipelined RISC processor",
+    "Unikernel",
+    "Embedded database"
+  ],
   "repos": [
     {
       "name": "SQLite",
