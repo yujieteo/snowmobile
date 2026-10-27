@@ -89,8 +89,8 @@ These study axes do not replace your Stack axes.
 The same file includes source-backed profiles of existing seeds from all 4 layers for joint PCA.
 Reason: the repository-only corpus produced no joint map in the regression test.
 Each profile describes the cited example within its stated scope, rather than every implementation of that paradigm.
-For example, the Unikernel profile scores libraries within one image, while the Unikraft repository profile has uncertain evidence for component isolation.
-The output retains both scopes and their reasons. Review those differences before a conclusion.
+The Unikernel and Unikraft profiles both score the libraries within one image, with no separate component failure boundaries.
+The output retains profile scopes and their reasons. Review them before a conclusion.
 Use `map.explained` to check how much variance the first 2 components retain.
 With paradigm profiles, the output also has `gaps`, ordered by distance on the map.
 Reason: the real corpus returned a joint map but no search regions near the selected repositories.
@@ -123,6 +123,14 @@ The study adds **Functional package management** as a software seed and a profil
 This paradigm applies functional values to package deployment. The language seed **Functional programming** describes program composition.
 The profile covers the Nix region. Its distributed operation score still marks uncertain evidence.
 Its component isolation score concerns package dependencies, rather than process faults.
+
+The six-repository run exposed a false region near Unikraft, 7.07 units from the Unikernel profile across all axes.
+Reason: two uncertain midpoint scores separated two profiles of the same image model.
+The [Unikraft concepts](https://unikraft.org/docs/concepts) source confirms one address space for the application and OS libraries.
+Both profiles now use the same scope: one image and its internal libraries.
+The repository profile now scores distributed operation and component isolation at zero, with source reasons.
+This correction reduces regions from two to one, without a duplicate seed. Redis supplies the region that remains.
+The immutable state and durable state scores still mark uncertain evidence.
 
 ## Interface
 

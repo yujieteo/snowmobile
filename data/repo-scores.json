@@ -219,18 +219,19 @@
       "url": "https://github.com/unikraft/unikraft",
       "revision": "359307a2a4cc9c1feb22683d841650902b799e4d",
       "layer": "os",
-      "scope": "The custom kernel artifact.",
+      "scope": "One Unikraft image and its internal libraries.",
       "sources": [
-        "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+        "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md",
+        "https://unikraft.org/docs/concepts"
       ],
       "scores": [
         6,
         5,
-        5,
+        0,
         2,
         9,
         10,
-        5,
+        0,
         5
       ],
       "reasons": [
@@ -243,8 +244,8 @@
           "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
         },
         {
-          "reason": "Cloud deployment does not establish distributed coordination. The midpoint marks uncertain evidence.",
-          "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+          "reason": "This profile covers one image and its local library services. Network access alone does not require coordination across nodes.",
+          "source": "https://unikraft.org/docs/concepts"
         },
         {
           "reason": "The README emphasizes custom kernel construction rather than runtime component changes.",
@@ -259,8 +260,8 @@
           "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
         },
         {
-          "reason": "The README does not establish component failure boundaries. The midpoint marks uncertain evidence.",
-          "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+          "reason": "The application and OS libraries share one address space, with no kernel and user separation.",
+          "source": "https://unikraft.org/docs/concepts"
         },
         {
           "reason": "The README does not establish a durable state model. The midpoint marks uncertain evidence.",
@@ -490,7 +491,7 @@
       "name": "Unikernel",
       "layer": "os",
       "definition": "An application and its required OS libraries form one image with one address space.",
-      "scope": "One Unikraft image and its internal libraries, not isolation between separate virtual machines.",
+      "scope": "One Unikraft image and its internal libraries.",
       "sources": [
         "https://unikraft.org/docs/concepts"
       ],

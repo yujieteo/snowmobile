@@ -211,6 +211,34 @@ test('functional package management covers the Nix region in a four-repository s
   assert.deepEqual(after.repos, before.repos);
 });
 
+test('consistent Unikraft evidence removes a false region from the full repository pool', () => {
+  const corpus = require('../data/repo-scores.json');
+  const repo = corpus.repos.find((record) => record.name === 'Unikraft');
+  const paradigm = corpus.paradigms.find((record) => record.name === 'Unikernel');
+  // Restore the two uncertain midpoint scores from the earlier README-only profile.
+  const earlier = structuredClone(corpus);
+  const oldRepo = earlier.repos.find((record) => record.name === 'Unikraft');
+  oldRepo.scores[2] = 5;
+  oldRepo.scores[6] = 5;
+  const before = selectRepos(earlier, earlier.repos.length);
+  const region = before.gaps.find((gap) => gap.repo.name === 'Unikraft');
+  assert.ok(region);
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(50)) < 1e-9);
+  assert.equal(repo.scope, paradigm.scope);
+  assert.deepEqual(repo.scores, paradigm.scores);
+  assert.equal(repo.scores[2], 0);
+  assert.equal(repo.scores[6], 0);
+  for (const axis of [2, 6]) {
+    assert.ok(paradigm.sources.includes(repo.reasons[axis].source));
+    assert.doesNotMatch(repo.reasons[axis].reason, /uncertain/);
+  }
+  const after = selectRepos(corpus, corpus.repos.length);
+  assert.equal(before.gaps.length, after.gaps.length + 1);
+  assert.deepEqual(after.gaps.map((gap) => gap.repo.name), ['Redis']);
+  assert.deepEqual(new Set(after.repos.map((record) => record.url)),
+    new Set(before.repos.map((record) => record.url)));
+});
+
 test('invalid scores and duplicate repositories cannot distort the distance', () => {
   for (const scores of [[0], [0, 11], [NaN, 0], [null, 0], ['2', 0]]) {
     assert.throws(() => selectRepos({ ...data, repos: [profile('a', scores), data.repos[1]] }, 2), /score/);
