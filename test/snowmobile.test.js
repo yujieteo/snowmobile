@@ -132,3 +132,116 @@ test('a failed grill call shows its error and calls claude again only on retry',
   assert.strictEqual(calls(), 2);
   server.close();
 });
+
+test('the owner leaves out a part, buries and restores an idea, and undoes a round, a kill and a brief', async () => {
+  const { server, call, until } = await lab();
+  const { id } = (await call('/api/hunts', { seed: 'flaky tests' })).body;
+  await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'hunted');
+  await call(`/api/hunts/${id}/create`, {});
+  let h = await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'created');
+  const part = h.sources[1].components[0];
+  const [good, weak, old] = h.snowmobiles;
+
+  await call(`/api/components/${part.id}`, { out: true });
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.strictEqual(h.sources[1].components[0].bad_reason, 'left out by you');
+  await call(`/api/components/${part.id}`, { out: false });
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.strictEqual(h.sources[1].components[0].bad_reason, null);
+
+  await call(`/api/snowmobiles/${good.id}`, { status: 'graveyard' });
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.strictEqual(h.snowmobiles[0].status, 'graveyard');
+  assert.strictEqual(h.snowmobiles[0].proof_note, 'Buried by you. Nothing close.');
+  assert.strictEqual((await call(`/api/snowmobiles/${good.id}`, { status: 'graveyard' })).status, 409);
+  await call(`/api/snowmobiles/${good.id}`, { status: 'survivor' });
+  await call(`/api/snowmobiles/${old.id}`, { status: 'survivor' });
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.deepStrictEqual(h.snowmobiles.slice(0, 3).map((s) => [s.status, s.proof_note]),
+    [['survivor', 'Nothing close.'], ['survivor', ''], ['survivor', 'Same thing.']]);
+
+  await until(`/api/grills/${weak.id}`, (b) => !b.pending);
+  assert.strictEqual((await call(`/api/grills/${weak.id}/undo`, {})).status, 409);
+  await call(`/api/grills/${weak.id}/answer`, { answers: { scope: { choice: 1 }, lang: { choice: 0 } } });
+  let g = (await call(`/api/grills/${weak.id}/undo`, {})).body;
+  assert.strictEqual(g.status, 'open');
+  assert.ok(g.tree.decisions.every((d) => !d.answer) && !g.tree.killed);
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.strictEqual(h.sources[0].components[0].bad_reason, null);
+  assert.deepStrictEqual([h.snowmobiles[1].status, h.snowmobiles[1].proof_note], ['survivor', '']);
+
+  await until(`/api/grills/${good.id}`, (b) => !b.pending);
+  await call(`/api/grills/${good.id}/answer`, { answers: { scope: { choice: 0 }, lang: { choice: 0 } } });
+  await until(`/api/grills/${good.id}`, (b) => b.status === 'done');
+  g = (await call(`/api/grills/${good.id}/undo`, {})).body;
+  assert.deepStrictEqual([g.status, g.brief, g.tree.decisions.filter((d) => !d.answer).length], ['open', null, 2]);
+  assert.strictEqual((await call(`/api/hunts/${id}`)).body.snowmobiles[0].status, 'survivor');
+  server.close();
+});
+
+test('an undo puts back the exact earlier part mark, idea status and note', async () => {
+  const { server, cfg, call, until } = await lab();
+  const { id } = (await call('/api/hunts', { seed: 'flaky tests' })).body;
+  await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'hunted');
+  await call(`/api/hunts/${id}/create`, {});
+  let h = await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'created');
+  const part = h.sources[0].components[0];
+  const [good, weak, old] = h.snowmobiles;
+  const mark = async () => (await call(`/api/hunts/${id}`)).body.sources[0].components[0].bad_reason;
+
+  const killOne = async (sm) => {
+    await until(`/api/grills/${sm.id}`, (b) => !b.pending);
+    await call(`/api/grills/${sm.id}/answer`, { answers: { scope: { choice: 1 }, lang: { choice: 0 } } });
+  };
+  const killBoth = async () => {
+    for (const sm of [good, weak]) await killOne(sm);
+    assert.match(await mark(), /^Killme: /);
+  };
+
+  // An undo in the order of the kills: the part keeps the mark of the kill that still stands, then has no mark.
+  await killBoth();
+  await call(`/api/grills/${good.id}/undo`, {});
+  assert.match(await mark(), /^Killme: /);
+  await call(`/api/grills/${weak.id}/undo`, {});
+  assert.strictEqual(await mark(), null);
+
+  // An undo in the reverse order on a part that you left out: the part gets back the standing mark, then your mark.
+  await call(`/api/components/${part.id}`, { out: true });
+  await killBoth();
+  await call(`/api/grills/${weak.id}/undo`, {});
+  assert.match(await mark(), /^Hashvisor: /);
+  await call(`/api/grills/${good.id}/undo`, {});
+  assert.strictEqual(await mark(), 'left out by you');
+
+  // An undo in the order of the kills on a part that you left out: the part gets back your mark.
+  await killBoth();
+  await call(`/api/grills/${good.id}/undo`, {});
+  await call(`/api/grills/${weak.id}/undo`, {});
+  assert.strictEqual(await mark(), 'left out by you');
+
+  // You bring the part back between 2 kills: an undo of the second kill keeps your bring-back.
+  await killOne(good);
+  await call(`/api/components/${part.id}`, { out: false });
+  await killOne(weak);
+  await call(`/api/grills/${weak.id}/undo`, {});
+  assert.strictEqual(await mark(), null);
+  await call(`/api/grills/${good.id}/undo`, {});
+  assert.strictEqual(await mark(), null);
+
+  // An idea that you bury while its grill is open stays buried after an undo of the grill round.
+  const { ids: [sm] } = plant(cfg.db, ['Buried']);
+  const tree = { round: 1, decisions: [{ id: 'q', question: 'Q?', depends_on: [], recommended: 0, round: 1,
+    options: [{ label: 'Yes', why: 'w', kills_component_id: 0 }], answer: { choice: 0, note: '' } }] };
+  cfg.db.prepare(`INSERT INTO grills (snowmobile_id, tree, status) VALUES (?, ?, 'open')`).run(sm, JSON.stringify(tree));
+  await call(`/api/snowmobiles/${sm}`, { status: 'graveyard' });
+  assert.strictEqual((await call(`/api/grills/${sm}/undo`, {})).status, 200);
+  const buried = cfg.db.prepare(`SELECT status, proof_note FROM snowmobiles WHERE id = ?`).get(sm);
+  assert.deepStrictEqual({ ...buried }, { status: 'graveyard', proof_note: 'Buried by you. ' });
+
+  // An undo of a restore sends the earlier note, so prior art does not become an idea that you buried.
+  await call(`/api/snowmobiles/${old.id}`, { status: 'survivor' });
+  await call(`/api/snowmobiles/${old.id}`, { status: 'graveyard', proof_note: old.proof_note });
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.deepStrictEqual([h.snowmobiles[2].status, h.snowmobiles[2].proof_note], ['graveyard', 'Same thing.']);
+  server.close();
+});

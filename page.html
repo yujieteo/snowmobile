@@ -3,109 +3,205 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1216" media="(prefers-color-scheme: dark)">
 <title>snowmobile</title>
 <style>
+/* Two layers (see docs/concepts.md): the content, and a control layer that floats above it.
+   Each object has one elevation: a card 1, a sheet or a toast 6, the control layer 8. */
 :root {
   --bg: #f6f7f9; --card: #fff; --ink: #15181d; --dim: #5d6673; --line: #d9dee5;
   --accent: #0b6bcb; --accent-ink: #fff; --good: #1a7f37; --bad: #c62828; --soft: #e8f1fb;
   --l-language: #2a78d6; --l-hardware: #eb6834; --l-os: #1baf7a; --l-software: #52514e;
+  --glass: rgba(255, 255, 255, .72); --glass-line: rgba(255, 255, 255, .6);
+  --e1: 0 1px 3px rgba(0, 0, 0, .10), 0 1px 2px rgba(0, 0, 0, .14);
+  --e6: 0 6px 10px rgba(0, 0, 0, .14), 0 1px 18px rgba(0, 0, 0, .10), 0 3px 5px -1px rgba(0, 0, 0, .18);
+  --e8: 0 8px 10px -5px rgba(0, 0, 0, .18), 0 16px 24px 2px rgba(0, 0, 0, .12), 0 6px 30px 5px rgba(0, 0, 0, .10);
+  --tap: 44px; --dock: 64px; --gutter: 16px;
+  --ease: cubic-bezier(.2, .8, .2, 1);
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #0f1216; --card: #181c22; --ink: #e8ecf1; --dim: #96a0ad; --line: #2b323c;
     --accent: #4c9eff; --accent-ink: #061322; --good: #4cc26a; --bad: #ff6b6b; --soft: #13263a;
-    --l-language: #3987e5; --l-hardware: #d95926; --l-os: #199e70; --l-software: #c3c2b7; }
+    --l-language: #3987e5; --l-hardware: #d95926; --l-os: #199e70; --l-software: #c3c2b7;
+    --glass: rgba(30, 35, 43, .72); --glass-line: rgba(255, 255, 255, .08);
+    --e1: 0 1px 3px rgba(0, 0, 0, .5); --e6: 0 6px 18px rgba(0, 0, 0, .55); --e8: 0 12px 32px rgba(0, 0, 0, .6); }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink);
-  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); overflow-x: hidden;
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-tap-highlight-color: transparent; }
 a { color: var(--accent); }
-main { max-width: 1100px; margin: 0 auto; padding: 16px 16px 120px; }
-header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-header a.brand { font-weight: 700; font-size: 20px; color: var(--ink); text-decoration: none; }
-header nav a { margin-right: 12px; }
-h1 { font-size: 24px; margin: 20px 0 6px; } h2 { font-size: 18px; margin: 24px 0 8px; }
+main { max-width: 1100px; margin: 0 auto;
+  padding: calc(8px + env(safe-area-inset-top)) calc(var(--gutter) + env(safe-area-inset-right))
+    calc(var(--dock) + 48px + env(safe-area-inset-bottom)) calc(var(--gutter) + env(safe-area-inset-left)); }
+main.enter > * { animation: enter .22s var(--ease); }
+@keyframes enter { from { opacity: 0; transform: translateY(6px); } }
+h1 { font-size: 24px; line-height: 1.2; margin: 8px 0 6px; overflow-wrap: anywhere; }
+h2 { font-size: 18px; margin: 28px 0 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+h2 .grow { flex: 1; }
 .dim { color: var(--dim); } .small { font-size: 13px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-.steps { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; font-size: 14px; }
+.card { background: var(--card); border-radius: 12px; padding: 14px; box-shadow: var(--e1); overflow-wrap: anywhere; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.top { display: flex; align-items: center; min-height: var(--tap); }
+.back { display: inline-flex; align-items: center; min-height: var(--tap); padding-right: 12px; text-decoration: none; font-weight: 600; }
+.steps { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0; font-size: 13px; }
 .steps span { background: var(--soft); border-radius: 999px; padding: 4px 10px; }
-form.seed { display: flex; gap: 8px; margin: 12px 0; }
-input[type=text], textarea { flex: 1; min-width: 0; font: inherit; color: var(--ink); background: var(--card);
-  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
-textarea { width: 100%; resize: vertical; min-height: 40px; font-size: 14px; }
-button { font: inherit; border: 0; border-radius: 8px; padding: 10px 14px; background: var(--accent);
-  color: var(--accent-ink); font-weight: 600; cursor: pointer; }
-button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+form.row { display: flex; gap: 8px; margin: 12px 0; }
+input[type=text], input[type=search], input[type=number], textarea { flex: 1; min-width: 0; min-height: var(--tap);
+  font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+textarea { width: 100%; resize: vertical; font-size: 15px; }
+button, .btn { font: inherit; border: 0; border-radius: 10px; min-height: var(--tap); padding: 10px 16px; background: var(--accent);
+  color: var(--accent-ink); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; text-decoration: none; touch-action: manipulation; transition: transform .12s var(--ease), background .12s; }
+button:active:not(:disabled) { transform: scale(.97); }
+button.ghost, .btn.ghost { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1px var(--line); }
+button.quiet { background: transparent; color: var(--dim); padding: 10px 12px; }
 button:disabled { opacity: .5; cursor: default; }
-.chip { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px;
-  padding: 2px 9px; margin: 3px 4px 0 0; }
-.chip.bad { border-color: var(--bad); color: var(--bad); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; border: 1px solid var(--line); border-radius: 999px;
+  padding: 2px 10px; margin: 4px 4px 0 0; }
+.chip.bad { border-color: var(--bad); color: var(--bad); text-decoration: line-through; }
+button.chip { min-height: var(--tap); background: var(--card); color: var(--ink); font-weight: 400; padding: 6px 14px; box-shadow: none; }
+button.chip.on { border: 2px solid var(--accent); background: var(--soft); font-weight: 700; }
 .status { margin: 8px 0; } .err { color: var(--bad); white-space: pre-wrap; }
-.spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line);
-  border-top-color: var(--accent); border-radius: 50%; animation: s 0.8s linear infinite; vertical-align: -1px; }
+.spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); flex: none;
+  border-top-color: var(--accent); border-radius: 50%; animation: s .8s linear infinite; vertical-align: -2px; }
 @keyframes s { to { transform: rotate(360deg); } }
 .tag { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
 .tag.survivor, .tag.grilled { color: var(--good); } .tag.graveyard, .tag.killed { color: var(--bad); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+.list > a, .list > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-height: var(--tap); padding: 10px 0;
+  border-bottom: 1px solid var(--line); }
+.list > a { text-decoration: none; color: var(--ink); }
+.list > a b { color: var(--accent); }
+
+/* segmented tabs of a hunt */
+.tabs { display: flex; gap: 4px; padding: 4px; margin: 12px 0; background: var(--soft); border-radius: 12px; }
+.tabs a { flex: 1; min-height: var(--tap); display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 9px;
+  text-decoration: none; color: var(--ink); font-size: 15px; }
+.tabs a[aria-current] { background: var(--card); box-shadow: var(--e1); font-weight: 700; }
+.tabs .n { font-size: 12px; color: var(--dim); }
+
+/* a card that you swipe: it follows the finger, and the layer below names the action */
+.swipe { position: relative; border-radius: 12px; }
+.swipe > .under { position: absolute; inset: 0; border-radius: 12px; display: flex; align-items: center; padding: 0 20px;
+  font-weight: 700; color: #fff; opacity: 0; }
+.swipe > .under.left { justify-content: flex-end; background: var(--bad); }
+.swipe > .under.right { justify-content: flex-start; background: var(--good); }
+.swipe > .card { position: relative; touch-action: pan-y; will-change: transform; }
+.hint { font-size: 12px; color: var(--dim); }
+
+/* parts */
+.part { padding: 10px 0; border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: flex-start; }
+.part:first-of-type { margin-top: 8px; }
+.part .what { flex: 1; min-width: 0; }
+.part.out .name { text-decoration: line-through; color: var(--bad); }
+
 /* grill tree */
 .tree { position: relative; }
 .tree svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .tree svg path { fill: none; stroke: var(--line); stroke-width: 2; }
 .level { position: relative; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 0 0 28px; }
-.node { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-  padding: 8px 10px; max-width: 260px; font-size: 14px; }
-.node .q { font-weight: 600; } .node .a { color: var(--good); }
+.node { position: relative; background: var(--card); border-radius: 12px; box-shadow: var(--e1);
+  padding: 8px 10px; max-width: 260px; font-size: 14px; overflow-wrap: anywhere; }
+.node .q { font-weight: 600; } .node .a { color: var(--good); } .node .a::before { content: "✓ "; }
 .node.root { background: var(--soft); max-width: 520px; text-align: center; }
-.node.open { max-width: 100%; width: 100%; border-color: var(--accent); padding: 12px; }
-.opts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); margin: 8px 0; }
+.node.open { max-width: 100%; width: 100%; box-shadow: var(--e1), inset 0 0 0 2px var(--accent); padding: 12px; }
+.undo-round { display: flex; justify-content: center; margin: -16px 0 20px; }
+.opts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); margin: 8px 0; }
 .opt { text-align: left; background: var(--bg); color: var(--ink); border: 2px solid var(--line); font-weight: 400;
-  padding: 10px; }
-.opt b { display: block; margin-bottom: 2px; } .opt .why { font-size: 13px; color: var(--dim); }
-.opt.on { border-color: var(--accent); background: var(--soft); }
+  padding: 10px 12px; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 2px; }
+.opt b { display: block; } .opt .why { font-size: 13px; color: var(--dim); }
+.opt .flags { display: flex; gap: 8px; flex-wrap: wrap; min-height: 16px; }
 .opt .rec { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+.opt .sel { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-left: auto; visibility: hidden; }
+.opt.on { border-color: var(--accent); background: var(--soft); }
+.opt.on .sel { visibility: visible; color: var(--accent); }
 .opt.kills { border-style: dashed; } .opt.kills .rec { color: var(--bad); }
-.bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-  background: var(--card); border-top: 1px solid var(--line); display: flex; gap: 12px; align-items: center;
-  justify-content: center; }
-.bar button { min-width: 220px; }
+.need { color: var(--bad); font-size: 13px; margin-top: 4px; }
 .brief { white-space: pre-wrap; }
 @media (max-width: 600px) {
   .level { gap: 8px; } .node:not(.open):not(.root) { max-width: calc(50% - 4px); font-size: 12px; padding: 6px 8px; }
 }
+.banner { border-radius: 12px; padding: 14px; margin: 12px 0; background: var(--card); box-shadow: var(--e1), inset 4px 0 0 var(--bad); }
+
 /* stack map */
-.map { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 10px; touch-action: manipulation; }
+.map { position: relative; background: var(--card); border-radius: 12px; box-shadow: var(--e1); touch-action: manipulation;
+  cursor: crosshair; overflow: hidden; -webkit-user-select: none; user-select: none; }
 .map svg { display: block; width: 100%; }
-.map text { font-size: 10px; fill: var(--dim); paint-order: stroke; stroke: var(--card); stroke-width: 3px; stroke-linejoin: round; }
+.map text { font-size: 11px; fill: var(--dim); paint-order: stroke; stroke: var(--card); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
 .map text.on { fill: var(--ink); font-weight: 700; font-size: 12px; }
-.map .mark { stroke: var(--card); stroke-width: 2; }
+.map .mark { stroke: var(--card); stroke-width: 2; cursor: pointer; }
 .map .ring { fill: none; stroke: var(--ink); stroke-width: 2; }
 .map .zero { stroke: var(--line); stroke-dasharray: 3 4; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; margin: 8px 0; }
 .legend svg { vertical-align: -2px; margin-right: 4px; }
-.slots { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.sheet { margin-top: 10px; border-radius: 14px; padding: 14px; background: var(--card); box-shadow: var(--e6); }
+.slots { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+.slot { display: flex; gap: 8px; align-items: flex-start; }
+.slot .what { flex: 1; min-width: 0; }
+.slot.empty { box-shadow: inset 0 0 0 1px var(--line); background: transparent; }
+.x { min-width: var(--tap); padding: 0; background: transparent; color: var(--dim); font-size: 20px; }
 .gaps { width: 100%; border-collapse: collapse; font-size: 14px; }
 .gaps td, .gaps th { border-bottom: 1px solid var(--line); padding: 6px 4px; text-align: left; vertical-align: top; }
-.gaps input { width: 52px; font: inherit; padding: 4px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; }
+.gaps input { width: 64px; flex: none; padding: 6px 8px; background: var(--bg); }
 .gaps .m { color: var(--bad); font-weight: 700; }
 .gapbar { height: 6px; border-radius: 3px; background: var(--dim); margin-top: 4px; }
 .gapbar.m { background: var(--bad); }
-.scroll { overflow-x: auto; }
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .axis { display: grid; gap: 6px; grid-template-columns: 1fr 1fr 1fr auto; margin: 6px 0; }
 @media (max-width: 600px) { .axis { grid-template-columns: 1fr; } }
-.chip.pick { cursor: pointer; background: var(--bg); color: var(--ink); font-weight: 400; padding: 6px 10px; }
-.chip.pick.on { border-color: var(--accent); background: var(--soft); font-weight: 700; }
-.banner { border: 2px solid var(--bad); border-radius: 10px; padding: 12px; margin: 12px 0; }
+details > summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
+
+/* the control layer: navigation and the primary action float above the content, within reach of the thumb */
+.dock { position: fixed; z-index: 8; left: 50%; transform: translateX(-50%);
+  bottom: calc(12px + env(safe-area-inset-bottom)); width: min(calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)), 560px);
+  min-height: var(--dock); display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 22px;
+  background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
+  box-shadow: var(--e8), inset 0 0 0 1px var(--glass-line); }
+.dock nav { display: flex; }
+.dock nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 56px; min-height: 52px;
+  border-radius: 16px; color: var(--dim); text-decoration: none; font-size: 11px; gap: 2px; }
+.dock nav a svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dock nav a[aria-current] { color: var(--accent); background: var(--soft); font-weight: 700; }
+.dock .primary { flex: 1; min-height: 52px; border-radius: 16px; margin-left: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dock .primary[hidden] { display: none; }
+.toast { position: fixed; z-index: 6; left: 50%; bottom: calc(var(--dock) + 24px + env(safe-area-inset-bottom));
+  width: min(calc(100% - 24px), 560px); transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+  display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 16px; border-radius: 14px;
+  background: var(--ink); color: var(--bg); box-shadow: var(--e6); transition: transform .22s var(--ease), opacity .22s; }
+.toast.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.toast .msg { flex: 1; font-size: 14px; padding: 8px 0; }
+.toast button { background: transparent; color: var(--accent); filter: brightness(1.4); }
+.toast.error .msg::before { content: "⚠ "; }
+@media (min-width: 900px) { h1 { font-size: 28px; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .spin { border-top-color: var(--accent); }
+}
 </style>
 </head>
 <body>
 <main id="app"></main>
+<div class="dock" id="dock">
+  <nav>
+    <a href="#/" data-nav="home"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>Hunt</a>
+    <a href="#/stack" data-nav="stack"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>Stack</a>
+    <a href="#/library" data-nav="library"><svg viewBox="0 0 24 24"><path d="M5 4h4v16H5zM10 4h4v16h-4z"/><path d="M15.5 4.5l3.8-1 3.2 15.6-3.8 1z"/></svg>Library</a>
+  </nav>
+  <button class="primary" id="primary" hidden></button>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span class="msg"></span><button type="button" hidden>Undo</button></div>
 <script>
 const T = new URLSearchParams(location.search).get('token') || '';
 const app = document.getElementById('app');
-let timer = null, view = 0, lastTree = null, shownRound = null;
+let timer = null, view = 0, shownView = -1, lastTree = null, shownRound = null, dragging = false;
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const link = (url, text) => /^https?:\/\//i.test(url || '') ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text)}</a>` : esc(text);
 const go = (h) => { location.hash = h; };
+const still = matchMedia('(prefers-reduced-motion: reduce)');
 
 async function api(path, body) {
   const res = await fetch(path, { method: body ? 'POST' : 'GET', headers: { 'x-token': T, 'content-type': 'application/json' },
@@ -115,12 +211,89 @@ async function api(path, body) {
   return data;
 }
 
-function shell(inner) {
-  app.innerHTML = `<header><a class="brand" href="#/">snowmobile</a>
-    <nav><a href="#/">new hunt</a><a href="#/stack">stack</a><a href="#/library">library</a></nav></header>${inner}`;
+// The content layer. A new view enters with a short motion; a poll of the same view does not move.
+function shell(inner, nav) {
+  app.classList.toggle('enter', shownView !== view && !still.matches);
+  shownView = view;
+  app.innerHTML = inner;
+  document.querySelectorAll('[data-nav]').forEach((a) => a.toggleAttribute('aria-current', a.dataset.nav === nav));
 }
 
-function poll(fn, ms) { clearTimeout(timer); const v = view; timer = setTimeout(() => v === view && fn(), ms); }
+// The primary action of the screen, in the control layer.
+function primary(label, onclick, { disabled = false, busy = false } = {}) {
+  const b = document.getElementById('primary');
+  b.hidden = !label;
+  b.disabled = disabled || busy;
+  b.innerHTML = label ? `${busy ? '<span class="spin"></span>' : ''}${esc(label)}` : '';
+  b.onclick = onclick || null;
+}
+
+// A toast floats above the content. An action that you can take back offers "Undo" here, so nothing asks for a confirmation.
+let toastTimer = null;
+function toast(msg, undo, error = false) {
+  const el = document.getElementById('toast'), b = el.querySelector('button');
+  el.querySelector('.msg').textContent = msg;
+  el.classList.toggle('error', error);
+  b.hidden = !undo;
+  b.onclick = async () => { el.classList.remove('show'); await undo(); };
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), undo ? 7000 : 4000);
+}
+const fail = (e) => toast(e.message, null, true);
+
+function poll(fn, ms) {
+  clearTimeout(timer);
+  const v = view;
+  // A redraw under a finger would drop the card that it holds.
+  timer = setTimeout(() => v === view && (dragging ? poll(fn, ms) : fn()), ms);
+}
+
+// Makes a card follow a horizontal swipe. Past a third of its width, or with a fast flick, the card leaves and the action runs.
+// A finger can catch the card again while it moves, and redirect it.
+function swipeable(card, dir, act) {
+  const sign = dir === 'left' ? -1 : 1;
+  let x0 = 0, y0 = 0, from = 0, x = 0, t0 = 0, axis = null, id = null, leaving = null;
+  const under = card.previousElementSibling;
+  const set = (v, ease) => {
+    x = v;
+    card.style.transition = ease && !still.matches ? 'transform .28s cubic-bezier(.2,.8,.2,1)' : 'none';
+    card.style.transform = v ? `translateX(${v}px)` : '';
+    under.style.opacity = Math.min(1, Math.abs(v) / 80) * (v * sign > 0 ? 1 : 0);
+  };
+  card.addEventListener('pointerdown', (e) => {
+    if (e.button || e.target.closest('a, button, input, textarea')) return;
+    // Catch a card in motion where it is now.
+    const m = new DOMMatrix(getComputedStyle(card).transform);
+    clearTimeout(leaving); leaving = null;
+    set(m.m41, false);
+    from = x; x0 = e.clientX; y0 = e.clientY; t0 = e.timeStamp; axis = null; id = e.pointerId;
+  });
+  card.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== id) return;
+    const dx = e.clientX - x0, dy = e.clientY - y0;
+    if (!axis && Math.hypot(dx, dy) > 8) {
+      axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (axis === 'x') { card.setPointerCapture(id); dragging = true; }
+    }
+    if (axis !== 'x') return;
+    // Against the action, the card resists.
+    const v = from + dx;
+    set(v * sign >= 0 ? v : v / 4, false);
+  });
+  const end = (e) => {
+    if (e.pointerId !== id) return;
+    id = null; dragging = false;
+    if (axis !== 'x') { if (x) set(0, true); return; }
+    const speed = (x - from) / Math.max(1, e.timeStamp - t0);
+    if (x * sign > card.offsetWidth / 3 || speed * sign > 0.6) {
+      set(sign * (card.offsetWidth + 40), true);
+      leaving = setTimeout(act, still.matches ? 0 : 260);
+    } else set(0, true);
+  };
+  card.addEventListener('pointerup', end);
+  card.addEventListener('pointercancel', end);
+}
 
 // ---------- home ----------
 const EXAMPLES = ['flaky end-to-end tests', 'code review takes days', 'CRDTs', 'spreadsheets', 'make', 'feature flags'];
@@ -131,34 +304,26 @@ async function home() {
     recombines distant parts into new tools, kills the ones that already exist,
     and grills you on a survivor as a tree: one tap per decision.</p>
     <div class="steps"><span>1 hunt parts</span><span>2 recombine</span><span>3 prior-art check</span><span>4 grill tree</span><span>5 build brief</span></div>
-    <form class="seed" id="f"><input type="text" id="seed" placeholder="seed, e.g. flaky end-to-end tests" autocomplete="off">
-      <button>Hunt</button></form>
-    <div>${EXAMPLES.map((e) => `<button type="button" class="ghost chip ex">${esc(e)}</button>`).join('')}</div>
-    <h2>Recent hunts</h2><div id="recent" class="dim">…</div>`);
+    <form class="row" id="f"><input type="search" id="seed" placeholder="seed, e.g. flaky end-to-end tests" autocomplete="off" enterkeyhint="go" aria-label="seed"></form>
+    <div>${EXAMPLES.map((e) => `<button type="button" class="chip ex">${esc(e)}</button>`).join('')}</div>
+    <h2>Recent hunts</h2><div id="recent" class="list dim">…</div>`, 'home');
   const seed = document.getElementById('seed');
-  document.querySelectorAll('.ex').forEach((b) => (b.onclick = () => { seed.value = b.textContent; seed.focus(); }));
-  document.getElementById('f').onsubmit = async (e) => {
-    e.preventDefault();
-    try { const { id } = await api('/api/hunts', { seed: seed.value }); go(`#/hunt/${id}`); } catch (err) { alert(err.message); }
+  const start = async () => {
+    try { const { id } = await api('/api/hunts', { seed: seed.value }); go(`#/hunt/${id}`); } catch (err) { fail(err); seed.focus(); }
   };
+  primary('Hunt', start);
+  document.querySelectorAll('.ex').forEach((b) => (b.onclick = () => { seed.value = b.textContent; seed.focus(); }));
+  document.getElementById('f').onsubmit = (e) => { e.preventDefault(); start(); };
   const { hunts } = await api('/api/search?q=');
   document.getElementById('recent').innerHTML = hunts.length
-    ? hunts.slice(0, 20).map((h) => `<div><a href="#/hunt/${h.id}">${esc(h.seed)}</a> <span class="small dim">${esc(h.status)} · ${esc(h.created_at)}</span></div>`).join('')
+    ? hunts.slice(0, 20).map((h) => `<a href="#/hunt/${h.id}"><b>${esc(h.seed)}</b> <span class="small dim">${esc(h.status)} · ${esc(h.created_at)}</span></a>`).join('')
     : 'None yet.';
 }
 
 // ---------- hunt ----------
 const STEP = { hunting: 'Hunting real software for parts. This takes a few minutes of web search.',
   creating: 'Recombining parts and searching for prior art. This takes a few minutes.' };
-
-function smCard(s, comps) {
-  const parts = s.component_ids.map((i) => comps[i]).filter(Boolean).map((c) => `<span class="chip">${esc(c.name)}</span>`).join('');
-  const grillable = s.status === 'survivor' || s.status === 'grilled' || s.status === 'killed';
-  return `<div class="card"><div class="tag ${esc(s.status)}">${esc(s.status)}</div><b>${esc(s.name)}</b>
-    ${caseOf(s)}<div class="dim">${esc(s.pitch)}</div><div>${parts}</div>
-    <p class="small dim">${s.status === 'graveyard' && s.proof_url ? `Exists: ${link(s.proof_url, s.proof_url)}. ` : ''}${esc(s.proof_note)}</p>
-    ${grillable ? `<button class="${s.status === 'survivor' ? '' : 'ghost'}" onclick="go('#/grill/${s.id}')">${s.status === 'survivor' ? 'Grill me' : 'Open tree'}</button>` : ''}</div>`;
-}
+const MARK = { survivor: '●', grilled: '✓', killed: '✕', graveyard: '✝' };
 
 // The case for an idea comes first: the problem, its evidence, today's solution and the gain over it.
 function caseOf(s) {
@@ -170,29 +335,86 @@ function caseOf(s) {
     ${s.mismatch ? `<div><b>Layer mismatch:</b> ${esc(s.mismatch)}</div>` : ''}</div>`;
 }
 
-async function hunt(id) {
+// A survivor swipes left to the graveyard; a graveyard entry swipes right back. Each also has a button, the visible signifier.
+function smCard(s, comps, first) {
+  const parts = s.component_ids.map((i) => comps[i]).filter(Boolean).map((c) => `<span class="chip ${c.bad_reason ? 'bad' : ''}">${esc(c.name)}</span>`).join('');
+  const dir = { survivor: 'left', graveyard: 'right' }[s.status];
+  const open = s.status === 'survivor' || s.status === 'grilled' || s.status === 'killed';
+  const card = `<div class="card" data-sm="${s.id}"><div class="tag ${esc(s.status)}">${MARK[s.status] || ''} ${esc(s.status)}</div><b>${esc(s.name)}</b>
+    ${caseOf(s)}<div class="dim">${esc(s.pitch)}</div><div>${parts}</div>
+    <p class="small dim">${s.status === 'graveyard' && s.proof_url ? `Exists: ${link(s.proof_url, s.proof_url)}. ` : ''}${esc(s.proof_note)}</p>
+    <div class="actions">${open ? `<a class="btn ${s.status === 'survivor' ? '' : 'ghost'}" href="#/grill/${s.id}">${s.status === 'survivor' ? 'Grill me' : 'Open tree'}</a>` : ''}
+      ${dir === 'left' ? `<button class="quiet" data-move="graveyard">✝ Bury</button>${first ? '<span class="hint">or swipe left</span>' : ''}` : ''}
+      ${dir === 'right' ? `<button class="ghost" data-move="survivor">↺ Restore</button>${first ? '<span class="hint">or swipe right</span>' : ''}` : ''}</div></div>`;
+  return dir ? `<div class="swipe"><div class="under ${dir}">${dir === 'left' ? '✝ Bury' : '↺ Restore'}</div>${card}</div>` : card;
+}
+
+async function hunt(id, tab) {
   const { hunt: h, sources, snowmobiles } = await api(`/api/hunts/${id}`);
   const comps = {};
   sources.forEach((s) => s.components.forEach((c) => (comps[c.id] = { ...c, source: s.name })));
   const busy = h.status === 'hunting' || h.status === 'creating';
-  const groups = ['survivor', 'grilled', 'killed', 'graveyard'].map((st) => [st, snowmobiles.filter((s) => s.status === st)]);
+  const ideas = snowmobiles.filter((s) => s.status !== 'graveyard'), grave = snowmobiles.filter((s) => s.status === 'graveyard');
+  const nParts = Object.keys(comps).length;
+  tab ||= ideas.length || h.status === 'creating' ? 'ideas' : grave.length ? 'graveyard' : 'parts';
+  const tabs = [['ideas', 'Ideas', ideas.length], ['graveyard', 'Graveyard', grave.length], ['parts', h.stack ? 'Stack' : 'Parts', nParts]];
+  let body;
+  if (tab === 'parts') {
+    body = `${h.stack ? '<p class="small"><a href="#/stack">Open the stack map</a></p>' : `<div class="actions" style="margin:0 0 12px">
+        <button id="more" class="ghost" ${busy ? 'disabled' : ''}>＋ Hunt more parts</button></div>`}
+      <p class="small dim">A part that you leave out stays out of the next creation. A kill in the grill also leaves out a part.</p>
+      <div class="grid">${sources.map((s) => `<div class="card"><span class="tag dim">${esc(s.kind)}</span>
+        <div><b>${link(s.url, s.name)}</b></div><div class="small dim">${esc(s.summary)}</div>
+        ${s.components.map((c) => `<div class="part ${c.bad_reason ? 'out' : ''}"><div class="what"><b class="name">${link(c.url, c.name)}</b>
+          <div class="small">${esc(c.mechanism)}</div>${c.bad_reason ? `<div class="small err">✕ Left out: ${esc(c.bad_reason)}</div>` : ''}</div>
+          <button class="${c.bad_reason ? 'ghost' : 'quiet'} small" data-part="${c.id}" data-out="${c.bad_reason ? '' : '1'}">${c.bad_reason ? '↺ Bring back' : '✕ Leave out'}</button></div>`).join('')}
+      </div>`).join('') || `<p class="dim">${busy ? '…' : 'No parts yet.'}</p>`}</div>`;
+  } else if (tab === 'graveyard') {
+    body = grave.length ? `<p class="small dim">Ideas that already exist, have no clear problem or gain, or that you buried. Restore one to grill it.</p>
+      <div class="grid">${grave.map((s, i) => smCard(s, comps, !i)).join('')}</div>` : '<p class="dim">The graveyard is empty.</p>';
+  } else {
+    const groups = [['survivor', 'Survivors'], ['grilled', 'Grilled'], ['killed', 'Killed in the grill']]
+      .map(([st, title]) => [title, ideas.filter((s) => s.status === st)]).filter(([, l]) => l.length);
+    body = groups.map(([title, list], g) => `<h2>${title}</h2><div class="grid">${list.map((s, i) => smCard(s, comps, !g && !i)).join('')}</div>`).join('')
+      || `<p class="dim">${busy ? '…' : 'No ideas yet. Create them from the parts.'}</p>`;
+  }
   shell(`<h1>${esc(h.seed)}</h1>
     <div class="status">${busy ? `<span class="spin"></span> ${STEP[h.status]}` : ''}
       ${h.error ? `<div class="err">${esc(h.error)}</div>` : ''}</div>
-    <button id="create" ${busy || !sources.length ? 'disabled' : ''}>${h.stack ? 'Create more apps' : 'Create snowmobiles'}</button>
-    ${h.stack ? '<a class="small" href="#/stack">← back to the stack map</a>' : `<button id="more" class="ghost" ${busy ? 'disabled' : ''}>Hunt more parts</button>`}
-    ${groups.map(([st, list]) => list.length ? `<h2>${{ survivor: 'Survivors', grilled: 'Grilled', killed: 'Killed in the grill', graveyard: 'Graveyard' }[st]}</h2>
-      <div class="grid">${list.map((s) => smCard(s, comps)).join('')}</div>` : '').join('')}
-    <h2>${h.stack ? 'The stack' : 'Parts found in the wild'}</h2>
-    <div class="grid">${sources.map((s) => `<div class="card"><span class="tag dim">${esc(s.kind)}</span>
-      <div><b>${link(s.url, s.name)}</b></div><div class="small dim">${esc(s.summary)}</div>
-      ${s.components.map((c) => `<div style="margin-top:8px"><span class="chip ${c.bad_reason ? 'bad' : ''}">${link(c.url, c.name)}</span>
-        <div class="small">${esc(c.mechanism)}</div>${c.bad_reason ? `<div class="small err">Bad part: ${esc(c.bad_reason)}</div>` : ''}</div>`).join('')}
-    </div>`).join('') || `<p class="dim">${busy ? '…' : 'No parts yet.'}</p>`}</div>`);
-  const step = (s) => async () => { try { await api(`/api/hunts/${id}/${s}`, {}); hunt(id); } catch (e) { alert(e.message); } };
-  document.getElementById('create').onclick = step('create');
-  if (!h.stack) document.getElementById('more').onclick = step('hunt');
-  if (busy) poll(() => hunt(id), 2000);
+    <nav class="tabs">${tabs.map(([k, label, n]) => `<a href="#/hunt/${id}/${k}" ${k === tab ? 'aria-current="page"' : ''}>${label} <span class="n">${n}</span></a>`).join('')}</nav>
+    ${body}`, 'home');
+  const create = async () => {
+    try { await api(`/api/hunts/${id}/create`, {}); } catch (e) { return fail(e); }
+    if (location.hash === `#/hunt/${id}/ideas`) hunt(id, 'ideas'); else go(`#/hunt/${id}/ideas`);
+  };
+  primary(busy ? (h.status === 'hunting' ? 'Hunting…' : 'Creating…') : h.stack ? 'Create more apps' : 'Create ideas', create,
+    { busy, disabled: !sources.length });
+  const more = document.getElementById('more');
+  if (more) more.onclick = async () => { try { await api(`/api/hunts/${id}/hunt`, {}); hunt(id, 'parts'); } catch (e) { fail(e); } };
+  const name = (sid) => snowmobiles.find((s) => s.id === sid).name;
+  const move = async (sid, status) => {
+    const { proof_note } = snowmobiles.find((s) => s.id === sid);
+    try { await api(`/api/snowmobiles/${sid}`, { status }); } catch (e) { fail(e); return hunt(id, tab); }
+    hunt(id, tab);
+    toast(`${status === 'graveyard' ? 'Buried' : 'Restored'} ${name(sid)}.`, async () => {
+      try { await api(`/api/snowmobiles/${sid}`, { status: status === 'graveyard' ? 'survivor' : 'graveyard', proof_note }); } catch (e) { fail(e); }
+      hunt(id, tab);
+    });
+  };
+  document.querySelectorAll('[data-sm]').forEach((card) => {
+    const b = card.querySelector('[data-move]');
+    if (!b) return;
+    const sid = Number(card.dataset.sm);
+    b.onclick = () => move(sid, b.dataset.move);
+    swipeable(card, b.dataset.move === 'graveyard' ? 'left' : 'right', () => move(sid, b.dataset.move));
+  });
+  document.querySelectorAll('[data-part]').forEach((b) => (b.onclick = async () => {
+    const pid = Number(b.dataset.part), out = !!b.dataset.out;
+    const flip = async (o) => { try { await api(`/api/components/${pid}`, { out: o }); } catch (e) { fail(e); } hunt(id, 'parts'); };
+    await flip(out);
+    toast(`${out ? 'Left out' : 'Brought back'} ${comps[pid].name}.`, () => flip(!out));
+  }));
+  if (busy) poll(() => hunt(id, tab), 2000);
 }
 
 // ---------- grill ----------
@@ -236,6 +458,7 @@ async function grill(id, data) {
   for (const d of open) picks[`${id}:${d.id}`] ||= { choice: d.recommended, note: '' };
   const rounds = [];
   tree.decisions.forEach((d) => (rounds[d.round] ||= []).push(d));
+  const lastAnswered = Math.max(0, ...tree.decisions.filter((d) => d.answer).map((d) => d.round));
   const answered = (d) => {
     const a = d.answer;
     return `<div class="node" data-id="${esc(d.id)}"><div class="q">${esc(d.question)}</div>
@@ -245,54 +468,73 @@ async function grill(id, data) {
   const names = Object.fromEntries(tree.decisions.map((d) => [d.id, d.question]));
   const asking = (d) => `<div class="node open" data-id="${esc(d.id)}"><div class="q">${esc(d.question)}</div>
     ${d.depends_on.length ? `<div class="small dim">builds on: ${d.depends_on.map((i) => esc(names[i] || i)).join(' · ')}</div>` : ''}
-    <div class="opts">${d.options.map((o, i) => `<button class="opt ${pick(d.id).choice === i ? 'on' : ''} ${o.kills_component_id ? 'kills' : ''}" data-d="${esc(d.id)}" data-i="${i}">
-      ${i === d.recommended ? '<span class="rec">recommended</span>' : ''}${o.kills_component_id ? '<span class="rec">kills the idea</span>' : ''}
+    <div class="opts" role="radiogroup">${d.options.map((o, i) => `<button class="opt ${pick(d.id).choice === i ? 'on' : ''} ${o.kills_component_id ? 'kills' : ''}" role="radio"
+      aria-checked="${pick(d.id).choice === i}" data-d="${esc(d.id)}" data-i="${i}">
+      <span class="flags">${i === d.recommended ? '<span class="rec">★ recommended</span>' : ''}${o.kills_component_id ? '<span class="rec">✕ kills the idea</span>' : ''}<span class="sel">✓ picked</span></span>
       <b>${esc(o.label)}</b><span class="why">${esc(o.why)}</span></button>`).join('')}</div>
-    <textarea data-note="${esc(d.id)}" rows="1" placeholder="optional note, or your own answer (tap the selected card to clear it)">${esc(pick(d.id).note)}</textarea></div>`;
-  shell(`<h1>${esc(sm.name)}</h1><div class="dim">${esc(sm.pitch)}</div>
+    <textarea data-note="${esc(d.id)}" rows="1" placeholder="optional note, or your own answer" aria-label="note for ${esc(d.question)}">${esc(pick(d.id).note)}</textarea>
+    <div class="need" data-need="${esc(d.id)}" hidden>Pick a card, or write your own answer.</div></div>`;
+  const undoBtn = (label) => `<button class="ghost" data-undo>↶ ${label}</button>`;
+  shell(`<div class="top"><a class="back" href="#/hunt/${sm.hunt_id}">‹ Hunt</a></div>
+    <h1>${esc(sm.name)}</h1><div class="dim">${esc(sm.pitch)}</div>
     <div>${g.components.map((c) => `<span class="chip ${c.bad_reason ? 'bad' : ''}">${link(c.url, c.name)} <span class="dim">· ${esc(c.source)}</span></span>`).join('')}</div>
-    <p class="small"><a href="#/hunt/${sm.hunt_id}">← back to the hunt</a></p>
-    ${g.status === 'killed' ? `<div class="banner"><b>Killed.</b> ${esc(tree.killed?.reason)}<br>
-      ${comps[tree.killed?.component_id] ? `Bad part: <b>${esc(comps[tree.killed.component_id].name)}</b>. It is marked on the hunt and left out of the next creation.` : ''}
-      <p><button onclick="go('#/hunt/${sm.hunt_id}')">Back to the hunt</button></p></div>` : ''}
+    ${g.status === 'killed' ? `<div class="banner"><b>✕ Killed.</b> ${esc(tree.killed?.reason)}<br>
+      ${comps[tree.killed?.component_id] ? `Bad part: <b>${esc(comps[tree.killed.component_id].name)}</b>. It is left out of the next creation.` : ''}
+      <div class="actions">${lastAnswered ? undoBtn('Undo the kill') : ''}</div></div>` : ''}
+    ${open.length ? '<p class="small dim">Each round starts with the recommended cards picked. Tap a card to pick it. Tap a picked card again to clear it and write your own answer.</p>' : ''}
     <div class="tree"><svg></svg>
       <div class="level"><div class="node root" data-id="__root"><b>${esc(sm.name)}</b></div></div>
-      ${rounds.filter(Boolean).map((list) => `<div class="level">${list.map((d) => d.answer ? answered(d) : asking(d)).join('')}</div>`).join('')}
+      ${rounds.map((list, r) => list ? `<div class="level">${list.map((d) => d.answer ? answered(d) : asking(d)).join('')}</div>
+        ${r === lastAnswered && g.status === 'open' ? `<div class="undo-round">${undoBtn('Undo this round')}</div>` : ''}` : '').join('')}
       ${g.pending ? `<div class="level"><div class="node"><span class="spin"></span> next round…</div></div>` : ''}
       ${g.error ? `<div class="err">${esc(g.error)}</div><button id="retry">Retry</button>` : ''}
     </div>
-    ${g.status === 'done' ? `<h2>Build brief</h2><div class="card brief">${md(g.brief)}</div>` : ''}
-    ${open.length ? `<div class="bar"><button id="accept">Answer ${open.length} decision${open.length > 1 ? 's' : ''}</button></div>` : ''}`);
+    ${g.status === 'done' ? `<h2><span class="grow">Build brief</span>${undoBtn('Undo the last round')}</h2><div class="card brief" id="brief">${md(g.brief)}</div>` : ''}`, 'home');
   lastTree = tree;
   drawEdges(tree);
   // A new round: bring its first question into view.
   const key = `${id}:${tree.round}`;
-  if (open.length && shownRound !== key && shownRound?.startsWith(`${id}:`)) document.querySelector('.node.open').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (open.length && shownRound !== key && shownRound?.startsWith(`${id}:`)) {
+    document.querySelector('.node.open').scrollIntoView({ behavior: still.matches ? 'auto' : 'smooth', block: 'start' });
+  }
   shownRound = key;
   document.querySelectorAll('.opt').forEach((b) => (b.onclick = () => {
     const p = pick(b.dataset.d), i = Number(b.dataset.i);
     p.choice = p.choice === i ? -1 : i;
-    document.querySelectorAll(`.opt[data-d="${CSS.escape(b.dataset.d)}"]`).forEach((o) => o.classList.toggle('on', Number(o.dataset.i) === p.choice));
+    document.querySelectorAll(`.opt[data-d="${CSS.escape(b.dataset.d)}"]`).forEach((o) => {
+      o.classList.toggle('on', Number(o.dataset.i) === p.choice); o.setAttribute('aria-checked', Number(o.dataset.i) === p.choice);
+    });
+    document.querySelector(`[data-need="${CSS.escape(b.dataset.d)}"]`).hidden = true;
   }));
   document.querySelectorAll('[data-note]').forEach((t) => (t.oninput = () => (pick(t.dataset.note).note = t.value)));
-  const accept = document.getElementById('accept');
-  if (accept) accept.onclick = async () => {
-    const missing = open.find((d) => pick(d.id).choice < 0 && !pick(d.id).note.trim());
-    if (missing) return alert(`Pick a card or write an answer for: ${missing.question}`);
-    accept.disabled = true;
+  const answer = async () => {
+    const missing = open.filter((d) => pick(d.id).choice < 0 && !pick(d.id).note.trim());
+    missing.forEach((d) => (document.querySelector(`[data-need="${CSS.escape(d.id)}"]`).hidden = false));
+    if (missing.length) return document.querySelector(`[data-id="${CSS.escape(missing[0].id)}"]`).scrollIntoView({ block: 'center' });
+    primary('Answering…', null, { busy: true });
     try { grill(id, await api(`/api/grills/${id}/answer`, { answers: Object.fromEntries(open.map((d) => [d.id, pick(d.id)])) })); }
-    catch (e) { alert(e.message); accept.disabled = false; }
+    catch (e) { fail(e); grill(id); }
   };
+  if (open.length) primary(`Answer ${open.length} decision${open.length > 1 ? 's' : ''}`, answer);
+  else if (g.status === 'done') primary('Copy brief', async () => {
+    try { await navigator.clipboard.writeText(g.brief); toast('Copied the build brief.'); }
+    catch { getSelection().selectAllChildren(document.getElementById('brief')); toast('Select all is on. Copy it with the menu.'); }
+  });
+  else if (g.status === 'killed') primary('Back to the hunt', () => go(`#/hunt/${sm.hunt_id}`));
+  else primary(g.pending ? 'Thinking…' : '', null, { busy: g.pending });
+  document.querySelectorAll('[data-undo]').forEach((b) => (b.onclick = async () => {
+    b.disabled = true;
+    try { grill(id, await api(`/api/grills/${id}/undo`, {})); toast('The last round is open again.'); } catch (e) { fail(e); b.disabled = false; }
+  }));
   const retry = document.getElementById('retry');
-  if (retry) retry.onclick = async () => grill(id, await api(`/api/grills/${id}/retry`, {}));
+  if (retry) retry.onclick = async () => { try { grill(id, await api(`/api/grills/${id}/retry`, {})); } catch (e) { fail(e); } };
   if (g.pending) poll(() => grill(id), 600);
 }
-// Mobile Safari fires resize on scroll, so only the edges are drawn again.
-window.addEventListener('resize', () => lastTree && drawEdges(lastTree));
 
 // ---------- stack ----------
 const stackPick = {};  // layer -> paradigm id
 let tapped = null;     // the last empty point that the owner tapped, and its answer
+let lastMap = null;    // what the map shows, so that a new width draws it again
 const SHAPE = {
   language: (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}"/>`,
   hardware: (x, y, r) => `<rect x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" rx="1.5"/>`,
@@ -309,6 +551,11 @@ function pcLabel(s, i) {
   return `${i ? 'Up' : 'Across'} (PC${i + 1}, ${Math.round(100 * s.map.explained[i])}% of the spread): ${top.map(([a, w]) => `${esc(a.name)} ${w >= 0 ? '+' : '−'}${Math.abs(w).toFixed(2)}`).join(', ')}`;
 }
 
+function choose(p) {
+  if (stackPick[p.layer] === p.id) delete stackPick[p.layer]; else stackPick[p.layer] = p.id;
+  stack();
+}
+
 async function stack() {
   const ids = Object.values(stackPick);
   const s = await api(`/api/stack?pick=${ids.join(',')}`);
@@ -316,70 +563,77 @@ async function stack() {
   const busy = s.job && !s.job.error;
   const unscored = s.paradigms.filter((p) => s.axes.some((a) => !s.scores[p.id]?.[a.id])).length;
   const picked = ids.map((id) => byId[id]).filter(Boolean);
+  const pain = document.getElementById('pain')?.value || '';
   shell(`<h1>Stack</h1>
-    <p class="dim">Paradigms of 4 layers on one map. The axes run through all layers. Principal component analysis puts each paradigm at a point.
-    Tap a mark to pick it for its layer. Tap an empty area to ask which paradigm would live there.
-    A large gap between the layers of your stack is a mismatch: a chance for a consumer app that a conventional stack cannot give.</p>
+    <p class="dim">Paradigms of 4 layers on one map. A large gap between the layers of your stack is a mismatch:
+    a chance for a consumer app that a conventional stack cannot give.</p>
     <div class="status">${busy ? `<span class="spin"></span> ${JOB[s.job.step]}` : ''}${s.job?.error ? `<div class="err">${esc(s.job.error)}</div>` : ''}</div>
-    ${!s.axes.length || unscored ? `<button id="prep" ${busy ? 'disabled' : ''}>${s.axes.length ? `Score ${unscored} paradigm${unscored > 1 ? 's' : ''}` : 'Propose axes and score the paradigms'}</button>` : ''}
-    <button id="more" class="ghost" ${busy ? 'disabled' : ''}>Hunt more paradigms</button>
     <div class="legend">${Object.entries(s.layers).map(([k, v]) => `<span><svg width="14" height="14">${mark(k, 7, 7, 5)}</svg>${esc(v)}</span>`).join('')}</div>
-    ${s.map ? `<div class="map" id="map"></div><p class="small dim">${pcLabel(s, 0)}<br>${pcLabel(s, 1)}</p>`
-      : `<p class="dim">The map needs axes and a score for each paradigm.</p>`}
-    <div id="point"></div>
+    ${s.map ? `<div class="map" id="map"></div><p class="hint">Tap a mark to pick it for its layer. Tap an empty point to ask which paradigm would live there.</p>
+      <div id="point"></div><p class="small dim">${pcLabel(s, 0)}<br>${pcLabel(s, 1)}</p>`
+      : `<div class="card dim">The map needs axes and a score for each paradigm. <a href="#axes" data-jump>Propose the axes below.</a></div>`}
     <h2>Your stack</h2>
     <div class="slots">${Object.entries(s.layers).map(([k, v]) => {
       const p = byId[stackPick[k]];
-      return `<div class="card"><div class="tag dim">${esc(v)}</div>${p ? `<b>${link(p.url, p.name)}</b>
-        <button class="ghost small" data-clear="${k}" style="padding:2px 8px;margin-left:6px">clear</button>
-        <div class="small dim">${esc(p.summary)}</div>` : '<span class="dim">any (the LLM chooses)</span>'}</div>`;
+      return `<div class="card slot ${p ? '' : 'empty'}"><svg width="16" height="16" style="flex:none;margin-top:3px">${mark(k, 8, 8, 6)}</svg><div class="what"><div class="tag dim">${esc(v)}</div>
+        ${p ? `<b>${link(p.url, p.name)}</b><div class="small dim">${esc(p.summary)}</div>` : '<span class="dim">any (the LLM chooses)</span>'}</div>
+        ${p ? `<button class="x" data-clear="${k}" aria-label="clear ${esc(v)}">×</button>` : ''}</div>`;
     }).join('')}</div>
-    ${s.gaps.length ? `<h2>Gaps on each axis</h2><div class="scroll"><table class="gaps"><tr><th>axis</th><th>gap</th>${picked.map((p) => `<th>${esc(p.name)}</th>`).join('')}</tr>
+    <form class="row" id="f"><input type="text" id="pain" placeholder="a consumer pain (optional with a stack)" autocomplete="off" aria-label="consumer pain" value="${esc(pain)}">
+      <button>Create apps</button></form>
+    <p class="small dim">With a pain and no stack, the LLM chooses a paradigm for each layer.</p>
+    ${s.gaps.length ? `<h2>Gaps on each axis</h2><p class="small dim">Edit a score to correct it. A new score from the LLM never replaces your edit.</p>
+      <div class="scroll"><table class="gaps"><tr><th>axis</th><th>gap</th>${picked.map((p) => `<th>${esc(p.name)}</th>`).join('')}</tr>
       ${[...s.gaps].sort((a, b) => b.gap - a.gap).map((g) => {
         const a = s.axes.find((x) => x.id === g.axis_id);
         return `<tr><td><b>${esc(a.name)}</b><div class="small dim">0 ${esc(a.low)} · 10 ${esc(a.high)}</div></td>
-          <td class="${g.mismatch ? 'm' : ''}">${g.gap}${g.mismatch ? ' mismatch' : ''}<div class="gapbar ${g.mismatch ? 'm' : ''}" style="width:${g.gap * 10}%"></div></td>
+          <td class="${g.mismatch ? 'm' : ''}">${g.gap}${g.mismatch ? ' ⚠ mismatch' : ''}<div class="gapbar ${g.mismatch ? 'm' : ''}" style="width:${g.gap * 10}%"></div></td>
           ${picked.map((p) => { const sc = s.scores[p.id]?.[a.id];
-            return `<td><input type="number" min="0" max="10" inputmode="numeric" data-p="${p.id}" data-a="${a.id}" value="${sc ? sc.score : ''}">
+            return `<td><input type="number" min="0" max="10" inputmode="numeric" data-p="${p.id}" data-a="${a.id}" value="${sc ? sc.score : ''}" aria-label="${esc(p.name)} on ${esc(a.name)}">
               <div class="small dim">${esc(sc?.reason)}</div></td>`; }).join('')}</tr>`;
       }).join('')}</table></div>` : ''}
-    <h2>Create apps</h2>
-    <form class="seed" id="f"><input type="text" id="pain" placeholder="a consumer pain (optional with a stack)" autocomplete="off">
-      <button>Create apps</button></form>
-    <p class="small dim">With a pain and no stack, the LLM chooses a paradigm for each layer.</p>
-    <h2>Paradigms</h2>
+    <h2><span class="grow">Paradigms</span><button id="more" class="ghost" ${busy ? 'disabled' : ''}>＋ Hunt more paradigms</button></h2>
     ${Object.entries(s.layers).map(([k, v]) => `<div style="margin-bottom:10px"><div class="tag dim">${esc(v)}</div>
-      ${s.paradigms.filter((p) => p.layer === k).map((p) => `<button type="button" class="chip pick ${stackPick[k] === p.id ? 'on' : ''}" data-pick="${p.id}">${esc(p.name)}</button>`).join('')}</div>`).join('')}
-    ${s.axes.length ? `<details><summary>Axes (${s.axes.length})</summary>${s.axes.map((a) => `<form class="axis" data-axis="${a.id}">
+      ${s.paradigms.filter((p) => p.layer === k).map((p) => `<button type="button" class="chip ${stackPick[k] === p.id ? 'on' : ''}" aria-pressed="${stackPick[k] === p.id}" data-pick="${p.id}">${stackPick[k] === p.id ? '✓ ' : ''}${esc(p.name)}</button>`).join('')}</div>`).join('')}
+    <h2 id="axes"><span class="grow">Axes</span>${!s.axes.length || unscored ? `<button id="prep" ${busy ? 'disabled' : ''}>${s.axes.length ? `Score ${unscored} paradigm${unscored > 1 ? 's' : ''}` : 'Propose axes and score'}</button>` : ''}</h2>
+    ${s.axes.length ? `<details><summary>Edit the ${s.axes.length} axes</summary>${s.axes.map((a) => `<form class="axis" data-axis="${a.id}">
       <input type="text" name="name" value="${esc(a.name)}" aria-label="name"><input type="text" name="low" value="${esc(a.low)}" aria-label="0 means">
-      <input type="text" name="high" value="${esc(a.high)}" aria-label="10 means"><button class="ghost">Save</button></form>`).join('')}</details>` : ''}`);
+      <input type="text" name="high" value="${esc(a.high)}" aria-label="10 means"><button class="ghost">Save</button></form>`).join('')}</details>`
+      : '<p class="small dim">Claude proposes 8 to 12 design axes that run through all 4 layers, then scores each paradigm on each axis.</p>'}`, 'stack');
 
-  const choose = (id) => { const p = byId[id]; stackPick[p.layer] = stackPick[p.layer] === id ? undefined : id; if (!stackPick[p.layer]) delete stackPick[p.layer]; stack(); };
-  document.querySelectorAll('[data-pick]').forEach((b) => (b.onclick = () => choose(Number(b.dataset.pick))));
-  document.querySelectorAll('[data-clear]').forEach((b) => (b.onclick = () => { delete stackPick[b.dataset.clear]; stack(); }));
-  const job = (step) => async () => { try { await api(`/api/stack/${step}`, {}); stack(); } catch (e) { alert(e.message); } };
+  document.querySelectorAll('[data-pick]').forEach((b) => (b.onclick = () => choose(byId[Number(b.dataset.pick)])));
+  document.querySelectorAll('[data-clear]').forEach((b) => (b.onclick = () => {
+    const layer = b.dataset.clear, was = stackPick[layer];
+    delete stackPick[layer]; stack();
+    toast(`Cleared ${s.layers[layer]}.`, () => { stackPick[layer] = was; stack(); });
+  }));
+  document.querySelector('[data-jump]')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('axes').scrollIntoView(); });
+  const job = (step) => async () => { try { await api(`/api/stack/${step}`, {}); stack(); } catch (e) { fail(e); } };
   if (document.getElementById('prep')) document.getElementById('prep').onclick = job('axes');
   document.getElementById('more').onclick = job('hunting');
   document.querySelectorAll('.gaps input').forEach((i) => (i.onchange = async () => {
-    if (i.value !== '') try { await api('/api/scores', { paradigm_id: Number(i.dataset.p), axis_id: Number(i.dataset.a), score: Number(i.value) }); } catch (e) { alert(e.message); }
+    if (i.value !== '') try { await api('/api/scores', { paradigm_id: Number(i.dataset.p), axis_id: Number(i.dataset.a), score: Number(i.value) }); } catch (e) { fail(e); }
     stack();
   }));
   document.querySelectorAll('[data-axis]').forEach((f) => (f.onsubmit = async (e) => {
     e.preventDefault();
-    try { await api(`/api/axes/${f.dataset.axis}`, Object.fromEntries(new FormData(f))); stack(); } catch (err) { alert(err.message); }
+    try { await api(`/api/axes/${f.dataset.axis}`, Object.fromEntries(new FormData(f))); toast('Saved the axis.'); stack(); } catch (err) { fail(err); }
   }));
-  document.getElementById('f').onsubmit = async (e) => {
-    e.preventDefault();
+  const create = async () => {
     try { const { id } = await api('/api/hunts', { seed: document.getElementById('pain').value, stack: Object.values(stackPick) }); go(`#/hunt/${id}`); }
-    catch (err) { alert(err.message); }
+    catch (err) { fail(err); }
   };
+  document.getElementById('f').onsubmit = (e) => { e.preventDefault(); create(); };
+  primary('Create apps', create);
+  lastMap = s.map ? { s, byId } : null;
   if (s.map) drawMap(s, byId);
   if (busy) poll(stack, 1500);
 }
 
 function drawMap(s, byId) {
   const box = document.getElementById('map');
-  const W = box.clientWidth, H = Math.round(Math.min(520, Math.max(300, W * 0.75))), pad = 28;
+  const W = box.clientWidth, H = Math.round(Math.min(560, Math.max(340, W * (W < 600 ? 1.05 : 0.6)))), pad = 28;
+  const r0 = W < 600 ? 6 : 5;
   const xs = s.map.points.map((p) => p[0]), ys = s.map.points.map((p) => p[1]);
   const [x0, x1] = [Math.min(...xs), Math.max(...xs)], [y0, y1] = [Math.min(...ys), Math.max(...ys)];
   const sx = (W - 2 * pad) / ((x1 - x0) || 1), sy = (H - 2 * pad) / ((y1 - y0) || 1);
@@ -391,74 +645,84 @@ function drawMap(s, byId) {
   // A label that would cover another label stays off. Picked labels go first; the list below names each mark.
   const boxes = [];
   for (const d of [...dots].reverse()) {
-    const w = d.p.name.length * (on.has(d.p.id) ? 7 : 5.6), left = d.x > W / 2 ? d.x - 9 - w : d.x + 9;
+    const w = d.p.name.length * (on.has(d.p.id) ? 7 : 6), left = d.x > W / 2 ? d.x - 10 - w : d.x + 10;
     const b = [left, d.y - 8, left + w, d.y + 6];
     d.label = !boxes.some((o) => b[0] < o[2] && o[0] < b[2] && b[1] < o[3] && o[1] < b[3]);
     if (d.label) boxes.push(b);
   }
   box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Map of the paradigms on the first two principal components">
     <line class="zero" x1="${px(0)}" y1="0" x2="${px(0)}" y2="${H}"/><line class="zero" x1="0" y1="${py(0)}" x2="${W}" y2="${py(0)}"/>
-    ${dots.map((d) => `${mark(d.p.layer, d.x, d.y, on.has(d.p.id) ? 7 : 5)}${on.has(d.p.id) ? `<circle class="ring" cx="${d.x}" cy="${d.y}" r="12"/>` : ''}
-      ${d.label ? `<text class="${on.has(d.p.id) ? 'on' : ''}" ${d.x > W / 2 ? `text-anchor="end" x="${d.x - 9}"` : `x="${d.x + 9}"`} y="${d.y + 4}">${esc(d.p.name)}</text>` : ''}`).join('')}
-    ${tapped ? `<circle class="ring" cx="${px(tapped.x)}" cy="${py(tapped.y)}" r="9" stroke-dasharray="3 3"/>` : ''}</svg>`;
-  showPoint();
+    ${dots.map((d) => `${mark(d.p.layer, d.x, d.y, on.has(d.p.id) ? r0 + 2 : r0)}${on.has(d.p.id) ? `<circle class="ring" cx="${d.x}" cy="${d.y}" r="13"/>` : ''}
+      ${d.label ? `<text class="${on.has(d.p.id) ? 'on' : ''}" ${d.x > W / 2 ? `text-anchor="end" x="${d.x - 10}"` : `x="${d.x + 10}"`} y="${d.y + 4}">${on.has(d.p.id) ? '✓ ' : ''}${esc(d.p.name)}</text>` : ''}`).join('')}
+    ${tapped ? `<circle class="ring" cx="${px(tapped.x)}" cy="${py(tapped.y)}" r="10" stroke-dasharray="3 3"/>` : ''}</svg>`;
+  box.dataset.w = W;
+  showPoint(byId);
   box.querySelector('svg').onclick = async (e) => {
     const r = box.getBoundingClientRect();
     const mx = e.clientX - r.left, my = e.clientY - r.top;
-    // A finger is wide: the nearest mark within 22px is the one that the owner meant.
+    // A finger is wide: the nearest mark within 22px (a 44px target) is the one that the owner meant.
     const hit = dots.map((d) => ({ d, dist: Math.hypot(d.x - mx, d.y - my) })).sort((a, b) => a.dist - b.dist)[0];
-    if (hit && hit.dist <= 22) {
-      const p = hit.d.p;
-      if (stackPick[p.layer] === p.id) delete stackPick[p.layer]; else stackPick[p.layer] = p.id;
-      return stack();
-    }
+    if (hit && hit.dist <= 22) return choose(hit.d.p);
     const v = view;
     tapped = { x: x0 + (mx - pad) / sx, y: y0 + (H - pad - my) / sy, busy: true };
     drawMap(s, byId);
     const mine = tapped;
     try { Object.assign(mine, await api('/api/stack/point', { x: mine.x, y: mine.y }), { busy: false }); }
     catch (err) { Object.assign(mine, { busy: false, error: err.message }); }
-    if (v === view && tapped === mine) showPoint();
+    if (v === view && tapped === mine) showPoint(byId);
   };
 }
 
-function showPoint() {
+// The answer for a tapped point. When it names a paradigm on the map, you can pick it from here.
+function showPoint(byId) {
   const el = document.getElementById('point');
   if (!el || !tapped) return;
   const t = tapped, a = t.answer;
-  el.innerHTML = `<div class="card" style="margin-top:8px">${t.busy ? '<span class="spin"></span> Asking which paradigm would live at this point…'
+  const known = a && Object.values(byId).find((p) => p.name.toLowerCase() === String(a.name).toLowerCase());
+  el.innerHTML = `<div class="sheet">${t.busy ? '<span class="spin"></span> Asking which paradigm would live at this point…'
     : t.error ? `<span class="err">${esc(t.error)}</span>`
-    : `<div class="tag dim">${esc(a.layer)} · ${a.exists ? 'exists' : 'missing from the map'}</div><b>${link(a.url, a.name)}</b>
-      <div class="small">${esc(a.why)}</div>`}</div>`;
+    : `<div class="tag dim">${esc(a.layer)} · ${known ? 'on the map' : a.exists ? 'exists' : 'missing from the map'}</div><b>${link(a.url, a.name)}</b>
+      <div class="small">${esc(a.why)}</div>`}
+    <div class="actions">${known ? `<button class="ghost" id="pick-point">${stackPick[known.layer] === known.id ? '✓ Picked' : 'Pick for the stack'}</button>` : ''}
+      <button class="quiet" id="close-point">Close</button></div></div>`;
+  if (known) document.getElementById('pick-point').onclick = () => choose(known);
+  document.getElementById('close-point').onclick = () => { tapped = null; el.innerHTML = ''; lastMap && drawMap(lastMap.s, lastMap.byId); };
 }
 
 // ---------- library ----------
 async function library(q = '') {
-  shell(`<h1>Library</h1><form class="seed" id="f"><input type="text" id="q" placeholder="search parts, ideas, briefs, trees" value="${esc(q)}"><button>Search</button></form><div id="r" class="dim">…</div>`);
+  shell(`<h1>Library</h1><form class="row" id="f"><input type="search" id="q" placeholder="search parts, ideas, briefs, trees" value="${esc(q)}" enterkeyhint="search" aria-label="search"><button>Search</button></form><div id="r" class="dim">…</div>`, 'library');
+  primary('');
   document.getElementById('f').onsubmit = (e) => { e.preventDefault(); library(document.getElementById('q').value); };
   const r = await api(`/api/search?q=${encodeURIComponent(q)}`);
   document.getElementById('r').innerHTML = `
-    <h2>Ideas (${r.snowmobiles.length})</h2>${r.snowmobiles.map((s) => `<div><span class="tag ${esc(s.status)}">${esc(s.status)}</span>
-      <a href="${s.status === 'graveyard' ? `#/hunt/${s.hunt_id}` : `#/grill/${s.id}`}">${esc(s.name)}</a> <span class="small dim">${esc(s.pitch)} · seed: ${esc(s.seed)}</span></div>`).join('')}
-    <h2>Parts (${r.components.length})</h2>${r.components.map((c) => `<div><span class="chip ${c.bad_reason ? 'bad' : ''}">${link(c.url, c.name)}</span>
-      <span class="small dim">${esc(c.source)} · ${esc(c.mechanism)}</span> <a class="small" href="#/hunt/${c.hunt_id}">hunt</a></div>`).join('')}
-    <h2>Hunts (${r.hunts.length})</h2>${r.hunts.map((h) => `<div><a href="#/hunt/${h.id}">${esc(h.seed)}</a></div>`).join('')}`;
+    <h2>Ideas (${r.snowmobiles.length})</h2><div class="list">${r.snowmobiles.map((s) => `<a href="${s.status === 'graveyard' ? `#/hunt/${s.hunt_id}/graveyard` : `#/grill/${s.id}`}">
+      <span class="tag ${esc(s.status)}">${MARK[s.status] || ''} ${esc(s.status)}</span><b>${esc(s.name)}</b> <span class="small dim">${esc(s.pitch)} · seed: ${esc(s.seed)}</span></a>`).join('')}</div>
+    <h2>Parts (${r.components.length})</h2><div class="list">${r.components.map((c) => `<div><span class="chip ${c.bad_reason ? 'bad' : ''}">${link(c.url, c.name)}</span>
+      <span class="small dim">${esc(c.source)} · ${esc(c.mechanism)}</span> <a class="btn ghost small" href="#/hunt/${c.hunt_id}/parts">hunt</a></div>`).join('')}</div>
+    <h2>Hunts (${r.hunts.length})</h2><div class="list">${r.hunts.map((h) => `<a href="#/hunt/${h.id}"><b>${esc(h.seed)}</b></a>`).join('')}</div>`;
 }
 
 // ---------- routing ----------
 async function route() {
   view++;
-  lastTree = null;
+  lastTree = null; lastMap = null;
   clearTimeout(timer);
-  const [, page, id] = location.hash.split('/');
+  const [, page, id, tab] = location.hash.split('/');
   try {
-    if (page === 'hunt') await hunt(id);
+    if (page === 'hunt') await hunt(id, tab);
     else if (page === 'stack') await stack();
     else if (page === 'grill') await grill(id);
     else if (page === 'library') await library();
     else await home();
-  } catch (e) { shell(`<p class="err">${esc(e.message)}</p>`); }
+  } catch (e) { shell(`<p class="err">${esc(e.message)}</p>`); primary(''); }
 }
+// Mobile Safari fires resize on scroll, so only what depends on the width is drawn again.
+window.addEventListener('resize', () => {
+  if (lastTree) drawEdges(lastTree);
+  const box = document.getElementById('map');
+  if (lastMap && box && Number(box.dataset.w) !== box.clientWidth) drawMap(lastMap.s, lastMap.byId);
+});
 window.addEventListener('hashchange', route);
 route();
 </script>

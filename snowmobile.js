@@ -608,14 +608,60 @@ async function advance(cfg, smId) {
   frontier(cfg, sm, guess).catch(() => {});
 }
 
+// The saved kill of a grill that still stands on the part with this mark.
+function standingKill(db, componentId, mark) {
+  const g = db.prepare(`SELECT g.tree FROM grills g JOIN snowmobiles s ON s.id = g.snowmobile_id
+    WHERE g.status = 'killed' AND json_extract(g.tree, '$.killed.component_id') = ?
+    AND s.name || ': ' || json_extract(g.tree, '$.killed.reason') = ?`).get(componentId, mark);
+  return g && JSON.parse(g.tree).killed;
+}
+
 function kill(cfg, sm, componentId, reason, tree) {
   const { db } = cfg;
   if (!JSON.parse(sm.component_ids).includes(componentId)) componentId = 0;
-  if (componentId) db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`).run(`${sm.name}: ${reason}`, componentId);
+  let under = [], badReason = null;
+  if (componentId) {
+    const now = db.prepare(`SELECT bad_reason FROM components WHERE id = ?`).get(componentId).bad_reason;
+    const below = now && standingKill(db, componentId, now);
+    if (below) [under, badReason] = [[...(below.under || []), now], below.bad_reason];
+    else badReason = now;
+    db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`).run(`${sm.name}: ${reason}`, componentId);
+  }
   db.prepare(`UPDATE snowmobiles SET status = 'killed', proof_note = ? WHERE id = ?`).run(reason, sm.id);
-  tree.killed = { component_id: componentId, reason };
+  // The note that the kill replaces, the marks of the kills under it, and your own mark under them, so that an undo can put them back.
+  tree.killed = { component_id: componentId, reason, note: sm.proof_note, bad_reason: badReason, under };
   db.prepare(`UPDATE grills SET tree = ?, status = 'killed', updated_at = CURRENT_TIMESTAMP WHERE snowmobile_id = ?`)
     .run(JSON.stringify(tree), sm.id);
+}
+
+// Takes back the last answered round: its answers, the rounds after it, and a kill or a brief that it caused.
+function undoRound(cfg, smId) {
+  const { db } = cfg;
+  const sm = db.prepare(`SELECT * FROM snowmobiles WHERE id = ?`).get(smId);
+  const grill = db.prepare(`SELECT * FROM grills WHERE snowmobile_id = ?`).get(smId);
+  const tree = JSON.parse(grill.tree);
+  const last = Math.max(0, ...settledOf(tree).map((d) => d.round));
+  if (!last) return false;
+  tree.decisions = tree.decisions.filter((d) => d.round <= last);
+  for (const d of tree.decisions) if (d.round === last) d.answer = null;
+  tree.round = last;
+  let note = sm.proof_note;
+  if (tree.killed) {
+    const { component_id: cid, reason } = tree.killed;
+    // The part gets the mark of the most recent kill under this one that still stands, else your own mark.
+    if (cid && db.prepare(`SELECT bad_reason FROM components WHERE id = ?`).get(cid).bad_reason === `${sm.name}: ${reason}`) {
+      const back = (tree.killed.under || []).findLast((m) => standingKill(db, cid, m));
+      db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`)
+        .run(back || (tree.killed.bad_reason === LEFT_OUT ? LEFT_OUT : null), cid);
+    }
+    note = tree.killed.note ?? note;
+    delete tree.killed;
+  }
+  db.prepare(`UPDATE snowmobiles SET status = 'survivor', proof_note = ? WHERE id = ? AND status IN ('killed', 'grilled')`).run(note, smId);
+  db.prepare(`UPDATE grills SET tree = ?, status = 'open', brief = NULL, updated_at = CURRENT_TIMESTAMP WHERE snowmobile_id = ?`)
+    .run(JSON.stringify(tree), smId);
+  cfg.grillErrors.delete(smId);
+  return true;
 }
 
 // ---------- HTTP ----------
@@ -667,6 +713,10 @@ function search(db, q) {
       WHERE c.name LIKE ? OR c.mechanism LIKE ? OR s.name LIKE ? ORDER BY c.id DESC LIMIT 200`).all(like, like, like),
   };
 }
+
+// The marks that the owner's own actions leave on a part and on an idea.
+const LEFT_OUT = 'left out by you';
+const BURIED = 'Buried by you. ';
 
 function handler(cfg) {
   const { db } = cfg;
@@ -737,6 +787,23 @@ function handler(cfg) {
           .run(paradigm_id, axis_id, score, String(reason || 'set by the owner'));
         return send(res, 200, {});
       }
+      if (req.method === 'POST' && (r = m(/^\/api\/components\/(\d+)$/))) {
+        // The owner leaves a part out of the next creation, or brings it back.
+        const { out } = await readBody(req);
+        const ok = db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`).run(out ? LEFT_OUT : null, Number(r[1])).changes;
+        return ok ? send(res, 200, {}) : send(res, 404, { error: 'no such part' });
+      }
+      if (req.method === 'POST' && (r = m(/^\/api\/snowmobiles\/(\d+)$/))) {
+        // The owner buries a survivor, or restores an idea from the graveyard. An undo sends the earlier note.
+        const { status, proof_note } = await readBody(req);
+        const sm = db.prepare(`SELECT * FROM snowmobiles WHERE id = ?`).get(Number(r[1]));
+        if (!sm) return send(res, 404, { error: 'no such idea' });
+        const from = { graveyard: 'survivor', survivor: 'graveyard' }[status];
+        if (!from || sm.status !== from) return send(res, 409, { error: `only a ${from || 'survivor'} can become ${status}` });
+        const note = proof_note !== undefined ? proof_note === null ? null : String(proof_note) : status === 'graveyard' ? BURIED + (sm.proof_note || '') : String(sm.proof_note || '').replace(BURIED, '');
+        db.prepare(`UPDATE snowmobiles SET status = ?, proof_note = ? WHERE id = ?`).run(status, note, sm.id);
+        return send(res, 200, {});
+      }
       if (req.method === 'GET' && (r = m(/^\/api\/hunts\/(\d+)$/))) {
         const v = huntView(db, Number(r[1]));
         return v ? send(res, 200, v) : send(res, 404, { error: 'no such hunt' });
@@ -763,6 +830,12 @@ function handler(cfg) {
         const tree = JSON.parse(grill.tree);
         if (grill.status === 'open' && tree.decisions.every((d) => d.answer)
           && !cfg.frontiers.has(frontierKey(smId, settledOf(tree))) && !cfg.grillErrors.has(smId)) advance(cfg, smId);
+        return send(res, 200, grillView(cfg, smId));
+      }
+      if (req.method === 'POST' && (r = m(/^\/api\/grills\/(\d+)\/undo$/))) {
+        const smId = Number(r[1]);
+        if (!db.prepare(`SELECT 1 FROM grills WHERE snowmobile_id = ?`).get(smId)) return send(res, 404, { error: 'no such grill' });
+        if (!undoRound(cfg, smId)) return send(res, 409, { error: 'no round to undo' });
         return send(res, 200, grillView(cfg, smId));
       }
       if (req.method === 'POST' && (r = m(/^\/api\/grills\/(\d+)\/(answer|retry)$/))) {
