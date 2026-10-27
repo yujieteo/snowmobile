@@ -31,6 +31,14 @@ test('a request without the token gets 403', async () => {
   server.close();
 });
 
+test('a multibyte token with the same character count gets 403 and the server keeps running', async () => {
+  const { server, cfg, call } = await lab();
+  const res = await fetch(`http://127.0.0.1:${server.address().port}/?token=${encodeURIComponent('é'.repeat(cfg.token.length))}`);
+  assert.strictEqual(res.status, 403);
+  assert.strictEqual((await call('/api/search')).status, 200);
+  server.close();
+});
+
 test('hunt, create, grill to a build brief, and kill', async () => {
   const { server, call, until } = await lab();
   const { id } = (await call('/api/hunts', { seed: 'flaky tests' })).body;

@@ -331,8 +331,9 @@ function handler(cfg) {
   const page = fs.readFileSync(path.join(__dirname, 'page.html'), 'utf8');
   return async (req, res) => {
     const url = new URL(req.url, 'http://127.0.0.1');
-    const t = url.searchParams.get('token') || req.headers['x-token'];
-    if (!t || t.length !== cfg.token.length || !crypto.timingSafeEqual(Buffer.from(t), Buffer.from(cfg.token))) {
+    const t = Buffer.from(String(url.searchParams.get('token') || req.headers['x-token'] || ''));
+    const want = Buffer.from(cfg.token);
+    if (t.length !== want.length || !crypto.timingSafeEqual(t, want)) {
       return send(res, 403, 'Open the URL that snowmobile printed at start, with its token.\n', 'text/plain');
     }
     const p = url.pathname;
