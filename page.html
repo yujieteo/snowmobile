@@ -579,7 +579,7 @@ async function stack() {
     <h2>Practical problems</h2>
     <p class="small dim">${s.practicalProblems.items.length} sourced problems · ${s.practicalProblems.links.length} paradigm-problem links. Select a problem as your app seed.</p>
     <div class="card">
-      <p><b>Problems without a documented reduction:</b> ${s.practicalProblems.coverage.withoutReduction.map((id) => esc(s.practicalProblems.items.find((p) => p.id === id).name)).join(', ') || 'None'}.</p>
+      <p><b>Whole database: problems without a documented reduction:</b> ${s.practicalProblems.coverage.withoutReduction.map((id) => esc(s.practicalProblems.items.find((p) => p.id === id).name)).join(', ') || 'None'}.</p>
       ${s.practicalProblems.items.map((p) => `<div>
         <button type="button" class="chip" data-problem="${esc(p.id)}">${esc(p.name)} · ${p.percent}%</button>
         ${s.practicalProblems.links.filter((l) => l.problem_id === p.id).map((l) => `<p class="small">
@@ -598,6 +598,11 @@ async function stack() {
         ${p ? `<b>${link(p.url, p.name)}</b><div class="small dim">${esc(p.summary)}</div>` : '<span class="dim">any (the LLM chooses)</span>'}</div>
         ${p ? `<button class="x" data-clear="${k}" aria-label="clear ${esc(v)}">×</button>` : ''}</div>`;
     }).join('')}</div>
+    ${s.selectedProblemCoverage ? `<div class="card" id="selected-problem-coverage">
+      <p><b>Your stack: problems without a documented reduction:</b> ${s.selectedProblemCoverage.withoutReduction.map((id) => esc(s.practicalProblems.items.find((p) => p.id === id).name)).join(', ') || 'None'}.</p>
+      <p class="small dim">${s.selectedProblemCoverage.unassessedParadigms} selected paradigms have no problem assessment. Empty layers remain open for Claude to choose.</p>
+      <p class="small dim">${esc(s.selectedProblemCoverage.limit)}</p>
+    </div>` : ''}
     <form class="row" id="f"><input type="text" id="pain" placeholder="a practical problem (optional with a stack)" autocomplete="off" aria-label="practical problem" value="${esc(pain)}">
       <button>Create apps</button></form>
     <p class="small dim">With a pain and no stack, the LLM chooses a paradigm for each layer.</p>

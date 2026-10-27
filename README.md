@@ -64,6 +64,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The reliability assessment uses [Erlang/OTP supervisors](https://www.erlang.org/doc/system/sup_princ.html), which restart failed processes and limit repeated restarts.
   Actors alone provide no supervisor. A documented reduction does not prove that a problem has a complete solution.
   Reason: the Stack API reported no reduction for technical debt or unreliable systems.
+  Your stack also shows problems without a documented reduction among its selected paradigms.
+  This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
+  The whole database measure stays separate. No assessment means an unknown effect.
+  Reason: a Microservices trial showed no uncovered problems because the page measured only the whole database.
 - **Gaps.** With 2 or more picked paradigms, the page shows the gap between them on each axis. A gap of 5 or more is a mismatch: a chance for a new idea.
 - **Create.** Write a practical problem, pick a stack, or do both. If you do not pick a paradigm for a layer, Claude chooses one. Claude then proposes consumer apps or developer tools that the stack makes possible, cheap or fast.
   The prompt gives practical developer problems priority over novelty.

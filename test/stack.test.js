@@ -219,6 +219,21 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   }
   const n = s.paradigms.length;
 
+  // Reason: database coverage hid problems that the selected stack had no assessment to reduce.
+  assert.strictEqual(s.selectedProblemCoverage, null);
+  const microservices = s.paradigms.find((p) => p.name === 'Microservices');
+  const nix = s.paradigms.find((p) => p.name === 'Functional package management');
+  const unassessed = s.paradigms.find((p) => p.name === 'Microkernel');
+  const harmOnly = (await call(`/api/stack?pick=${microservices.id}`)).body;
+  assert.deepStrictEqual(harmOnly.practicalProblems.coverage.withoutReduction, []);
+  assert.deepStrictEqual(harmOnly.selectedProblemCoverage.withoutReduction, problems.items.map((p) => p.id));
+  assert.strictEqual(harmOnly.selectedProblemCoverage.unassessedParadigms, 0);
+  const useful = (await call(`/api/stack?pick=${nix.id},${unassessed.id},${unassessed.id},999999`)).body;
+  assert.deepStrictEqual(useful.selectedProblemCoverage.withoutReduction, ['technical-debt', 'unreliable-tools']);
+  assert.strictEqual(useful.selectedProblemCoverage.unassessedParadigms, 1);
+  assert.strictEqual((await call('/api/stack?pick=999999')).body.selectedProblemCoverage, null);
+  assert.strictEqual((await call('/api/stack')).body.selectedProblemCoverage, null);
+
   await call('/api/stack/axes', {});
   s = await until('/api/stack', (b) => !b.job);
   assert.strictEqual(s.axes.length, 4);

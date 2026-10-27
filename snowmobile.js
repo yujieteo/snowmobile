@@ -285,6 +285,8 @@ function stackView(cfg, pick) {
   const data = stackData(cfg.db);
   const ids = pick.filter((id) => data.paradigms.some((p) => p.id === id));
   return { ...data, layers: LAYERS, mismatch: MISMATCH, job: cfg.stackJob,
+    // Reason: the Microservices trial showed only database coverage, with no selected-stack measure.
+    selectedProblemCoverage: ids.length ? practicalProblems(data.paradigms.filter((p) => ids.includes(p.id))).coverage : null,
     gaps: ids.length > 1 ? gaps(data.axes, data.scores, ids) : [] };
 }
 
