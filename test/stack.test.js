@@ -78,9 +78,10 @@ test('a seed update adds absent seeds and preserves user data on each start', as
   app = await start({ home, port: 0, claude: 'false' });
   const db = app.cfg.db;
   const before = db.prepare(`SELECT * FROM paradigms ORDER BY id`).all();
-  // Remove one seed to represent a database from before that seed was added.
-  const absent = before[0], edited = before[1];
-  db.prepare(`DELETE FROM paradigms WHERE id = ?`).run(absent.id);
+  // Remove the last seed of each layer to represent the previous seed list.
+  const absent = before.filter((p) => !before.some((q) => q.layer === p.layer && q.id > p.id));
+  const edited = before[1];
+  for (const p of absent) db.prepare(`DELETE FROM paradigms WHERE id = ?`).run(p.id);
   db.prepare(`UPDATE paradigms SET name = ?, summary = ?, url = ? WHERE id = ?`)
     .run(edited.name.toUpperCase(), 'My definition.', 'https://example.com/my-source', edited.id);
   db.prepare(`INSERT INTO axes (name, low, high) VALUES ('My axis', 'low', 'high')`).run();
@@ -97,9 +98,12 @@ test('a seed update adds absent seeds and preserves user data on each start', as
     app = await start({ home, port: 0, claude: 'false' });
     const current = app.cfg.db;
     assert.strictEqual(current.prepare(`SELECT COUNT(*) AS n FROM paradigms`).get().n, before.length);
-    const restored = current.prepare(`SELECT * FROM paradigms WHERE name = ?`).get(absent.name);
-    assert.deepStrictEqual([restored.layer, restored.summary, restored.url], [absent.layer, absent.summary, absent.url]);
-    assert.deepStrictEqual(current.prepare(`SELECT * FROM paradigms WHERE id != ? ORDER BY id`).all(restored.id), kept);
+    const restored = absent.map((p) => {
+      const row = current.prepare(`SELECT * FROM paradigms WHERE name = ?`).get(p.name);
+      assert.deepStrictEqual([row.layer, row.summary, row.url], [p.layer, p.summary, p.url]);
+      return row.id;
+    });
+    assert.deepStrictEqual(current.prepare(`SELECT * FROM paradigms ORDER BY id`).all().filter((p) => !restored.includes(p.id)), kept);
     assert.deepStrictEqual(current.prepare(`SELECT * FROM axes`).all(), axes);
     assert.deepStrictEqual(current.prepare(`SELECT * FROM scores`).all(), scores);
     assert.strictEqual(app.cfg.token, token);
@@ -136,6 +140,11 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.strictEqual(s.axes.length, 4);
   assert.strictEqual(s.map.ids.length, n);
   assert.strictEqual(s.map.points.length, n);
+  for (const p of s.paradigms) for (const a of s.axes) {
+    const score = s.scores[p.id][a.id];
+    assert.ok(Number.isInteger(score.score) && score.score >= 0 && score.score <= 10);
+    assert.ok(score.reason.trim());
+  }
 
   // Hunt more: a paradigm that the map has already is left out, and the new one gets scores.
   await call('/api/stack/hunting', {});

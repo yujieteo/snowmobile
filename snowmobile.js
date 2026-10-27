@@ -74,8 +74,7 @@ function token(db) {
 // The four layers of a stack, from the program down to the machine and back up to the product.
 const LAYERS = { language: 'Programming language', hardware: 'Hardware', os: 'Operating system', software: 'Software' };
 
-// The start list. Languages follow Van Roy's taxonomy, hardware follows Patterson and Hennessy,
-// operating systems follow the kernel designs of an OS book, software follows the main architecture styles.
+// The start list includes taxonomies, papers, project documentation and architecture styles.
 const W = 'https://en.wikipedia.org/wiki/';
 const START = {
   language: [
@@ -87,6 +86,7 @@ const START = {
     ['Actor model', 'Independent actors own their state and talk only through asynchronous messages.', `${W}Actor_model`],
     ['Dataflow programming', 'Operations run when their inputs arrive, so the graph of data sets the order.', `${W}Dataflow_programming`],
     ['Functional reactive programming', 'Values that change over time are first-class and the runtime propagates each change.', `${W}Functional_reactive_programming`],
+    ['Concatenative programming', 'Adjacent program fragments compose functions, usually over a shared data stack.', 'https://concatenative.org/wiki/view/Concatenative%20language'],
   ],
   hardware: [
     ['Pipelined RISC processor', 'Simple fixed-length instructions overlap in a five-stage pipeline.', `${W}Classic_RISC_pipeline`],
@@ -97,6 +97,7 @@ const START = {
     ['Shared-memory multiprocessor', 'Several cores share one coherent address space through caches.', `${W}Symmetric_multiprocessing`],
     ['Cluster (warehouse-scale computer)', 'Many cheap servers connected by a network act as one computer.', `${W}Computer_cluster`],
     ['Domain-specific accelerator', 'Hardware built for one class of work, such as the systolic arrays of a TPU.', `${W}Tensor_Processing_Unit`],
+    ['Reconfigurable logic (FPGA)', 'Configurable logic blocks and interconnect form circuits rather than execute a fixed instruction stream.', 'https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw'],
   ],
   os: [
     ['Monolithic kernel', 'All operating system services run in one privileged address space.', `${W}Monolithic_kernel`],
@@ -107,6 +108,7 @@ const START = {
     ['Capability-based OS', 'A process can use a resource only through an unforgeable capability that names it.', `${W}Capability-based_security`],
     ['Real-time OS', 'The scheduler guarantees that each task meets its deadline.', `${W}Real-time_operating_system`],
     ['Distributed OS', 'Many machines appear to the user as one system with one namespace.', `${W}Distributed_operating_system`],
+    ['Multikernel', 'Independent kernels on each core coordinate through explicit messages and replicate state rather than share it.', 'https://barrelfish.org/publications/barrelfish_sosp09.pdf'],
   ],
   software: [
     ['Client-server', 'Clients send requests to a central server that owns the data.', `${W}Client%E2%80%93server_model`],
@@ -117,6 +119,7 @@ const START = {
     ['Serverless', 'The platform runs a function for each request and bills only that run.', `${W}Serverless_computing`],
     ['Local-first software', 'The primary copy of the data lives on the device and syncs to others when it can.', 'https://www.inkandswitch.com/local-first/'],
     ['Event sourcing', 'The state is the result of replaying an append-only log of events.', 'https://martinfowler.com/eaaDev/EventSourcing.html'],
+    ['CQRS', 'Separate models handle commands that change data and queries that read data.', 'https://martinfowler.com/bliki/CQRS.html'],
   ],
 };
 
