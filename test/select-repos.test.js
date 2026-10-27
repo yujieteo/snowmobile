@@ -290,7 +290,7 @@ function corpusBeforeAutomerge() {
   return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Automerge'),
     paradigms: corpus.paradigms.filter((p) =>
       !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)',
-        'Cluster (warehouse-scale computer)', 'Multikernel'].includes(p.name)) };
+        'Cluster (warehouse-scale computer)', 'Multikernel', 'Hardware root of trust'].includes(p.name)) };
 }
 
 function corpusBeforeGforth() {
@@ -583,7 +583,7 @@ test('the command preserves source evidence and leaves its input file intact', (
 });
 
 test('the single-level store profile adds a distinct durable OS example', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeAutomerge();
   const profile = corpus.paradigms.find((p) => p.name === 'Single-level store');
   assert.equal(profile.layer, 'os');
   const previous = corpus.paradigms.filter((p) => p !== profile);
@@ -696,6 +696,28 @@ test('the multikernel profile adds a distributed OS example without false isolat
   assert.ok(Math.abs(nearest - Math.sqrt(87)) < 1e-9);
   const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
   assert.equal(source.split("['Multikernel',").length - 1, 1);
+  const before = selectRepos({ ...corpus, paradigms: previous }, corpus.repos.length);
+  const after = selectRepos(corpus, corpus.repos.length);
+  assert.deepEqual(after.repos, before.repos);
+  assert.equal(after.minimumDistance, before.minimumDistance);
+  assert.deepEqual(after.gaps, []);
+  const { map } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.equal(map.coverage.radius, map.coverage.baseline.radius);
+});
+
+test('the hardware root of trust profile adds a distinct durable device example', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Hardware root of trust');
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  assert.equal(candidate.layer, 'hardware');
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]))));
+  assert.ok(Math.abs(nearest - Math.sqrt(68)) < 1e-9);
+  // Access control alone does not establish separate failure boundaries.
+  assert.match(candidate.reasons[6].reason, /uncertain evidence/);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Hardware root of trust',").length - 1, 1);
   const before = selectRepos({ ...corpus, paradigms: previous }, corpus.repos.length);
   const after = selectRepos(corpus, corpus.repos.length);
   assert.deepEqual(after.repos, before.repos);
