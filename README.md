@@ -54,6 +54,11 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
 - **Map.** Principal component analysis puts all paradigms on a 2D map, with a colour and a shape for each layer. Tap a mark to pick it for its layer. Tap an empty area, and Claude tells you which paradigm would live at that point.
 - **Practical problems.** The map page lists leading frustrations from the [2024 Stack Overflow survey](https://survey.stackoverflow.co/2024/professional-developers/#2-most-common-frustrations). Each problem shows its respondent share. Tap a problem to use it as the app seed. These shares describe the survey sample. Source links explain which mechanisms can reduce a problem or make it worse. Tap a linked paradigm to pick it for your stack. The page counts links and names problems without a documented reduction. These assessments describe specific mechanisms, not effects on survey shares. A paradigm without a link has no assessment. This does not prove that it has no benefit. A change to a paradigm name, layer or source removes its seed assessment.
   Reason: an API trial found no paradigm-problem links or measure of problems without a documented reduction.
+  The debt assessment uses [Fowler's separation of configuration from use](https://martinfowler.com/articles/injection.html#SeparatingConfigurationFromUse).
+  It infers a reduction in dependency-related debt, with no claim about all debt.
+  The reliability assessment uses [Erlang/OTP supervisors](https://www.erlang.org/doc/system/sup_princ.html), which restart failed processes and limit repeated restarts.
+  Actors alone provide no supervisor. A documented reduction does not prove that a problem has a complete solution.
+  Reason: the Stack API reported no reduction for technical debt or unreliable systems.
 - **Gaps.** With 2 or more picked paradigms, the page shows the gap between them on each axis. A gap of 5 or more is a mismatch: a chance for a new idea.
 - **Create.** Write a practical problem, pick a stack, or do both. If you do not pick a paradigm for a layer, Claude chooses one. Claude then proposes consumer apps or developer tools that the stack makes possible, cheap or fast.
   The prompt gives practical developer problems priority over novelty.

@@ -39,6 +39,27 @@ test('idea problem priority uses the greatest sourced share and ignores invalid 
   assert.strictEqual(result.practical_problems.length, 2);
 });
 
+// Reason: a changed user paradigm must not retain a seed assessment for debt or reliability.
+test('debt and reliability assessments follow only the documented seed definitions', () => {
+  const injection = { id: 93, layer: 'software', name: 'Dependency injection', url: 'https://martinfowler.com/articles/injection.html' };
+  const actor = { id: 94, layer: 'language', name: 'Actor model', url: 'https://en.wikipedia.org/wiki/Actor_model' };
+  const assessed = practicalProblems([injection, actor]);
+  assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
+  assert.strictEqual(assessed.coverage.unassessedParadigms, 0);
+  assert.deepStrictEqual(assessed.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[93, 'technical-debt', 'reduces'], [94, 'unreliable-tools', 'reduces']]);
+  assert.match(assessed.links[0].reason, /Assessment:.*does not address all technical debt/);
+  assert.match(assessed.links[1].reason, /In Erlang\/OTP.*Actors alone provide no supervisor/);
+  for (const original of [injection, actor]) {
+    for (const change of [{ name: 'User definition' }, { layer: 'os' }, { url: 'https://example.com/user' }]) {
+      const result = practicalProblems([{ ...original, ...change }]);
+      assert.strictEqual(result.links.length, 0);
+      assert.strictEqual(result.coverage.withoutReduction.length, 4);
+      assert.strictEqual(result.coverage.unassessedParadigms, 1);
+    }
+  }
+});
+
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} is not ${b}`);
 
 test('eigen finds the eigenpairs of a known symmetric matrix, largest first', () => {
@@ -188,9 +209,9 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.match(problems.source.scope, /Professional Developer/);
   assert.match(problems.source.measure, /more than one/);
   assert.match(problems.source.limit, /do not measure severity/);
-  assert.strictEqual(problems.links.length, 3);
-  assert.deepStrictEqual(problems.coverage.withoutReduction, ['technical-debt', 'unreliable-tools']);
-  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 2);
+  assert.strictEqual(problems.links.length, 5);
+  assert.deepStrictEqual(problems.coverage.withoutReduction, []);
+  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 4);
   for (const l of problems.links) {
     assert.ok(s.paradigms.some((p) => p.id === l.paradigm_id && p.name === l.paradigm));
     assert.ok(problems.items.some((p) => p.id === l.problem_id));

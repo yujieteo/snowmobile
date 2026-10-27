@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Stack API reported no reduction for technical debt or unreliable systems.
+  {
+    paradigm: 'Dependency injection', layer: 'software', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Assessment: separate service configuration can reduce debt from concrete dependencies and duplicate selection logic. This does not address all technical debt.',
+    source: { title: 'Martin Fowler: separate configuration from use', url: 'https://martinfowler.com/articles/injection.html#SeparatingConfigurationFromUse' },
+  },
+  {
+    paradigm: 'Actor model', layer: 'language', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'In Erlang/OTP, supervisors restart failed child processes and limit repeated restarts. This can restore service after a process fault. Actors alone provide no supervisor.',
+    source: { title: 'Erlang/OTP: supervision principles and restart limits', url: 'https://www.erlang.org/doc/system/sup_princ.html' },
+  },
   {
     paradigm: 'Functional package management', layer: 'software', problem_id: 'build-complexity', effect: 'reduces',
     reason: 'Explicit dependencies and isolated package paths reduce hidden build dependencies in Nix.',
