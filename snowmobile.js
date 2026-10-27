@@ -87,6 +87,8 @@ const START = {
     ['Dataflow programming', 'Operations run when their inputs arrive, so the graph of data sets the order.', `${W}Dataflow_programming`],
     ['Functional reactive programming', 'Values that change over time are first-class and the runtime propagates each change.', `${W}Functional_reactive_programming`],
     ['Concatenative programming', 'Adjacent program fragments compose functions, usually over a shared data stack.', 'https://concatenative.org/wiki/view/Concatenative%20language'],
+    ['Ownership types', 'The compiler checks one owner per value and releases the value when its owner leaves scope.', 'https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html'],
+    ['Algebraic effects', 'Programs declare effect operations, and handlers define how those operations execute and resume.', 'https://koka-lang.github.io/koka/doc/book.html'],
   ],
   hardware: [
     ['Pipelined RISC processor', 'Simple fixed-length instructions overlap in a five-stage pipeline.', `${W}Classic_RISC_pipeline`],
@@ -98,6 +100,8 @@ const START = {
     ['Cluster (warehouse-scale computer)', 'Many cheap servers connected by a network act as one computer.', `${W}Computer_cluster`],
     ['Domain-specific accelerator', 'Hardware built for one class of work, such as the systolic arrays of a TPU.', `${W}Tensor_Processing_Unit`],
     ['Reconfigurable logic (FPGA)', 'Configurable logic blocks and interconnect form circuits rather than execute a fixed instruction stream.', 'https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw'],
+    ['Neuromorphic hardware', 'Artificial neurons exchange sparse events, with memory and computation close together.', 'https://www.intel.com/content/www/us/en/research/neuromorphic-computing.html'],
+    ['Hardware root of trust', 'Dedicated secure silicon provides a trust anchor for boot verification and device attestation.', 'https://opentitan.org/book/doc/introduction.html'],
   ],
   os: [
     ['Monolithic kernel', 'All operating system services run in one privileged address space.', `${W}Monolithic_kernel`],
@@ -109,6 +113,8 @@ const START = {
     ['Real-time OS', 'The scheduler guarantees that each task meets its deadline.', `${W}Real-time_operating_system`],
     ['Distributed OS', 'Many machines appear to the user as one system with one namespace.', `${W}Distributed_operating_system`],
     ['Multikernel', 'Independent kernels on each core coordinate through explicit messages and replicate state rather than share it.', 'https://barrelfish.org/publications/barrelfish_sosp09.pdf'],
+    ['Splitkernel', 'Separate monitors manage processor, memory and storage components across a network instead of one complete server.', 'https://www.usenix.org/conference/osdi18/presentation/shan'],
+    ['Separation kernel', 'The kernel isolates applications through fixed resource partitions and explicit controls on information flow.', 'https://www.lynx.com/products/lynxsecure-separation-kernel-hypervisor'],
   ],
   software: [
     ['Client-server', 'Clients send requests to a central server that owns the data.', `${W}Client%E2%80%93server_model`],
@@ -120,6 +126,8 @@ const START = {
     ['Local-first software', 'The primary copy of the data lives on the device and syncs to others when it can.', 'https://www.inkandswitch.com/local-first/'],
     ['Event sourcing', 'The state is the result of replaying an append-only log of events.', 'https://martinfowler.com/eaaDev/EventSourcing.html'],
     ['CQRS', 'Separate models handle commands that change data and queries that read data.', 'https://martinfowler.com/bliki/CQRS.html'],
+    ['Embedded database', 'The database engine executes inside the application process and accesses files without a separate server.', 'https://www.sqlite.org/serverless.html'],
+    ['Dependency injection', 'External configuration supplies component dependencies, so each component can use an interface without a fixed implementation.', 'https://martinfowler.com/articles/injection.html'],
   ],
 };
 

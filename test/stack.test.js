@@ -78,8 +78,9 @@ test('a seed update adds absent seeds and preserves user data on each start', as
   app = await start({ home, port: 0, claude: 'false' });
   const db = app.cfg.db;
   const before = db.prepare(`SELECT * FROM paradigms ORDER BY id`).all();
-  // Remove the last seed of each layer to represent the previous seed list.
-  const absent = before.filter((p) => !before.some((q) => q.layer === p.layer && q.id > p.id));
+  // Remove two seeds per layer to represent the previous seed list.
+  const absent = [...new Set(before.map((p) => p.layer))]
+    .flatMap((layer) => before.filter((p) => p.layer === layer).slice(-2));
   const edited = before[1];
   for (const p of absent) db.prepare(`DELETE FROM paradigms WHERE id = ?`).run(p.id);
   db.prepare(`UPDATE paradigms SET name = ?, summary = ?, url = ? WHERE id = ?`)
