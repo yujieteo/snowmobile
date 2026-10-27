@@ -55,6 +55,20 @@ Stack mode makes consumer apps from a stack of 4 paradigms: one programming lang
 - **Gaps.** With 2 or more picked paradigms, the page shows the gap between them on each axis. A gap of 5 or more is a mismatch: a chance for a new idea.
 - **Create.** Write a consumer pain, pick a stack, or do both. If you do not pick a paradigm for a layer, Claude chooses one. Claude then proposes consumer apps that the stack makes possible, cheap or fast. The same checks as above send weak apps to the graveyard. The grill and the build brief are the same as in the other mode, and the brief also names the layer mismatch that the app uses.
 
+## Repository subset
+
+Use `node scripts/select-repos.js <scores.json> <count>` to select distant repositories from a score file.
+Reason: a distant subset supplies distinct sources for the paradigm search.
+The file has `axes`, an array of distinct axis names, and `repos`, an array of repository records.
+Each record has a GitHub `url` and a `scores` array, with one value from 0 to 10 per axis.
+Use the same axis order and definitions as the Stack map. Keep source links and score reasons in each record.
+The script preserves those extra fields in its JSON output.
+
+The script starts with the most distant pair, then selects the repository farthest from its nearest selected repository.
+It uses Euclidean distance on the full axis scores, with equal weight per axis. Ties follow input order.
+The output includes the selected records and their minimum pair distance. The method is greedy and does not guarantee the best subset.
+This step requires scores from source evidence. It does not fetch repositories, assign scores, run joint PCA, or verify candidate paradigms.
+
 ## Interface
 
 The interface comes from a conceptual model: the objects, their relationships, their actions and their attributes. [docs/concepts.md](docs/concepts.md) has the model and the object-action matrix. The content fills the screen. The navigation and the primary action of each screen float above it at the bottom, within reach of your thumb. [docs/screens](docs/screens) has a screenshot of each screen at 375, 430 and 1280 px.
