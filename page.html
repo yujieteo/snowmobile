@@ -156,7 +156,7 @@ function smCard(s, comps) {
   const grillable = s.status === 'survivor' || s.status === 'grilled' || s.status === 'killed';
   return `<div class="card"><div class="tag ${esc(s.status)}">${esc(s.status)}</div><b>${esc(s.name)}</b>
     ${caseOf(s)}<div class="dim">${esc(s.pitch)}</div><div>${parts}</div>
-    <p class="small dim">${s.status === 'graveyard' ? `Exists: ${link(s.proof_url, s.proof_url || 'proof')}. ` : ''}${esc(s.proof_note)}</p>
+    <p class="small dim">${s.proof_url ? `Exists: ${link(s.proof_url, s.proof_url)}. ` : ''}${esc(s.proof_note)}</p>
     ${grillable ? `<button class="${s.status === 'survivor' ? '' : 'ghost'}" onclick="go('#/grill/${s.id}')">${s.status === 'survivor' ? 'Grill me' : 'Open tree'}</button>` : ''}</div>`;
 }
 
@@ -181,7 +181,7 @@ async function hunt(id) {
       ${h.error ? `<div class="err">${esc(h.error)}</div>` : ''}</div>
     <button id="create" ${busy || !sources.length ? 'disabled' : ''}>${h.stack ? 'Create more apps' : 'Create snowmobiles'}</button>
     ${h.stack ? '<a class="small" href="#/stack">← back to the stack map</a>' : `<button id="more" class="ghost" ${busy ? 'disabled' : ''}>Hunt more parts</button>`}
-    ${groups.map(([st, list]) => list.length ? `<h2>${{ survivor: 'Survivors', grilled: 'Grilled', killed: 'Killed in the grill', graveyard: 'Graveyard: already exists' }[st]}</h2>
+    ${groups.map(([st, list]) => list.length ? `<h2>${{ survivor: 'Survivors', grilled: 'Grilled', killed: 'Killed in the grill', graveyard: 'Graveyard' }[st]}</h2>
       <div class="grid">${list.map((s) => smCard(s, comps)).join('')}</div>` : '').join('')}
     <h2>${h.stack ? 'The stack' : 'Parts found in the wild'}</h2>
     <div class="grid">${sources.map((s) => `<div class="card"><span class="tag dim">${esc(s.kind)}</span>
@@ -361,7 +361,7 @@ async function stack() {
   if (document.getElementById('prep')) document.getElementById('prep').onclick = job('axes');
   document.getElementById('more').onclick = job('hunting');
   document.querySelectorAll('.gaps input').forEach((i) => (i.onchange = async () => {
-    try { await api('/api/scores', { paradigm_id: Number(i.dataset.p), axis_id: Number(i.dataset.a), score: Number(i.value) }); } catch (e) { alert(e.message); }
+    if (i.value !== '') try { await api('/api/scores', { paradigm_id: Number(i.dataset.p), axis_id: Number(i.dataset.a), score: Number(i.value) }); } catch (e) { alert(e.message); }
     stack();
   }));
   document.querySelectorAll('[data-axis]').forEach((f) => (f.onsubmit = async (e) => {
