@@ -1569,6 +1569,59 @@
           "source": "https://opentitan.org/earlgrey_1.0.0/book/hw/ip/otp_ctrl/doc/programmers_guide.html"
         }
       ]
+    },
+    {
+      "name": "Microservices",
+      "layer": "software",
+      "definition": "Small services that each own their data talk over the network.",
+      "scope": "The stateful service architecture in Lewis and Fowler (2014), with separate processes, private databases, and failure controls. Stateless functions alone lie outside this scope.",
+      "sources": [
+        "https://martinfowler.com/articles/microservices.html"
+      ],
+      "scores": [
+        2,
+        0,
+        10,
+        8,
+        1,
+        5,
+        8,
+        10
+      ],
+      "reasons": [
+        {
+          "reason": "Services process requests through domain logic and explicit remote calls, rather than solve a desired-result query.",
+          "source": "https://martinfowler.com/articles/microservices.html"
+        },
+        {
+          "reason": "Services update their own databases and use compensating operations across services. The profile does not require immutable values.",
+          "source": "https://martinfowler.com/articles/microservices.html"
+        },
+        {
+          "reason": "Separate service processes coordinate through remote calls or messages across a network.",
+          "source": "https://martinfowler.com/articles/microservices.html"
+        },
+        {
+          "reason": "An individual service can be replaced without a full application deployment, although interface changes can require coordination.",
+          "source": "https://martinfowler.com/articles/microservices.html"
+        },
+        {
+          "reason": "HTTP requests and message channels expose service behavior rather than machine instructions or device registers.",
+          "source": "https://martinfowler.com/articles/microservices.html"
+        },
+        {
+          "reason": "The article specifies independent deployment, but not task-specific build composition. The midpoint marks uncertain evidence.",
+          "source": "https://martinfowler.com/articles/microservices.html"
+        },
+        {
+          "reason": "Separate processes and circuit breakers contain some service failures. Remote dependencies can still propagate failures.",
+          "source": "https://martinfowler.com/articles/microservices.html"
+        },
+        {
+          "reason": "Each service manages its own database, and coordination must account for updates across those databases.",
+          "source": "https://martinfowler.com/articles/microservices.html"
+        }
+      ]
     }
   ]
 }
