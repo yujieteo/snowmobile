@@ -158,6 +158,40 @@ const START = {
 // A gap of this size or more (out of 10) on one axis is a mismatch between the layers of a stack.
 const MISMATCH = 5;
 
+// Reason: the API trial found zero links and no measure of problems without a documented reduction.
+const PROBLEM_LINKS = [
+  {
+    paradigm: 'Functional package management', layer: 'software', problem_id: 'build-complexity', effect: 'reduces',
+    reason: 'Explicit dependencies and isolated package paths reduce hidden build dependencies in Nix.',
+    source: { title: 'Nix manual: complete dependencies', url: 'https://nix.dev/manual/nix/2.34/introduction.html#complete-dependencies' },
+  },
+  {
+    paradigm: 'Functional package management', layer: 'software', problem_id: 'deployment-complexity', effect: 'reduces',
+    reason: 'Immutable package versions permit atomic upgrades and rollback in Nix. This reduces the risk from partial package updates.',
+    source: { title: 'Nix manual: atomic upgrades and rollbacks', url: 'https://nix.dev/manual/nix/2.34/introduction.html#atomic-upgrades-and-rollbacks' },
+  },
+  {
+    paradigm: 'Microservices', layer: 'software', problem_id: 'deployment-complexity', effect: 'worsens',
+    reason: 'Compared with a monolith, more services add system complexity and require compatible service updates and mature operations.',
+    source: { title: 'Azure Architecture Center: microservices challenges', url: 'https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/microservices#challenges' },
+  },
+];
+
+function practicalProblems(paradigms) {
+  const links = PROBLEM_LINKS.flatMap((link) => {
+    const seed = START[link.layer].find((p) => p[0] === link.paradigm);
+    return paradigms.filter((p) => p.layer === link.layer && p.name === seed[0] && p.url === seed[2])
+      .map((p) => ({ ...link, paradigm_id: p.id }));
+  });
+  const withoutReduction = PRACTICAL_PROBLEMS.items.filter((p) => !links.some((l) => l.problem_id === p.id && l.effect === 'reduces'));
+  return { ...PRACTICAL_PROBLEMS, links,
+    coverage: {
+      withoutReduction: withoutReduction.map((p) => p.id),
+      unassessedParadigms: paradigms.length - new Set(links.map((l) => l.paradigm_id)).size,
+      limit: 'Links are source-based assessments of specific mechanisms, not measured effects on survey shares. No link means no assessment, not no benefit.',
+    } };
+}
+
 // Eigenvalues and eigenvectors of a symmetric matrix by cyclic Jacobi rotations.
 // Returns pairs sorted by eigenvalue, largest first; each vector has its largest entry positive.
 function eigen(m) {
@@ -225,7 +259,7 @@ function stackData(db) {
   for (const s of db.prepare(`SELECT * FROM scores`).all()) (scores[s.paradigm_id] ||= {})[s.axis_id] = s;
   const full = paradigms.filter((p) => axes.length && axes.every((a) => scores[p.id]?.[a.id]));
   const map = pca(full.map((p) => axes.map((a) => scores[p.id][a.id].score)));
-  return { axes, paradigms, scores, practicalProblems: PRACTICAL_PROBLEMS,
+  return { axes, paradigms, scores, practicalProblems: practicalProblems(paradigms),
     map: map && { ...map, ids: full.map((p) => p.id) } };
 }
 
@@ -937,4 +971,4 @@ if (require.main === module) {
   }, (e) => { console.error(`snowmobile: ${e.message}`); process.exit(1); });
 }
 
-module.exports = { start, eigen, pca, gaps };
+module.exports = { start, eigen, pca, gaps, practicalProblems };

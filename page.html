@@ -573,9 +573,16 @@ async function stack() {
       <div id="point"></div><p class="small dim">${pcLabel(s, 0)}<br>${pcLabel(s, 1)}</p>`
       : `<div class="card dim">The map needs axes and a score for each paradigm. <a href="#axes" data-jump>Propose the axes below.</a></div>`}
     <h2>Practical problems</h2>
-    <p class="small dim">${s.practicalProblems.items.length} sourced problems. Select a problem as your app seed.</p>
+    <p class="small dim">${s.practicalProblems.items.length} sourced problems · ${s.practicalProblems.links.length} paradigm-problem links. Select a problem as your app seed.</p>
     <div class="card">
-      ${s.practicalProblems.items.map((p) => `<button type="button" class="chip" data-problem="${esc(p.id)}">${esc(p.name)} · ${p.percent}%</button>`).join('')}
+      <p><b>Problems without a documented reduction:</b> ${s.practicalProblems.coverage.withoutReduction.map((id) => esc(s.practicalProblems.items.find((p) => p.id === id).name)).join(', ') || 'None'}.</p>
+      ${s.practicalProblems.items.map((p) => `<div>
+        <button type="button" class="chip" data-problem="${esc(p.id)}">${esc(p.name)} · ${p.percent}%</button>
+        ${s.practicalProblems.links.filter((l) => l.problem_id === p.id).map((l) => `<p class="small">
+          <button type="button" class="chip ${ids.includes(l.paradigm_id) ? 'on' : ''}" data-pick="${l.paradigm_id}" aria-pressed="${ids.includes(l.paradigm_id)}">${esc(l.paradigm)}${ids.includes(l.paradigm_id) ? ' · in your stack' : ''}</button>
+          <b>${esc(l.effect)}</b>: ${esc(l.reason)} ${link(l.source.url, l.source.title)}</p>`).join('')}
+        </div>`).join('')}
+      <p class="small dim">${s.practicalProblems.coverage.unassessedParadigms} paradigms have no problem assessment. ${esc(s.practicalProblems.coverage.limit)}</p>
       <p class="small">${link(s.practicalProblems.source.url, s.practicalProblems.source.title)} · ${s.practicalProblems.source.respondents.toLocaleString()} respondents</p>
       <p class="small dim">${esc(s.practicalProblems.source.scope)} ${esc(s.practicalProblems.source.measure)}</p>
       <p class="small dim">${esc(s.practicalProblems.source.limit)}</p>

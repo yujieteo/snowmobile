@@ -4,7 +4,29 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
-const { start, eigen, pca, gaps } = require('../snowmobile.js');
+const { start, eigen, pca, gaps, practicalProblems } = require('../snowmobile.js');
+
+// Reason: a stale link can assign a source assessment to a different user paradigm.
+test('problem coverage excludes absent or changed paradigms and does not count harm as a reduction', () => {
+  const microservices = { id: 71, layer: 'software', name: 'Microservices', url: 'https://en.wikipedia.org/wiki/Microservices' };
+  const nix = { id: 92, layer: 'software', name: 'Functional package management', url: 'https://nix.dev/manual/nix/2.35/introduction.html' };
+  const empty = practicalProblems([]);
+  assert.strictEqual(empty.links.length, 0);
+  assert.strictEqual(empty.coverage.withoutReduction.length, empty.items.length);
+  const harm = practicalProblems([microservices]);
+  assert.strictEqual(harm.links.length, 1);
+  assert.ok(harm.coverage.withoutReduction.includes('deployment-complexity'));
+  const both = practicalProblems([microservices, nix]);
+  assert.deepStrictEqual(both.coverage.withoutReduction, ['technical-debt', 'unreliable-tools']);
+  assert.strictEqual(both.coverage.unassessedParadigms, 0);
+  assert.deepStrictEqual(both.links.map((l) => l.paradigm_id), [92, 92, 71]);
+  for (const change of [{ name: 'My paradigm' }, { layer: 'os' }, { url: 'https://example.com/my-definition' }]) {
+    const changed = practicalProblems([microservices, { ...nix, ...change }]);
+    assert.strictEqual(changed.links.length, 1);
+    assert.strictEqual(changed.coverage.unassessedParadigms, 1);
+    assert.deepStrictEqual(changed.coverage.withoutReduction, empty.coverage.withoutReduction);
+  }
+});
 
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} is not ${b}`);
 
@@ -154,6 +176,14 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.match(problems.source.scope, /Professional Developer/);
   assert.match(problems.source.measure, /more than one/);
   assert.match(problems.source.limit, /do not measure severity/);
+  assert.strictEqual(problems.links.length, 3);
+  assert.deepStrictEqual(problems.coverage.withoutReduction, ['technical-debt', 'unreliable-tools']);
+  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 2);
+  for (const l of problems.links) {
+    assert.ok(s.paradigms.some((p) => p.id === l.paradigm_id && p.name === l.paradigm));
+    assert.ok(problems.items.some((p) => p.id === l.problem_id));
+    assert.ok(l.reason && l.source.title && l.source.url.startsWith('https://'));
+  }
   const n = s.paradigms.length;
 
   await call('/api/stack/axes', {});
