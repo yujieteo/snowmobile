@@ -292,9 +292,27 @@ test('the existing capability OS profile removes the duplicate seL4 search candi
   const after = selectRepos(corpus, 4);
   assert.equal(before.gaps.length, after.gaps.length + 1);
   assert.deepEqual(after.gaps, []);
-  assert.deepEqual(selectRepos(corpus, corpus.repos.length).gaps, []);
+  assert.ok(selectRepos(corpus, corpus.repos.length).gaps.every((gap) => gap.repo.name !== 'seL4'));
   assert.deepEqual(after.repos, before.repos);
   assert.equal(after.minimumDistance, before.minimumDistance);
+});
+
+test('GHCi increases six-repository separation and exposes a language search region', () => {
+  const corpus = require('../data/repo-scores.json');
+  const baseline = { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'GHCi') };
+  const before = selectRepos(baseline, 6);
+  const after = selectRepos(corpus, 6);
+  assert.equal(before.minimumDistance, 9);
+  assert.ok(Math.abs(after.minimumDistance - Math.sqrt(143)) < 1e-9);
+  assert.ok(after.minimumDistance > before.minimumDistance);
+  const region = after.gaps.find((gap) => gap.repo.name === 'GHCi');
+  assert.ok(region);
+  assert.equal(region.repo.layer, 'language');
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(143)) < 1e-9);
+  assert.ok(region.nearestOnMap.distance > 0);
+  assert.equal(region.nearestOnAxes.paradigm.name, 'Embedded database');
+  assert.equal(corpus.repos.filter((repo) => repo.layer === 'language').length,
+    baseline.repos.filter((repo) => repo.layer === 'language').length + 1);
 });
 
 test('invalid scores and duplicate repositories cannot distort the distance', () => {

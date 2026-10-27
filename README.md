@@ -155,6 +155,15 @@ The profile covers the same seL4 scope and retains the uncertain build specializ
 This profile reduces search regions from one to zero for both four-repository and seven-repository subsets.
 Other capability systems can differ. This result does not establish complete seed coverage.
 
+The corpus also includes the GHC repository, with a profile for one local GHCi session and eight source reasons.
+Reason: this profile raises six-repository minimum distance from 9.00 to 11.96 in the study run.
+The [GHCi manual](https://downloads.haskell.org/ghc/latest/docs/users_guide/ghci.html) describes expression evaluation, module reload, and temporary session values.
+This profile includes IO actions but excludes external services and foreign code. It does not score the compiler implementation.
+The region lies 11.96 axis units from the nearest scored paradigm and 3.79 units on the joint map.
+The first two components retain 68.64% of variance. The four-repository subset stays the same.
+Review **Functional programming**, an existing seed, before any new seed for this region.
+These scores are manual estimates. Other Haskell execution scopes can differ.
+
 ## Interface
 
 The interface comes from a conceptual model: the objects, their relationships, their actions and their attributes. [docs/concepts.md](docs/concepts.md) has the model and the object-action matrix. The content fills the screen. The navigation and the primary action of each screen float above it at the bottom, within reach of your thumb. [docs/screens](docs/screens) has a screenshot of each screen at 375, 430 and 1280 px.

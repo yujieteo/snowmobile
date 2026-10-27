@@ -433,6 +433,64 @@
           "source": "https://sel4.systems/About/FAQ.html"
         }
       ]
+    },
+    {
+      "name": "GHCi",
+      "url": "https://github.com/ghc/ghc",
+      "revision": "c83c673315407f28209004fc5a1cb2c47ad3890e",
+      "layer": "language",
+      "scope": "One local GHCi session with Haskell expressions and IO actions. External services and foreign code lie outside this scope.",
+      "sources": [
+        "https://github.com/ghc/ghc/blob/c83c673315407f28209004fc5a1cb2c47ad3890e/README.md",
+        "https://downloads.haskell.org/ghc/latest/docs/users_guide/intro.html",
+        "https://downloads.haskell.org/ghc/latest/docs/users_guide/ghci.html",
+        "https://www.haskell.org/onlinereport/haskell2010/haskellch3.html",
+        "https://www.haskell.org/onlinereport/haskell2010/haskellch7.html"
+      ],
+      "scores": [
+        8,
+        8,
+        0,
+        10,
+        1,
+        1,
+        1,
+        1
+      ],
+      "reasons": [
+        {
+          "reason": "Expression evaluation follows data dependencies, while IO actions specify an explicit order. The score reflects both interfaces.",
+          "source": "https://www.haskell.org/onlinereport/haskell2010/haskellch7.html"
+        },
+        {
+          "reason": "Record updates construct new values, but IO actions can change external state. The score describes language values rather than runtime memory.",
+          "source": "https://www.haskell.org/onlinereport/haskell2010/haskellch3.html"
+        },
+        {
+          "reason": "This profile covers one local interpreter session. It does not include external network services.",
+          "source": "https://downloads.haskell.org/ghc/latest/docs/users_guide/ghci.html"
+        },
+        {
+          "reason": "Users define functions, evaluate expressions, and reload modules within the session.",
+          "source": "https://downloads.haskell.org/ghc/latest/docs/users_guide/ghci.html"
+        },
+        {
+          "reason": "The interpreter exposes Haskell expressions and modules. Direct hardware access through foreign code lies outside this scope.",
+          "source": "https://downloads.haskell.org/ghc/latest/docs/users_guide/intro.html"
+        },
+        {
+          "reason": "One interpreter loads different user modules and precompiled libraries without a task-specific interpreter build.",
+          "source": "https://downloads.haskell.org/ghc/latest/docs/users_guide/ghci.html"
+        },
+        {
+          "reason": "The command interface catches exceptions, but modules execute within the same session rather than separate protection domains.",
+          "source": "https://downloads.haskell.org/ghc/latest/docs/users_guide/ghci.html"
+        },
+        {
+          "reason": "Temporary session values disappear after module reload. Optional IO actions can write files, but the session supplies no durable value store.",
+          "source": "https://downloads.haskell.org/ghc/latest/docs/users_guide/ghci.html"
+        }
+      ]
     }
   ],
   "paradigmScope": "Each profile describes one cited example of an existing seed. Scores do not describe every implementation of that paradigm.",
