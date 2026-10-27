@@ -162,7 +162,7 @@ async function hunt(id) {
 }
 
 // ---------- grill ----------
-const picks = {};  // decision id -> { choice, note } while the round is open
+const picks = {};  // 'snowmobile id:decision id' -> { choice, note } while the round is open
 
 function md(s) {
   return esc(s).split('\n').map((l) => {
@@ -198,7 +198,8 @@ async function grill(id, data) {
   const { snowmobile: sm, tree } = g;
   const comps = Object.fromEntries(g.components.map((c) => [c.id, c]));
   const open = tree.decisions.filter((d) => !d.answer);
-  for (const d of open) if (!picks[d.id]) picks[d.id] = { choice: d.recommended, note: '' };
+  const pick = (did) => picks[`${id}:${did}`];
+  for (const d of open) picks[`${id}:${d.id}`] ||= { choice: d.recommended, note: '' };
   const rounds = [];
   tree.decisions.forEach((d) => (rounds[d.round] ||= []).push(d));
   const answered = (d) => {
@@ -210,15 +211,15 @@ async function grill(id, data) {
   const names = Object.fromEntries(tree.decisions.map((d) => [d.id, d.question]));
   const asking = (d) => `<div class="node open" data-id="${esc(d.id)}"><div class="q">${esc(d.question)}</div>
     ${d.depends_on.length ? `<div class="small dim">builds on: ${d.depends_on.map((i) => esc(names[i] || i)).join(' · ')}</div>` : ''}
-    <div class="opts">${d.options.map((o, i) => `<button class="opt ${picks[d.id].choice === i ? 'on' : ''} ${o.kills_component_id ? 'kills' : ''}" data-d="${esc(d.id)}" data-i="${i}">
+    <div class="opts">${d.options.map((o, i) => `<button class="opt ${pick(d.id).choice === i ? 'on' : ''} ${o.kills_component_id ? 'kills' : ''}" data-d="${esc(d.id)}" data-i="${i}">
       ${i === d.recommended ? '<span class="rec">recommended</span>' : ''}${o.kills_component_id ? '<span class="rec">kills the idea</span>' : ''}
       <b>${esc(o.label)}</b><span class="why">${esc(o.why)}</span></button>`).join('')}</div>
-    <textarea data-note="${esc(d.id)}" rows="1" placeholder="optional note, or your own answer (tap the selected card to clear it)">${esc(picks[d.id].note)}</textarea></div>`;
+    <textarea data-note="${esc(d.id)}" rows="1" placeholder="optional note, or your own answer (tap the selected card to clear it)">${esc(pick(d.id).note)}</textarea></div>`;
   shell(`<h1>${esc(sm.name)}</h1><div class="dim">${esc(sm.pitch)}</div>
     <div>${g.components.map((c) => `<span class="chip ${c.bad_reason ? 'bad' : ''}">${link(c.url, c.name)} <span class="dim">· ${esc(c.source)}</span></span>`).join('')}</div>
     <p class="small"><a href="#/hunt/${sm.hunt_id}">← back to the hunt</a></p>
     ${g.status === 'killed' ? `<div class="banner"><b>Killed.</b> ${esc(tree.killed?.reason)}<br>
-      Bad part: <b>${esc(comps[tree.killed?.component_id]?.name || '?')}</b>. It is marked on the hunt and left out of the next creation.
+      ${comps[tree.killed?.component_id] ? `Bad part: <b>${esc(comps[tree.killed.component_id].name)}</b>. It is marked on the hunt and left out of the next creation.` : ''}
       <p><button onclick="go('#/hunt/${sm.hunt_id}')">Back to the hunt</button></p></div>` : ''}
     <div class="tree"><svg></svg>
       <div class="level"><div class="node root" data-id="__root"><b>${esc(sm.name)}</b></div></div>
@@ -235,17 +236,17 @@ async function grill(id, data) {
   if (open.length && shownRound !== key && shownRound?.startsWith(`${id}:`)) document.querySelector('.node.open').scrollIntoView({ behavior: 'smooth', block: 'start' });
   shownRound = key;
   document.querySelectorAll('.opt').forEach((b) => (b.onclick = () => {
-    const p = picks[b.dataset.d], i = Number(b.dataset.i);
+    const p = pick(b.dataset.d), i = Number(b.dataset.i);
     p.choice = p.choice === i ? -1 : i;
     document.querySelectorAll(`.opt[data-d="${CSS.escape(b.dataset.d)}"]`).forEach((o) => o.classList.toggle('on', Number(o.dataset.i) === p.choice));
   }));
-  document.querySelectorAll('[data-note]').forEach((t) => (t.oninput = () => (picks[t.dataset.note].note = t.value)));
+  document.querySelectorAll('[data-note]').forEach((t) => (t.oninput = () => (pick(t.dataset.note).note = t.value)));
   const accept = document.getElementById('accept');
   if (accept) accept.onclick = async () => {
-    const missing = open.find((d) => picks[d.id].choice < 0 && !picks[d.id].note.trim());
+    const missing = open.find((d) => pick(d.id).choice < 0 && !pick(d.id).note.trim());
     if (missing) return alert(`Pick a card or write an answer for: ${missing.question}`);
     accept.disabled = true;
-    try { grill(id, await api(`/api/grills/${id}/answer`, { answers: Object.fromEntries(open.map((d) => [d.id, picks[d.id]])) })); }
+    try { grill(id, await api(`/api/grills/${id}/answer`, { answers: Object.fromEntries(open.map((d) => [d.id, pick(d.id)])) })); }
     catch (e) { alert(e.message); accept.disabled = false; }
   };
   const retry = document.getElementById('retry');

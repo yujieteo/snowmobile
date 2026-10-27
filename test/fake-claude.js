@@ -20,7 +20,15 @@ process.stdin.on('end', () => {
     ] };
   } else {
     const id = Number(prompt.match(/^(\d+) \|/m)[1]);
-    out = prompt.includes('answer:')
+    // A part that is not in the plan: the plan's parts are inserted first in the tests.
+    const foreign = id + 1;
+    out = prompt.includes('Plan: Blameless.') ? { verdict: 'killed', decisions: [], brief: '', killed_component_id: 0, reason: 'Nobody needs it.' }
+      : prompt.includes('Plan: Blamer.') ? { verdict: 'killed', decisions: [], brief: '', killed_component_id: foreign, reason: 'Wrong part.' }
+      : prompt.includes('Plan: Stranger.') && !prompt.includes('answer:') ? { verdict: 'open', brief: '', killed_component_id: 0, reason: '', decisions: [
+          { id: 'mode', question: 'Mode?', depends_on: [], recommended: 1, options: [
+            { label: 'Batch', why: 'Simple.', kills_component_id: 0 },
+            { label: 'Stream', why: 'Live.', kills_component_id: foreign }] }] }
+      : prompt.includes('answer:')
       ? { verdict: 'done', decisions: [], brief: '# Build\nDo it.', killed_component_id: 0, reason: '' }
       : { verdict: 'open', brief: '', killed_component_id: 0, reason: '', decisions: [
           { id: 'scope', question: 'Scope?', depends_on: [], recommended: 0, options: [

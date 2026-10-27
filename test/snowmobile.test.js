@@ -21,7 +21,7 @@ async function lab() {
     }
     throw new Error(`timeout on ${p}`);
   };
-  return { server, call, until };
+  return { server, cfg, call, until };
 }
 
 test('a request without the token gets 403', async () => {
@@ -58,5 +58,46 @@ test('hunt, create, grill to a build brief, and kill', async () => {
 
   const found = (await call('/api/search?q=Zig')).body;
   assert.deepStrictEqual(found.snowmobiles.map((s) => s.name), ['Hashvisor']);
+  server.close();
+});
+
+// One hunt with part A in each plan and part B outside every plan, written straight into the database.
+function plant(db, names) {
+  const hunt = db.prepare(`INSERT INTO hunts (seed, status) VALUES ('x', 'created')`).run().lastInsertRowid;
+  const src = db.prepare(`INSERT INTO sources (hunt_id, name) VALUES (?, 'src')`).run(hunt).lastInsertRowid;
+  const a = db.prepare(`INSERT INTO components (source_id, name) VALUES (?, 'A')`).run(src).lastInsertRowid;
+  db.prepare(`INSERT INTO components (source_id, name) VALUES (?, 'B')`).run(src);
+  const ids = names.map((n) => db.prepare(`INSERT INTO snowmobiles (hunt_id, name, pitch, component_ids, status)
+    VALUES (?, ?, 'p', ?, 'survivor')`).run(hunt, n, JSON.stringify([a])).lastInsertRowid);
+  return { hunt, ids };
+}
+
+test('a grill left without a running call after a restart continues on the next read', async () => {
+  const { server, cfg, until } = await lab();
+  const { ids: [sm] } = plant(cfg.db, ['Restarted']);
+  const tree = { round: 1, decisions: [{ id: 'restart-q', question: 'Q?', depends_on: [], recommended: 0, round: 1,
+    options: [{ label: 'Yes', why: 'w', kills_component_id: 0 }], answer: { choice: 0, note: '' } }] };
+  cfg.db.prepare(`INSERT INTO grills (snowmobile_id, tree, status) VALUES (?, ?, 'open')`).run(sm, JSON.stringify(tree));
+  const g = await until(`/api/grills/${sm}`, (b) => b.status === 'done');
+  assert.match(g.brief, /Build/);
+  server.close();
+});
+
+test('a kill blames only a part of the plan, and a killed verdict without a part is still a kill', async () => {
+  const { server, cfg, call, until } = await lab();
+  const { hunt, ids: [blameless, blamer, stranger] } = plant(cfg.db, ['Blameless', 'Blamer', 'Stranger']);
+  for (const sm of [blameless, blamer]) {
+    const g = await until(`/api/grills/${sm}`, (b) => b.status !== 'open');
+    assert.strictEqual(g.status, 'killed');
+    assert.strictEqual(g.tree.killed.component_id, 0);
+  }
+  let g = await until(`/api/grills/${stranger}`, (b) => !b.pending);
+  assert.strictEqual(g.tree.decisions[0].options[1].kills_component_id, 0);
+  await call(`/api/grills/${stranger}/answer`, { answers: { mode: { choice: 1 } } });
+  g = await until(`/api/grills/${stranger}`, (b) => b.status !== 'open');
+  assert.strictEqual(g.status, 'done');
+  const h = (await call(`/api/hunts/${hunt}`)).body;
+  assert.deepStrictEqual(h.sources[0].components.map((c) => c.bad_reason), [null, null]);
+  assert.deepStrictEqual(h.snowmobiles.map((s) => s.status), ['killed', 'killed', 'grilled']);
   server.close();
 });

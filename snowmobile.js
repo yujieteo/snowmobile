@@ -206,14 +206,13 @@ async function runCreate(cfg, huntId) {
 
 // The frontier for a set of settled answers. Calls are cached by that set, so the round that
 // follows the recommended answers is computed while the owner still reads the current one.
-const frontiers = new Map();
-const grillErrors = new Map();
 
 function frontierKey(smId, settled) {
   return `${smId}:${JSON.stringify(settled.map((d) => [d.id, d.answer]))}`;
 }
 
 function frontier(cfg, sm, settled) {
+  const { frontiers } = cfg;
   const key = frontierKey(sm.id, settled);
   if (!frontiers.has(key)) {
     const comps = partsOf(cfg.db, JSON.parse(sm.component_ids));
@@ -230,7 +229,7 @@ function settledOf(tree) {
 
 // Asks for the round after the current tree, writes it into the tree, then speculates on the next.
 async function advance(cfg, smId) {
-  const { db } = cfg;
+  const { db, grillErrors } = cfg;
   const sm = db.prepare(`SELECT * FROM snowmobiles WHERE id = ?`).get(smId);
   const grill = db.prepare(`SELECT * FROM grills WHERE snowmobile_id = ?`).get(smId);
   const tree = JSON.parse(grill.tree);
@@ -241,7 +240,7 @@ async function advance(cfg, smId) {
   // The owner may have answered differently while this call ran.
   const now = JSON.parse(db.prepare(`SELECT tree FROM grills WHERE snowmobile_id = ?`).get(smId).tree);
   if (frontierKey(smId, settledOf(now)) !== frontierKey(smId, settled) || now.decisions.some((d) => !d.answer)) return;
-  if (out.verdict === 'killed' && out.killed_component_id) return kill(cfg, sm, out.killed_component_id, out.reason, now);
+  if (out.verdict === 'killed') return kill(cfg, sm, out.killed_component_id, out.reason, now);
   if (out.verdict === 'done' || !out.decisions.length) {
     now.round += 1;
     db.prepare(`UPDATE grills SET tree = ?, status = 'done', brief = ?, updated_at = CURRENT_TIMESTAMP WHERE snowmobile_id = ?`)
@@ -251,7 +250,9 @@ async function advance(cfg, smId) {
   }
   now.round += 1;
   const used = new Set(now.decisions.map((d) => d.id));
+  const parts = JSON.parse(sm.component_ids);
   for (const d of out.decisions) {
+    for (const o of d.options) if (!parts.includes(o.kills_component_id)) o.kills_component_id = 0;
     let id = d.id;
     while (used.has(id)) id += '-';
     used.add(id);
@@ -267,7 +268,8 @@ async function advance(cfg, smId) {
 
 function kill(cfg, sm, componentId, reason, tree) {
   const { db } = cfg;
-  db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`).run(`${sm.name}: ${reason}`, componentId);
+  if (!JSON.parse(sm.component_ids).includes(componentId)) componentId = 0;
+  if (componentId) db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`).run(`${sm.name}: ${reason}`, componentId);
   db.prepare(`UPDATE snowmobiles SET status = 'killed', proof_note = ? WHERE id = ?`).run(reason, sm.id);
   tree.killed = { component_id: componentId, reason };
   db.prepare(`UPDATE grills SET tree = ?, status = 'killed', updated_at = CURRENT_TIMESTAMP WHERE snowmobile_id = ?`)
@@ -299,7 +301,8 @@ function huntView(db, id) {
   return { hunt, sources, snowmobiles };
 }
 
-function grillView(db, smId) {
+function grillView(cfg, smId) {
+  const { db, grillErrors } = cfg;
   const sm = db.prepare(`SELECT * FROM snowmobiles WHERE id = ?`).get(smId);
   if (!sm) return null;
   const grill = db.prepare(`SELECT * FROM grills WHERE snowmobile_id = ?`).get(smId);
@@ -366,9 +369,13 @@ function handler(cfg) {
         if (!db.prepare(`SELECT 1 FROM grills WHERE snowmobile_id = ?`).get(smId)) {
           db.prepare(`INSERT INTO grills (snowmobile_id, tree, status) VALUES (?, ?, 'open')`)
             .run(smId, JSON.stringify({ round: 0, decisions: [] }));
-          advance(cfg, smId);
         }
-        return send(res, 200, grillView(db, smId));
+        // A grill that waits for a round that no call computes (a new grill, or a restart mid-call).
+        const grill = db.prepare(`SELECT * FROM grills WHERE snowmobile_id = ?`).get(smId);
+        const tree = JSON.parse(grill.tree);
+        if (grill.status === 'open' && tree.decisions.every((d) => d.answer)
+          && !cfg.frontiers.has(frontierKey(smId, settledOf(tree)))) advance(cfg, smId);
+        return send(res, 200, grillView(cfg, smId));
       }
       if (req.method === 'POST' && (r = m(/^\/api\/grills\/(\d+)\/(answer|retry)$/))) {
         const smId = Number(r[1]);
@@ -390,12 +397,12 @@ function handler(cfg) {
             const sm = db.prepare(`SELECT * FROM snowmobiles WHERE id = ?`).get(smId);
             const opt = killer.options[killer.answer.choice];
             kill(cfg, sm, opt.kills_component_id, `${killer.question} ${opt.label}: ${opt.why}`, tree);
-            return send(res, 200, grillView(db, smId));
+            return send(res, 200, grillView(cfg, smId));
           }
           db.prepare(`UPDATE grills SET tree = ?, updated_at = CURRENT_TIMESTAMP WHERE snowmobile_id = ?`).run(JSON.stringify(tree), smId);
         }
         advance(cfg, smId);
-        return send(res, 200, grillView(db, smId));
+        return send(res, 200, grillView(cfg, smId));
       }
       if (req.method === 'GET' && p === '/api/search') {
         return send(res, 200, search(db, url.searchParams.get('q') || ''));
@@ -410,7 +417,7 @@ function handler(cfg) {
 function start({ home = path.join(os.homedir(), '.snowmobile'), port = 4747, claude = 'claude',
   grillModel = 'sonnet' } = {}) {
   const db = openDb(path.join(home, 'snowmobile.db'));
-  const cfg = { db, home, claude, grillModel, token: token(db) };
+  const cfg = { db, home, claude, grillModel, token: token(db), frontiers: new Map(), grillErrors: new Map() };
   const server = http.createServer(handler(cfg));
   return new Promise((resolve, reject) => {
     server.on('error', reject);
