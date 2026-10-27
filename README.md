@@ -1,6 +1,6 @@
 # snowmobile
 
-Snowmobile hunts real software tools and programming paradigms for their parts, and recombines distant parts into new developer tools. It kills each idea that already exists, then grills you on a survivor as a visual design tree: one tap per decision, until you have a build brief.
+Snowmobile hunts real software tools and programming paradigms for their parts, and recombines distant parts into new developer tools, or into consumer apps in Stack mode. It kills each idea that already exists, then grills you on a survivor as a visual design tree: one tap per decision, until you have a build brief.
 
 ![A grill tree: settled decisions on top, the open round below with the recommended cards already selected](docs/grill.png)
 
