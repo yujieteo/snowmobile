@@ -1730,6 +1730,59 @@
           "source": "https://9p.io/sys/doc/9.html"
         }
       ]
+    },
+    {
+      "name": "Event sourcing",
+      "layer": "software",
+      "definition": "The state is the result of replaying an append-only log of events.",
+      "scope": "A local application with a persistent event log as its system of record. Scores describe the log, not mutable projections or optional distributed replicas.",
+      "sources": [
+        "https://martinfowler.com/eaaDev/EventSourcing.html"
+      ],
+      "scores": [
+        2,
+        9,
+        0,
+        8,
+        1,
+        5,
+        1,
+        10
+      ],
+      "reasons": [
+        {
+          "reason": "Explicit event handlers apply each change rather than solve a desired-result query.",
+          "source": "https://martinfowler.com/eaaDev/EventSourcing.html"
+        },
+        {
+          "reason": "The additive event log preserves history. Applications can rebuild mutable projections from that history.",
+          "source": "https://martinfowler.com/eaaDev/EventSourcing.html"
+        },
+        {
+          "reason": "This scope uses one local application. The optional reader cluster lies outside it.",
+          "source": "https://martinfowler.com/eaaDev/EventSourcing.html"
+        },
+        {
+          "reason": "New events and replay commands change application state at runtime.",
+          "source": "https://martinfowler.com/eaaDev/EventSourcing.html"
+        },
+        {
+          "reason": "Event objects and application models hide hardware details.",
+          "source": "https://martinfowler.com/eaaDev/EventSourcing.html"
+        },
+        {
+          "reason": "The article does not establish task-specific build composition. The midpoint marks uncertain evidence.",
+          "source": "https://martinfowler.com/eaaDev/EventSourcing.html"
+        },
+        {
+          "reason": "The local event processor and domain objects share one application failure boundary.",
+          "source": "https://martinfowler.com/eaaDev/EventSourcing.html"
+        },
+        {
+          "reason": "Persistent events preserve history and restore application state after a crash.",
+          "source": "https://martinfowler.com/eaaDev/EventSourcing.html"
+        }
+      ]
     }
   ]
 }

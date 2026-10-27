@@ -291,7 +291,7 @@ function corpusBeforeAutomerge() {
     paradigms: corpus.paradigms.filter((p) =>
       !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)',
         'Cluster (warehouse-scale computer)', 'Multikernel', 'Hardware root of trust', 'Microservices',
-        'Logic programming', 'Distributed OS'].includes(p.name)) };
+        'Logic programming', 'Distributed OS', 'Event sourcing'].includes(p.name)) };
 }
 
 function corpusBeforeGforth() {
@@ -803,4 +803,25 @@ test('the distributed OS profile preserves private namespaces and mutable active
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
+});
+
+test('the event log profile preserves history without an assumed distributed deployment', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Event sourcing');
+  assert.ok(candidate);
+  assert.equal(candidate.layer, 'software');
+  assert.match(candidate.scope, /mutable projections/);
+  assert.equal(candidate.scores[2], 0);
+  assert.match(candidate.reasons[5].reason, /uncertain evidence/);
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]))));
+  assert.equal(nearest, 11);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Event sourcing',").length - 1, 1);
+  assert.ok(source.includes(`['Event sourcing', '${candidate.definition}', '${candidate.sources[0]}']`));
+  const { map, gaps } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.deepEqual(gaps, []);
+  assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
 });
