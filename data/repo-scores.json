@@ -556,6 +556,63 @@
           "source": "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Files-Tutorial.html"
         }
       ]
+    },
+    {
+      "name": "Automerge",
+      "url": "https://github.com/automerge/automerge",
+      "revision": "5bae7757ef7b92c8cd6850def388f22767305ccb",
+      "layer": "software",
+      "scope": "JavaScript immutable documents and their independent replicas, with core sync and save APIs. Host network and disk adapters lie outside this scope.",
+      "sources": [
+        "https://github.com/automerge/automerge/blob/5bae7757ef7b92c8cd6850def388f22767305ccb/README.md",
+        "https://automerge.org/docs/hello/",
+        "https://automerge.org/automerge/api-docs/js/functions/change.html",
+        "https://automerge.org/automerge/api-docs/js/functions/save.html"
+      ],
+      "scores": [
+        3,
+        10,
+        10,
+        9,
+        1,
+        1,
+        8,
+        9
+      ],
+      "reasons": [
+        {
+          "reason": "Explicit assignments change document fields, while the library resolves concurrent changes automatically.",
+          "source": "https://automerge.org/automerge/api-docs/js/functions/change.html"
+        },
+        {
+          "reason": "Each change or merge returns a new immutable snapshot and preserves old document versions.",
+          "source": "https://automerge.org/docs/hello/"
+        },
+        {
+          "reason": "Independent devices exchange changes and converge without a central server.",
+          "source": "https://automerge.org/docs/hello/"
+        },
+        {
+          "reason": "The change API adds document fields and values at runtime without a new library build.",
+          "source": "https://automerge.org/automerge/api-docs/js/functions/change.html"
+        },
+        {
+          "reason": "The JavaScript interface exposes document values through a Rust and WebAssembly core rather than direct hardware controls.",
+          "source": "https://github.com/automerge/automerge/blob/5bae7757ef7b92c8cd6850def388f22767305ccb/README.md"
+        },
+        {
+          "reason": "One reusable library supplies document persistence and sync across multiple host applications.",
+          "source": "https://github.com/automerge/automerge/blob/5bae7757ef7b92c8cd6850def388f22767305ccb/README.md"
+        },
+        {
+          "reason": "Replicas accept local edits without other devices online. This score concerns replica independence, not isolation within one host process.",
+          "source": "https://automerge.org/docs/hello/"
+        },
+        {
+          "reason": "The save API exports document bytes for later load. The host must write those bytes to durable storage.",
+          "source": "https://automerge.org/automerge/api-docs/js/functions/save.html"
+        }
+      ]
     }
   ],
   "paradigmScope": "Each profile describes one cited example of an existing seed. Scores do not describe every implementation of that paradigm.",

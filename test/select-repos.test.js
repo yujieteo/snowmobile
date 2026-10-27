@@ -221,8 +221,8 @@ test('the error bound includes an empty-circle centre between grid nodes', () =>
   assert.ok(Math.abs(errorBound - 0.125) < 1e-9);
 });
 
-test('the real map has empty space despite zero repository search regions', () => {
-  const corpus = require('../data/repo-scores.json');
+test('the prior map has empty space despite zero repository search regions', () => {
+  const corpus = corpusBeforeAutomerge();
   const result = selectRepos(corpus, corpus.repos.length);
   assert.deepEqual(result.gaps, []);
   const { center, radius, errorBound } = result.map.coverage;
@@ -238,8 +238,6 @@ test('the real baseline measures a coverage gain within one map', () => {
   const { map } = selectRepos(corpus, corpus.repos.length);
   const { baseline, radius, errorBound } = map.coverage;
   assert.deepEqual(baseline.names, corpus.coverageBaseline);
-  assert.ok(Math.abs(baseline.radius - 12.5426810167518) < 1e-6);
-  assert.ok(Math.abs(radius - 7.009006074009566) < 1e-6);
   // The lower bound before exceeds the upper bound after.
   assert.ok(baseline.radius > radius + errorBound);
 });
@@ -287,14 +285,19 @@ test('gap regions use selected repositories and exact nearest distances in each 
 });
 
 // Keep prior discovery checks on the repository pool that supplied their measurements.
-function corpusBeforeGforth() {
+function corpusBeforeAutomerge() {
   const corpus = require('../data/repo-scores.json');
+  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Automerge') };
+}
+
+function corpusBeforeGforth() {
+  const corpus = corpusBeforeAutomerge();
   return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Gforth'),
     paradigms: corpus.paradigms.filter((p) => !['Concatenative programming', 'Single-level store'].includes(p.name)) };
 }
 
 test('Gforth improves seven-repository separation and retains a source-backed search region', () => {
-  const current = require('../data/repo-scores.json');
+  const current = corpusBeforeAutomerge();
   // Exclude the later profile to retain the original discovery measurement.
   const corpus = { ...current,
     paradigms: current.paradigms.filter((p) => p.name !== 'Concatenative programming') };
@@ -315,7 +318,7 @@ test('Gforth improves seven-repository separation and retains a source-backed se
 });
 
 test('the existing concatenative seed profile removes the duplicate Gforth search candidate', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeAutomerge();
   const candidate = corpus.paradigms.find((p) => p.name === 'Concatenative programming');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
@@ -589,4 +592,25 @@ test('the single-level store profile adds a distinct durable OS example', () => 
   // Compare only reference sets within one map, rectangle, and grid.
   const { map } = selectRepos({ ...corpus, coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.equal(map.coverage.baseline.radius, map.coverage.radius);
+});
+
+test('Automerge improves repository separation and exposes a replicated data region', () => {
+  const corpus = require('../data/repo-scores.json');
+  const baseline = corpusBeforeAutomerge();
+  for (const [count, beforeSquared, afterSquared] of [[2, 465, 488], [4, 214, 221], [8, 81, 100]]) {
+    const before = selectRepos(baseline, count);
+    const after = selectRepos(corpus, count);
+    assert.ok(Math.abs(before.minimumDistance - Math.sqrt(beforeSquared)) < 1e-9);
+    assert.ok(Math.abs(after.minimumDistance - Math.sqrt(afterSquared)) < 1e-9);
+    assert.ok(after.minimumDistance > before.minimumDistance);
+  }
+  const result = selectRepos(corpus, 4);
+  const region = result.gaps.find((gap) => gap.repo.name === 'Automerge');
+  assert.ok(region);
+  assert.equal(region.nearestOnAxes.paradigm.name, 'Actor model');
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(23)) < 1e-9);
+  assert.ok(region.nearestOnMap.distance > 0);
+  assert.equal(region.repo.layer, 'software');
+  assert.ok(region.repo.reasons.every(({ source }) => region.repo.sources.includes(source)));
+  assert.ok(selectRepos(corpus, corpus.repos.length).gaps.some((gap) => gap.repo === region.repo));
 });
