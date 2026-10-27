@@ -132,3 +132,49 @@ test('a failed grill call shows its error and calls claude again only on retry',
   assert.strictEqual(calls(), 2);
   server.close();
 });
+
+test('the owner leaves out a part, buries and restores an idea, and undoes a round, a kill and a brief', async () => {
+  const { server, call, until } = await lab();
+  const { id } = (await call('/api/hunts', { seed: 'flaky tests' })).body;
+  await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'hunted');
+  await call(`/api/hunts/${id}/create`, {});
+  let h = await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'created');
+  const part = h.sources[1].components[0];
+  const [good, weak, old] = h.snowmobiles;
+
+  await call(`/api/components/${part.id}`, { out: true });
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.strictEqual(h.sources[1].components[0].bad_reason, 'left out by you');
+  await call(`/api/components/${part.id}`, { out: false });
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.strictEqual(h.sources[1].components[0].bad_reason, null);
+
+  await call(`/api/snowmobiles/${good.id}`, { status: 'graveyard' });
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.strictEqual(h.snowmobiles[0].status, 'graveyard');
+  assert.strictEqual(h.snowmobiles[0].proof_note, 'Buried by you. Nothing close.');
+  assert.strictEqual((await call(`/api/snowmobiles/${good.id}`, { status: 'graveyard' })).status, 409);
+  await call(`/api/snowmobiles/${good.id}`, { status: 'survivor' });
+  await call(`/api/snowmobiles/${old.id}`, { status: 'survivor' });
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.deepStrictEqual(h.snowmobiles.slice(0, 3).map((s) => [s.status, s.proof_note]),
+    [['survivor', 'Nothing close.'], ['survivor', ''], ['survivor', 'Same thing.']]);
+
+  await until(`/api/grills/${weak.id}`, (b) => !b.pending);
+  assert.strictEqual((await call(`/api/grills/${weak.id}/undo`, {})).status, 409);
+  await call(`/api/grills/${weak.id}/answer`, { answers: { scope: { choice: 1 }, lang: { choice: 0 } } });
+  let g = (await call(`/api/grills/${weak.id}/undo`, {})).body;
+  assert.strictEqual(g.status, 'open');
+  assert.ok(g.tree.decisions.every((d) => !d.answer) && !g.tree.killed);
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.strictEqual(h.sources[0].components[0].bad_reason, null);
+  assert.deepStrictEqual([h.snowmobiles[1].status, h.snowmobiles[1].proof_note], ['survivor', '']);
+
+  await until(`/api/grills/${good.id}`, (b) => !b.pending);
+  await call(`/api/grills/${good.id}/answer`, { answers: { scope: { choice: 0 }, lang: { choice: 0 } } });
+  await until(`/api/grills/${good.id}`, (b) => b.status === 'done');
+  g = (await call(`/api/grills/${good.id}/undo`, {})).body;
+  assert.deepStrictEqual([g.status, g.brief, g.tree.decisions.filter((d) => !d.answer).length], ['open', null, 2]);
+  assert.strictEqual((await call(`/api/hunts/${id}`)).body.snowmobiles[0].status, 'survivor');
+  server.close();
+});
