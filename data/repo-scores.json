@@ -2116,6 +2116,60 @@
           "source": "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
         }
       ]
+    },
+    {
+      "name": "Exokernel",
+      "layer": "os",
+      "definition": "The kernel only multiplexes hardware safely and libraries implement the abstractions.",
+      "scope": "The Aegis kernel and ExOS libraries in the 1995 prototype on one DECstation, not later XOK systems.",
+      "sources": [
+        "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf",
+        "https://pdos.csail.mit.edu/archive/exo/"
+      ],
+      "scores": [
+        2,
+        0,
+        2,
+        9,
+        9,
+        7,
+        7,
+        3
+      ],
+      "reasons": [
+        {
+          "reason": "Applications explicitly allocate physical resources and implement their own system policies.",
+          "source": "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf"
+        },
+        {
+          "reason": "Applications modify physical pages and packet buffers in place.",
+          "source": "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf"
+        },
+        {
+          "reason": "Aegis manages one DECstation. ExOS adds network protocols rather than a distributed resource kernel.",
+          "source": "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf"
+        },
+        {
+          "reason": "Applications replace packet filters and supply code for message handlers at runtime.",
+          "source": "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf"
+        },
+        {
+          "reason": "The kernel exposes physical pages, TLB entries, interrupts, and the network interface.",
+          "source": "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf"
+        },
+        {
+          "reason": "Applications select specialized libraries at link time. The kernel still serves different applications.",
+          "source": "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf"
+        },
+        {
+          "reason": "Resource protection separates applications. A library fault can affect its application, and all applications share the kernel.",
+          "source": "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf"
+        },
+        {
+          "reason": "ExOS supports NFS, but its native file system was incomplete in the prototype.",
+          "source": "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf"
+        }
+      ]
     }
   ]
 }

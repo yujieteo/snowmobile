@@ -107,7 +107,7 @@ const START = {
   os: [
     ['Monolithic kernel', 'All operating system services run in one privileged address space.', `${W}Monolithic_kernel`],
     ['Microkernel', 'The kernel keeps only address spaces, threads and IPC; services run as user processes.', `${W}Microkernel`],
-    ['Exokernel', 'The kernel only multiplexes hardware safely and libraries implement the abstractions.', `${W}Exokernel`],
+    ['Exokernel', 'The kernel only multiplexes hardware safely and libraries implement the abstractions.', 'https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf'],
     ['Unikernel', 'One application and the library OS that it needs compile into one single-address-space image.', `${W}Unikernel`],
     ['Hypervisor', 'A thin layer runs several complete operating systems on virtual hardware.', `${W}Hypervisor`],
     ['Capability-based OS', 'A process can use a resource only through an unforgeable capability that names it.', `${W}Capability-based_security`],

@@ -288,7 +288,7 @@ test('gap regions use selected repositories and exact nearest distances in each 
 function corpusBeforeKubo() {
   const corpus = require('../data/repo-scores.json');
   return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Kubo'),
-    paradigms: corpus.paradigms.filter((p) => !['Peer-to-peer', 'Vector processor'].includes(p.name)) };
+    paradigms: corpus.paradigms.filter((p) => !['Peer-to-peer', 'Vector processor', 'Exokernel'].includes(p.name)) };
 }
 
 function corpusBeforeAutomerge() {
@@ -915,7 +915,7 @@ test('the accelerator profile distinguishes fixed silicon from fixed runtime wor
 
 test('Kubo increases seven-repository separation and exposes an immutable content region', () => {
   const current = require('../data/repo-scores.json');
-  const corpus = { ...current, paradigms: current.paradigms.filter((p) => !['Peer-to-peer', 'Vector processor'].includes(p.name)) };
+  const corpus = { ...current, paradigms: current.paradigms.filter((p) => !['Peer-to-peer', 'Vector processor', 'Exokernel'].includes(p.name)) };
   const before = selectRepos(corpusBeforeKubo(), 7);
   const after = selectRepos(corpus, 7);
   assert.ok(Math.abs(before.minimumDistance - Math.sqrt(104)) < 1e-9);
@@ -980,6 +980,32 @@ test('the vector profile covers runtime vector control without a task-specific c
   const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
   assert.equal(source.split("['Vector processor',").length - 1, 1);
   assert.ok(source.includes(`['Vector processor', '${candidate.definition}', '${candidate.sources[0]}']`));
+  const { map, gaps } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.deepEqual(gaps, []);
+  assert.equal(map.coverage.radius, map.coverage.baseline.radius);
+});
+
+
+test('the exokernel profile separates library policy from kernel resource protection', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Exokernel');
+  assert.ok(candidate);
+  assert.equal(candidate.layer, 'os');
+  assert.match(candidate.scope, /1995 prototype.*not later XOK/);
+  assert.equal(candidate.scores[1], 0);
+  assert.match(candidate.reasons[3].reason, /packet filters.*runtime/);
+  assert.match(candidate.reasons[5].reason, /link time/);
+  assert.match(candidate.reasons[6].reason, /library fault.*share the kernel/);
+  assert.ok(candidate.scores[7] > 0);
+  assert.match(candidate.reasons[7].reason, /NFS.*native file system was incomplete/);
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]))));
+  assert.ok(Math.abs(nearest - Math.sqrt(21)) < 1e-9);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Exokernel',").length - 1, 1);
+  assert.ok(source.includes(`['Exokernel', '${candidate.definition}', '${candidate.sources[0]}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
