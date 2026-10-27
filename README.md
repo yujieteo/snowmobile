@@ -64,8 +64,13 @@ Each record has a GitHub `url` and a `scores` array, with one value from 0 to 10
 Use the same axis order and definitions as the Stack map. Keep source links and score reasons in each record.
 The script preserves those extra fields in its JSON output.
 
-The script starts with the most distant pair, then selects the repository farthest from its nearest selected repository.
-It uses Euclidean distance on the full axis scores, with equal weight per axis. Ties follow input order.
+The script tries each initial pair, then selects the repository farthest from its nearest selected repository.
+Reason: the nine-repository trial found a four-repository subset with minimum distance 14.63, versus 13.30 from the farthest pair alone.
+It keeps the subset with the greatest minimum pair distance. It tests the farthest pair first and keeps earlier results on ties.
+It uses Euclidean distance on the full axis scores, with equal weight per axis. Equal candidate distances follow input order.
+With two repositories or the full input count, one start suffices. Other counts require one greedy trial per initial pair.
+The current corpus gains distance for subset counts of three, four, and five. Joint PCA and coverage stay the same.
+Earlier discovery results below describe the former farthest-pair method.
 The output includes the selected records and their minimum pair distance. The method is greedy and does not guarantee the best subset.
 This step requires scores from source evidence. It does not fetch repositories, assign scores, or verify candidate paradigms.
 

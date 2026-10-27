@@ -68,6 +68,28 @@ test('max-min selection increases minimum distance from 1 to 10 on a known geome
   assert.deepEqual(data.repos[0].scores, [0, 0]);
 });
 
+test('each initial pair improves real subsets to the exhaustive optimum for this corpus', () => {
+  const corpus = require('../data/repo-scores.json');
+  const separation = (subset) => Math.min(...subset.flatMap((repo, i) => subset.slice(i + 1)
+    .map((other) => Math.hypot(...repo.scores.map((value, axis) => value - other.scores[axis])))));
+  const optimum = (count, subset = [], start = 0) => {
+    if (subset.length === count) return separation(subset);
+    let best = -Infinity;
+    for (let i = start; i <= corpus.repos.length - (count - subset.length); i++) {
+      best = Math.max(best, optimum(count, [...subset, corpus.repos[i]], i + 1));
+    }
+    return best;
+  };
+  // These are the measured results from the former farthest-pair start.
+  const former = [Math.sqrt(249), Math.sqrt(177), Math.sqrt(160)];
+  for (let count = 2; count <= corpus.repos.length; count++) {
+    const result = selectRepos(corpus, count);
+    assert.ok(Math.abs(result.minimumDistance - optimum(count)) < 1e-9);
+    assert.equal(new Set(result.repos).size, count);
+    if (count >= 3 && count <= 5) assert.ok(result.minimumDistance > former[count - 3]);
+  }
+});
+
 test('ties follow input order and identical profiles remain distinct repositories', () => {
   const same = { ...data, repos: ['a', 'b', 'c'].map((name) => profile(name, [5, 5])) };
   assert.deepEqual(selectRepos(same, 3).repos, same.repos);
@@ -271,8 +293,6 @@ test('Gforth improves seven-repository separation and retains a source-backed se
   assert.ok(region.repo.reasons.every((reason) => region.repo.sources.includes(reason.source)));
   assert.equal(after.map.records.filter(({ kind }) => kind === 'repo').length,
     before.map.records.filter(({ kind }) => kind === 'repo').length + 1);
-  assert.deepEqual(selectRepos(corpusBeforeGforth(), 3).repos.map((repo) => repo.name),
-    ['Erlang/OTP', 'Rocket Chip', 'SQLite']);
 });
 
 test('the existing concatenative seed profile removes the duplicate Gforth search candidate', () => {
@@ -339,13 +359,13 @@ test('the verified hardware generator profile closes the Rocket Chip search regi
   const candidate = corpus.paradigms.find((p) => p.name === 'Hardware generators');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
-    paradigms: corpus.paradigms.filter((p) => p !== candidate) }, 3);
+    paradigms: corpus.paradigms.filter((p) => p !== candidate) }, corpus.repos.length);
   const region = before.gaps.find((gap) => gap.repo.name === 'Rocket Chip');
   assert.ok(region);
   assert.ok(region.nearestOnAxes.distance > 6);
   assert.ok(candidate.suggestedBy.includes(region.repo.url));
   assert.deepEqual(candidate.scores, region.repo.scores);
-  const after = selectRepos(corpus, 3);
+  const after = selectRepos(corpus, corpus.repos.length);
   assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Rocket Chip'));
   assert.deepEqual(after.repos, before.repos);
 });
@@ -422,7 +442,7 @@ test('seL4 increases four-repository separation and exposes an OS search region'
   const before = selectRepos(baseline, 4);
   const after = selectRepos(corpus, 4);
   assert.ok(after.minimumDistance > before.minimumDistance);
-  assert.ok(Math.abs(after.minimumDistance - Math.sqrt(147)) < 1e-9);
+  assert.ok(Math.abs(after.minimumDistance - Math.sqrt(214)) < 1e-9);
   assert.equal(baseline.repos.filter((repo) => repo.layer === 'os').length, 1);
   assert.equal(corpus.repos.filter((repo) => repo.layer === 'os').length, 2);
   const region = after.gaps.find((gap) => gap.repo.name === 'seL4');

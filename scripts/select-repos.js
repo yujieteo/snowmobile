@@ -29,7 +29,7 @@ function checkScores(records, axes) {
   }
 }
 
-// Start with the most distant pair. Then maximize distance to the nearest selected repository.
+// Try each initial pair, then maximize distance to the nearest selected repository.
 function selectRepos(data, count) {
   const { axes, repos } = data;
   if (!Array.isArray(axes) || axes.length < 2 || new Set(axes).size !== axes.length ||
@@ -97,19 +97,34 @@ function selectRepos(data, count) {
     const d = distance(repos[i].scores, repos[j].scores);
     if (d > farthest) { farthest = d; selected[0] = i; selected[1] = j; }
   }
-  while (selected.length < count) {
-    let next = -1, best = -1;
-    for (let i = 0; i < repos.length; i++) {
-      if (selected.includes(i)) continue;
-      const nearest = Math.min(...selected.map((j) => distance(repos[i].scores, repos[j].scores)));
-      if (nearest > best) { best = nearest; next = i; }
+  const extend = (pair) => {
+    const subset = [...pair];
+    while (subset.length < count) {
+      let next = -1, best = -1;
+      for (let i = 0; i < repos.length; i++) {
+        if (subset.includes(i)) continue;
+        const nearest = Math.min(...subset.map((j) => distance(repos[i].scores, repos[j].scores)));
+        if (nearest > best) { best = nearest; next = i; }
+      }
+      subset.push(next);
     }
-    selected.push(next);
+    let minimum = Infinity;
+    for (let i = 0; i < subset.length; i++) for (let j = i + 1; j < subset.length; j++) {
+      minimum = Math.min(minimum, distance(repos[subset[i]].scores, repos[subset[j]].scores));
+    }
+    return { subset, minimum };
+  };
+  // Retain the original result on ties, so the extra trials cannot reduce separation.
+  let best = extend(selected);
+  if (count > 2 && count < repos.length) {
+    for (let i = 0; i < repos.length; i++) for (let j = i + 1; j < repos.length; j++) {
+      if (i === selected[0] && j === selected[1]) continue;
+      const trial = extend([i, j]);
+      if (trial.minimum > best.minimum) best = trial;
+    }
   }
-  let minimum = Infinity;
-  for (let i = 0; i < selected.length; i++) for (let j = i + 1; j < selected.length; j++) {
-    minimum = Math.min(minimum, distance(repos[selected[i]].scores, repos[selected[j]].scores));
-  }
+  selected.splice(0, selected.length, ...best.subset);
+  const minimum = best.minimum;
   let gaps;
   if (map) {
     // A repository anchors a search region, not a verified new paradigm.
