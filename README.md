@@ -85,8 +85,14 @@ Reason: synthetic profiles cannot supply real sources for the paradigm search.
 The file records manual estimates, axis endpoints, per-score reasons, and source links, with a fixed Git revision for each README.
 Scores describe each record's stated scope. They do not measure performance or code quality.
 Some midpoint scores mark uncertain evidence. Review their reasons before a conclusion.
-These study axes do not replace your Stack axes. Score paradigms on the same definitions before joint PCA.
-This file supplies repositories for review. It does not yet establish empty map regions or new paradigms.
+These study axes do not replace your Stack axes.
+The same file includes source-backed profiles of existing seeds from all 4 layers for joint PCA.
+Reason: the repository-only corpus produced no joint map in the regression test.
+Each profile describes the cited example within its stated scope, rather than every implementation of that paradigm.
+For example, the Unikernel profile scores libraries within one image, while the Unikraft repository profile has uncertain evidence for component isolation.
+The output retains both scopes and their reasons. Review those differences before a conclusion.
+Use `map.explained` to check how much variance the first 2 components retain.
+This small study does not establish empty regions across the full seed set or verify new paradigms.
 
 ## Interface
 

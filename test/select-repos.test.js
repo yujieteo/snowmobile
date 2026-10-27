@@ -23,12 +23,14 @@ test('the real corpus has complete source evidence and yields a more distant sub
   }
   for (const repo of corpus.repos) {
     assert.match(repo.revision, /^[a-f0-9]{40}$/);
-    assert.ok(repo.scope.trim());
     assert.ok(repo.sources.includes(`${repo.url}/blob/${repo.revision}/README.md`));
-    assert.equal(repo.reasons.length, corpus.axes.length);
-    for (const evidence of repo.reasons) {
+  }
+  for (const record of [...corpus.repos, ...corpus.paradigms]) {
+    assert.ok(record.scope.trim());
+    assert.equal(record.reasons.length, corpus.axes.length);
+    for (const evidence of record.reasons) {
       assert.ok(evidence.reason.trim());
-      assert.ok(repo.sources.includes(evidence.source));
+      assert.ok(record.sources.includes(evidence.source));
       assert.equal(new URL(evidence.source).protocol, 'https:');
     }
   }
@@ -37,6 +39,22 @@ test('the real corpus has complete source evidence and yields a more distant sub
   assert.ok(selected.minimumDistance > baseline.minimumDistance);
   assert.deepEqual(new Set(corpus.repos.map((repo) => repo.layer)),
     new Set(['language', 'hardware', 'os', 'software']));
+});
+
+test('the real corpus maps source-backed paradigms from all Stack layers with repositories', () => {
+  const corpus = require('../data/repo-scores.json');
+  const selected = selectRepos(corpus, 3);
+  assert.ok(selected.map);
+  assert.deepEqual(new Set(corpus.paradigms.map((record) => record.layer)),
+    new Set(['language', 'hardware', 'os', 'software']));
+  for (const paradigm of corpus.paradigms) assert.ok(paradigm.definition.trim());
+  assert.equal(selected.map.points.length, corpus.repos.length + corpus.paradigms.length);
+  assert.ok(selected.map.points.flat().every(Number.isFinite));
+  assert.ok(selected.map.explained.every((share) => share > 0 && share <= 1));
+  assert.deepEqual(selected.map.records.filter(({ kind }) => kind === 'paradigm').map(({ record }) => record),
+    corpus.paradigms);
+  const { paradigms, ...reposOnly } = corpus;
+  assert.deepEqual(selected.repos, selectRepos(reposOnly, 3).repos);
 });
 
 test('max-min selection increases minimum distance from 1 to 10 on a known geometry', () => {

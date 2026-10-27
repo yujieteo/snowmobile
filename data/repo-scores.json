@@ -377,5 +377,221 @@
         }
       ]
     }
+  ],
+  "paradigmScope": "Each profile describes one cited example of an existing seed. Scores do not describe every implementation of that paradigm.",
+  "paradigms": [
+    {
+      "name": "Ownership types",
+      "layer": "language",
+      "definition": "The compiler checks one owner per value and releases the value when its owner leaves scope.",
+      "scope": "Rust memory ownership rules, not the whole Rust language or a Rust application.",
+      "sources": [
+        "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+      ],
+      "scores": [
+        8,
+        1,
+        0,
+        2,
+        7,
+        5,
+        3,
+        0
+      ],
+      "reasons": [
+        {
+          "reason": "The compiler checks ownership rules rather than explicit memory release commands.",
+          "source": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+        },
+        {
+          "reason": "Ownership permits mutable strings and does not preserve each old value.",
+          "source": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+        },
+        {
+          "reason": "The rules control local stack and heap memory, not coordination across nodes.",
+          "source": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+        },
+        {
+          "reason": "The compiler fixes ownership rules before execution, although allocation occurs at runtime.",
+          "source": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+        },
+        {
+          "reason": "The model exposes stack, heap, pointers, and explicit value lifetimes.",
+          "source": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+        },
+        {
+          "reason": "The chapter does not establish component selection at build time. The midpoint marks uncertain evidence.",
+          "source": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+        },
+        {
+          "reason": "Ownership prevents invalid memory access but does not establish separate process failure boundaries.",
+          "source": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+        },
+        {
+          "reason": "Values leave memory when their owners leave scope. Durable storage is outside this model.",
+          "source": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+        }
+      ]
+    },
+    {
+      "name": "Pipelined RISC processor",
+      "layer": "hardware",
+      "definition": "A processor overlaps instruction stages to execute an instruction stream.",
+      "scope": "One generated Rocket core with its caches, not the whole Rocket Chip generator or a network of cores.",
+      "sources": [
+        "https://chipyard.readthedocs.io/en/stable/generators/rocket/"
+      ],
+      "scores": [
+        2,
+        0,
+        0,
+        2,
+        10,
+        8,
+        5,
+        1
+      ],
+      "reasons": [
+        {
+          "reason": "The generated core executes a scalar instruction stream.",
+          "source": "https://chipyard.readthedocs.io/en/stable/generators/rocket/"
+        },
+        {
+          "reason": "The core changes cache contents and branch prediction state.",
+          "source": "https://chipyard.readthedocs.io/en/stable/generators/rocket/"
+        },
+        {
+          "reason": "This profile covers one core with local caches, not coordination across network nodes.",
+          "source": "https://chipyard.readthedocs.io/en/stable/generators/rocket/"
+        },
+        {
+          "reason": "The generated pipeline fixes instruction execution mechanisms before runtime.",
+          "source": "https://chipyard.readthedocs.io/en/stable/generators/rocket/"
+        },
+        {
+          "reason": "The profile describes processor hardware and cache structures directly.",
+          "source": "https://chipyard.readthedocs.io/en/stable/generators/rocket/"
+        },
+        {
+          "reason": "Generator parameters select ISA extensions, pipeline stages, and cache sizes.",
+          "source": "https://chipyard.readthedocs.io/en/stable/generators/rocket/"
+        },
+        {
+          "reason": "Privilege levels protect access but do not establish independent component failures. The midpoint marks uncertain evidence.",
+          "source": "https://chipyard.readthedocs.io/en/stable/generators/rocket/"
+        },
+        {
+          "reason": "The described core emphasizes instruction execution and caches, not a durable data store.",
+          "source": "https://chipyard.readthedocs.io/en/stable/generators/rocket/"
+        }
+      ]
+    },
+    {
+      "name": "Unikernel",
+      "layer": "os",
+      "definition": "An application and its required OS libraries form one image with one address space.",
+      "scope": "One Unikraft image and its internal libraries, not isolation between separate virtual machines.",
+      "sources": [
+        "https://unikraft.org/docs/concepts"
+      ],
+      "scores": [
+        6,
+        5,
+        0,
+        2,
+        9,
+        10,
+        0,
+        5
+      ],
+      "reasons": [
+        {
+          "reason": "KConfig selects the libraries and options that form the image.",
+          "source": "https://unikraft.org/docs/concepts"
+        },
+        {
+          "reason": "The concepts page does not establish an immutable state model. The midpoint marks uncertain evidence.",
+          "source": "https://unikraft.org/docs/concepts"
+        },
+        {
+          "reason": "The profile covers one image. Cloud deployment does not itself require coordination across nodes.",
+          "source": "https://unikraft.org/docs/concepts"
+        },
+        {
+          "reason": "The build combines the selected libraries into one executable image.",
+          "source": "https://unikraft.org/docs/concepts"
+        },
+        {
+          "reason": "The image can directly control hardware on a hypervisor or bare metal.",
+          "source": "https://unikraft.org/docs/concepts"
+        },
+        {
+          "reason": "The image includes only the OS components that its application requires.",
+          "source": "https://unikraft.org/docs/concepts"
+        },
+        {
+          "reason": "The application and OS libraries share one address space with no kernel and user separation.",
+          "source": "https://unikraft.org/docs/concepts"
+        },
+        {
+          "reason": "File system access is an optional library service. The midpoint marks uncertain durability requirements.",
+          "source": "https://unikraft.org/docs/concepts"
+        }
+      ]
+    },
+    {
+      "name": "Embedded database",
+      "layer": "software",
+      "definition": "A database engine executes inside its application process and accesses files without a separate server.",
+      "scope": "The SQLite engine as an embedded database example, not a distributed application that uses SQLite.",
+      "sources": [
+        "https://www.sqlite.org/serverless.html",
+        "https://sqlite.org/whentouse.html"
+      ],
+      "scores": [
+        9,
+        1,
+        0,
+        8,
+        3,
+        3,
+        1,
+        10
+      ],
+      "reasons": [
+        {
+          "reason": "SQL queries describe the requested data through the database interface.",
+          "source": "https://sqlite.org/whentouse.html"
+        },
+        {
+          "reason": "Applications read and write the database file directly through the engine.",
+          "source": "https://www.sqlite.org/serverless.html"
+        },
+        {
+          "reason": "The engine requires no separate process or network service.",
+          "source": "https://www.sqlite.org/serverless.html"
+        },
+        {
+          "reason": "Applications issue database queries during execution.",
+          "source": "https://sqlite.org/whentouse.html"
+        },
+        {
+          "reason": "The engine exposes data files through the host file system.",
+          "source": "https://www.sqlite.org/serverless.html"
+        },
+        {
+          "reason": "The same engine serves devices, application files, and websites.",
+          "source": "https://sqlite.org/whentouse.html"
+        },
+        {
+          "reason": "The engine and application share an address space, so client faults can corrupt engine memory.",
+          "source": "https://www.sqlite.org/serverless.html"
+        },
+        {
+          "reason": "The engine maintains database files on disk.",
+          "source": "https://www.sqlite.org/serverless.html"
+        }
+      ]
+    }
   ]
 }
