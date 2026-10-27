@@ -634,8 +634,14 @@ function undoRound(cfg, smId) {
   let note = sm.proof_note;
   if (tree.killed) {
     const { component_id: cid, reason } = tree.killed;
-    if (cid) db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ? AND bad_reason = ?`)
-      .run(tree.killed.bad_reason ?? null, cid, `${sm.name}: ${reason}`);
+    // The part keeps the mark of the most recent kill that still stands on it.
+    if (cid && db.prepare(`SELECT bad_reason FROM components WHERE id = ?`).get(cid).bad_reason === `${sm.name}: ${reason}`) {
+      const other = db.prepare(`SELECT s.name, json_extract(g.tree, '$.killed.reason') AS reason FROM grills g
+        JOIN snowmobiles s ON s.id = g.snowmobile_id WHERE g.status = 'killed' AND g.snowmobile_id != ?
+        AND json_extract(g.tree, '$.killed.component_id') = ? ORDER BY g.updated_at DESC, g.id DESC`).get(smId, cid);
+      db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`)
+        .run(other ? `${other.name}: ${other.reason}` : tree.killed.bad_reason === LEFT_OUT ? LEFT_OUT : null, cid);
+    }
     note = tree.killed.note ?? note;
     delete tree.killed;
   }

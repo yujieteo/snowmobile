@@ -189,13 +189,24 @@ test('an undo puts back the exact earlier part mark, idea status and note', asyn
   const [good, weak, old] = h.snowmobiles;
   const mark = async () => (await call(`/api/hunts/${id}`)).body.sources[0].components[0].bad_reason;
 
-  // Two kills of a part that you left out: each undo puts back the mark that its kill replaced.
-  await call(`/api/components/${part.id}`, { out: true });
-  for (const sm of [good, weak]) {
-    await until(`/api/grills/${sm.id}`, (b) => !b.pending);
-    await call(`/api/grills/${sm.id}/answer`, { answers: { scope: { choice: 1 }, lang: { choice: 0 } } });
-  }
+  const killBoth = async () => {
+    for (const sm of [good, weak]) {
+      await until(`/api/grills/${sm.id}`, (b) => !b.pending);
+      await call(`/api/grills/${sm.id}/answer`, { answers: { scope: { choice: 1 }, lang: { choice: 0 } } });
+    }
+    assert.match(await mark(), /^Killme: /);
+  };
+
+  // An undo in the order of the kills: the part keeps the mark of the kill that still stands, then has no mark.
+  await killBoth();
+  await call(`/api/grills/${good.id}/undo`, {});
   assert.match(await mark(), /^Killme: /);
+  await call(`/api/grills/${weak.id}/undo`, {});
+  assert.strictEqual(await mark(), null);
+
+  // An undo in the reverse order on a part that you left out: the part gets back the standing mark, then your mark.
+  await call(`/api/components/${part.id}`, { out: true });
+  await killBoth();
   await call(`/api/grills/${weak.id}/undo`, {});
   assert.match(await mark(), /^Hashvisor: /);
   await call(`/api/grills/${good.id}/undo`, {});
