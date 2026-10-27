@@ -1622,6 +1622,61 @@
           "source": "https://martinfowler.com/articles/microservices.html"
         }
       ]
+    },
+    {
+      "name": "Logic programming",
+      "layer": "language",
+      "definition": "A program is a set of facts and rules, and a search engine derives the answers.",
+      "scope": "One local SWI-Prolog interactive process with queries and dynamic clauses. Foreign code, network services, and disk persistence libraries lie outside this scope.",
+      "sources": [
+        "https://www.swi-prolog.org/pldoc/man?section=quickstart",
+        "https://www.swi-prolog.org/pldoc/man?section=db",
+        "https://www.swi-prolog.org/pldoc/man?section=overrule"
+      ],
+      "scores": [
+        9,
+        2,
+        0,
+        10,
+        1,
+        1,
+        1,
+        0
+      ],
+      "reasons": [
+        {
+          "reason": "Queries state goals, and Prolog searches facts and rules for answers. Explicit goal order still affects execution.",
+          "source": "https://www.swi-prolog.org/pldoc/man?section=quickstart"
+        },
+        {
+          "reason": "Dynamic predicates permit clause additions and removals. These changes survive backtracking, so logical variables do not establish immutable program state.",
+          "source": "https://www.swi-prolog.org/pldoc/man?section=db"
+        },
+        {
+          "reason": "This scope covers one local interactive process. The tutorial loads clauses and answers queries without network nodes.",
+          "source": "https://www.swi-prolog.org/pldoc/man?section=quickstart"
+        },
+        {
+          "reason": "The interactive process accepts new queries, facts, and rules after it starts.",
+          "source": "https://www.swi-prolog.org/pldoc/man?section=quickstart"
+        },
+        {
+          "reason": "The tutorial exposes facts, rules, and query answers rather than device registers or machine instructions.",
+          "source": "https://www.swi-prolog.org/pldoc/man?section=quickstart"
+        },
+        {
+          "reason": "The same interactive executable loads different programs and accepts new clauses without a task-specific executable build.",
+          "source": "https://www.swi-prolog.org/pldoc/man?section=quickstart"
+        },
+        {
+          "reason": "Explicit module qualification permits calls and clause additions across module interfaces. Modules do not supply independent failure boundaries.",
+          "source": "https://www.swi-prolog.org/pldoc/man?section=overrule"
+        },
+        {
+          "reason": "Dynamic clauses reside in memory. The manual requires a separate persistence library for a disk backup, outside this scope.",
+          "source": "https://www.swi-prolog.org/pldoc/man?section=db"
+        }
+      ]
     }
   ]
 }

@@ -290,7 +290,8 @@ function corpusBeforeAutomerge() {
   return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Automerge'),
     paradigms: corpus.paradigms.filter((p) =>
       !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)',
-        'Cluster (warehouse-scale computer)', 'Multikernel', 'Hardware root of trust', 'Microservices'].includes(p.name)) };
+        'Cluster (warehouse-scale computer)', 'Multikernel', 'Hardware root of trust', 'Microservices',
+        'Logic programming'].includes(p.name)) };
 }
 
 function corpusBeforeGforth() {
@@ -748,5 +749,27 @@ test('the microservices profile separates mutable services from immutable replic
   assert.deepEqual(after.gaps, []);
   const { map } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.equal(map.coverage.radius, map.coverage.baseline.radius);
+});
+
+test('the logic profile distinguishes mutable clauses from immutable functional values', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Logic programming');
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  assert.equal(candidate.layer, 'language');
+  const functional = previous.find((p) => p.name === 'Functional programming');
+  assert.ok(candidate.scores[1] < functional.scores[1]);
+  assert.match(candidate.reasons[1].reason, /changes survive backtracking/);
+  assert.equal(candidate.scores[7], 0);
+  assert.match(candidate.scope, /disk persistence libraries lie outside/);
+  assert.match(candidate.reasons[6].reason, /do not supply independent failure boundaries/);
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]))));
+  assert.ok(Math.abs(nearest - Math.sqrt(38)) < 1e-9);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Logic programming',").length - 1, 1);
+  const { map, gaps } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
+  assert.deepEqual(gaps, []);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
 });
