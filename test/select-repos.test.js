@@ -142,11 +142,15 @@ test('gap regions use selected repositories and exact nearest distances in each 
 // Keep prior discovery checks on the repository pool that supplied their measurements.
 function corpusBeforeGforth() {
   const corpus = require('../data/repo-scores.json');
-  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Gforth') };
+  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Gforth'),
+    paradigms: corpus.paradigms.filter((p) => p.name !== 'Concatenative programming') };
 }
 
 test('Gforth improves seven-repository separation and retains a source-backed search region', () => {
-  const corpus = require('../data/repo-scores.json');
+  const current = require('../data/repo-scores.json');
+  // Exclude the later profile to retain the original discovery measurement.
+  const corpus = { ...current,
+    paradigms: current.paradigms.filter((p) => p.name !== 'Concatenative programming') };
   const before = selectRepos(corpusBeforeGforth(), 7);
   const after = selectRepos(corpus, 7);
   assert.equal(before.minimumDistance, 9);
@@ -163,6 +167,26 @@ test('Gforth improves seven-repository separation and retains a source-backed se
     before.map.records.filter(({ kind }) => kind === 'repo').length + 1);
   assert.deepEqual(selectRepos(corpusBeforeGforth(), 3).repos.map((repo) => repo.name),
     ['Erlang/OTP', 'Rocket Chip', 'SQLite']);
+});
+
+test('the existing concatenative seed profile removes the duplicate Gforth search candidate', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Concatenative programming');
+  assert.ok(candidate);
+  const before = selectRepos({ ...corpus,
+    paradigms: corpus.paradigms.filter((p) => p !== candidate) }, corpus.repos.length);
+  const region = before.gaps.find((gap) => gap.repo.name === 'Gforth');
+  assert.ok(region);
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(104)) < 1e-9);
+  assert.ok(candidate.suggestedBy.includes(region.repo.url));
+  assert.equal(candidate.scope, region.repo.scope);
+  assert.deepEqual(candidate.scores, region.repo.scores);
+  const after = selectRepos(corpus, corpus.repos.length);
+  assert.equal(before.gaps.length, after.gaps.length + 1);
+  assert.deepEqual(after.gaps, []);
+  assert.deepEqual(selectRepos(corpus, 7).gaps, []);
+  assert.deepEqual(after.repos, before.repos);
+  assert.equal(after.minimumDistance, before.minimumDistance);
 });
 
 test('real gap regions exclude an exact profile match and retain source evidence', () => {

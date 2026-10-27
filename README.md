@@ -179,7 +179,15 @@ The profile includes direct memory operations. It excludes network services and 
 The Gforth region lies 10.20 axis units from the nearest scored paradigm and 2.72 units on the joint map.
 The first two components retain 65.00% of joint variance. Scores remain manual estimates.
 The new initial pair also changes smaller subsets. A larger corpus does not guarantee better separation for every subset size.
-Review the existing **Concatenative programming** seed before a new seed, since the corpus has no profile for it.
+The region matches the existing **Concatenative programming** seed.
+Reason: the nine-repository run exposed a search candidate that the seed already describes.
+The [concatenative language source](https://concatenative.org/wiki/view/Concatenative%20language) identifies Forth as a language whose adjacent fragments compose functions.
+The study adds a profile with eight score reasons and the Gforth repository link, without a duplicate seed.
+The profile uses the same local interpreter scope as the repository. Other concatenative languages can differ.
+The source distinguishes concatenative languages from stack languages. A concatenative language need not use a stack.
+This profile reduces search regions from one to zero for both seven-repository and nine-repository subsets.
+Scored profiles increase from ten to eleven. The first two components now retain 66.10% of joint variance.
+Zero regions covers these repository profiles. It does not establish complete seed coverage.
 
 ## Interface
 
