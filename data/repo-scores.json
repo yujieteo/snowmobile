@@ -1461,6 +1461,59 @@
           "source": "https://link.springer.com/content/pdf/10.1007/978-3-031-01761-2.pdf"
         }
       ]
+    },
+    {
+      "name": "Multikernel",
+      "layer": "os",
+      "definition": "Independent kernels on each core coordinate through explicit messages and replicate state rather than share it.",
+      "scope": "The 2009 Barrelfish prototype within one multicore machine: CPU drivers, monitors, and memory management. Persistent application storage lies outside this scope.",
+      "sources": [
+        "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+      ],
+      "scores": [
+        2,
+        0,
+        8,
+        8,
+        9,
+        3,
+        3,
+        0
+      ],
+      "reasons": [
+        {
+          "reason": "Sections 4.3 and 4.7 describe explicit system calls for hardware access and memory operations.",
+          "source": "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+        },
+        {
+          "reason": "Section 3.3 describes updates to local replicas, rather than immutable values.",
+          "source": "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+        },
+        {
+          "reason": "Sections 3.1 and 4.4 describe independent cores as network nodes with message protocols. These nodes share one physical machine.",
+          "source": "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+        },
+        {
+          "reason": "Sections 4.6 and 4.7 describe runtime channel setup and changes to memory maps.",
+          "source": "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+        },
+        {
+          "reason": "Section 4.3 describes CPU drivers that directly control processor protection, interrupts, and hardware access.",
+          "source": "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+        },
+        {
+          "reason": "Sections 3.2 and 4.3 separate general OS mechanisms from processor-specific drivers. The build does not select one application.",
+          "source": "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+        },
+        {
+          "reason": "Sections 4.2 and 6 describe separate service processes, but the complete machine remains one failure unit.",
+          "source": "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+        },
+        {
+          "reason": "Sections 4.4 and 4.7 describe volatile memory tables and maps, outside persistent application storage.",
+          "source": "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+        }
+      ]
     }
   ]
 }
