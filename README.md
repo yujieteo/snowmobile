@@ -171,6 +171,16 @@ This profile reduces search regions from one to zero for both six-repository and
 Scored profiles increase from nine to ten. The first two components now retain 65.20% of joint variance.
 Zero regions covers these repository profiles. It does not establish complete seed coverage.
 
+
+The corpus also includes Gforth, with a profile for one local interpreter and eight source reasons.
+Reason: the seven-repository run raises minimum axis distance from 9.00 to 10.20 with this profile.
+The [Gforth manual](https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Your-first-definition.html) describes new word definitions within the same session.
+The profile includes direct memory operations. It excludes network services and external applications.
+The Gforth region lies 10.20 axis units from the nearest scored paradigm and 2.72 units on the joint map.
+The first two components retain 65.00% of joint variance. Scores remain manual estimates.
+The new initial pair also changes smaller subsets. A larger corpus does not guarantee better separation for every subset size.
+Review the existing **Concatenative programming** seed before a new seed, since the corpus has no profile for it.
+
 ## Interface
 
 The interface comes from a conceptual model: the objects, their relationships, their actions and their attributes. [docs/concepts.md](docs/concepts.md) has the model and the object-action matrix. The content fills the screen. The navigation and the primary action of each screen float above it at the bottom, within reach of your thumb. [docs/screens](docs/screens) has a screenshot of each screen at 375, 430 and 1280 px.

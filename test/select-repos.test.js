@@ -139,8 +139,34 @@ test('gap regions use selected repositories and exact nearest distances in each 
   assert.deepEqual(input, original);
 });
 
-test('real gap regions exclude an exact profile match and retain source evidence', () => {
+// Keep prior discovery checks on the repository pool that supplied their measurements.
+function corpusBeforeGforth() {
   const corpus = require('../data/repo-scores.json');
+  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Gforth') };
+}
+
+test('Gforth improves seven-repository separation and retains a source-backed search region', () => {
+  const corpus = require('../data/repo-scores.json');
+  const before = selectRepos(corpusBeforeGforth(), 7);
+  const after = selectRepos(corpus, 7);
+  assert.equal(before.minimumDistance, 9);
+  assert.ok(Math.abs(after.minimumDistance - Math.sqrt(104)) < 1e-9);
+  assert.ok(after.minimumDistance > before.minimumDistance);
+  const region = after.gaps.find((gap) => gap.repo.name === 'Gforth');
+  assert.ok(region);
+  assert.equal(region.repo.layer, 'language');
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(104)) < 1e-9);
+  assert.ok(region.nearestOnMap.distance > 0);
+  assert.equal(region.nearestOnAxes.paradigm.name, 'Capability-based OS');
+  assert.ok(region.repo.reasons.every((reason) => region.repo.sources.includes(reason.source)));
+  assert.equal(after.map.records.filter(({ kind }) => kind === 'repo').length,
+    before.map.records.filter(({ kind }) => kind === 'repo').length + 1);
+  assert.deepEqual(selectRepos(corpusBeforeGforth(), 3).repos.map((repo) => repo.name),
+    ['Erlang/OTP', 'Rocket Chip', 'SQLite']);
+});
+
+test('real gap regions exclude an exact profile match and retain source evidence', () => {
+  const corpus = corpusBeforeGforth();
   // Omit the actor profile to retain a real uncovered region for this distance check.
   const result = selectRepos({ ...corpus,
     paradigms: corpus.paradigms.filter((p) => p.name !== 'Actor model') }, 3);
@@ -162,7 +188,7 @@ test('real gap regions exclude an exact profile match and retain source evidence
 });
 
 test('the existing actor seed profile removes the duplicate Erlang search candidate', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeGforth();
   const actor = corpus.paradigms.find((p) => p.name === 'Actor model');
   assert.ok(actor);
   const before = selectRepos({ ...corpus,
@@ -179,7 +205,7 @@ test('the existing actor seed profile removes the duplicate Erlang search candid
 });
 
 test('the verified hardware generator profile closes the Rocket Chip search region', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeGforth();
   const candidate = corpus.paradigms.find((p) => p.name === 'Hardware generators');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
@@ -195,7 +221,7 @@ test('the verified hardware generator profile closes the Rocket Chip search regi
 });
 
 test('functional package management covers the Nix region in the full repository pool', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeGforth();
   const candidate = corpus.paradigms.find((p) => p.name === 'Functional package management');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
@@ -212,7 +238,7 @@ test('functional package management covers the Nix region in the full repository
 });
 
 test('consistent Unikraft evidence removes a false region from the full repository pool', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeGforth();
   const repo = corpus.repos.find((record) => record.name === 'Unikraft');
   const paradigm = corpus.paradigms.find((record) => record.name === 'Unikernel');
   // Restore the two uncertain midpoint scores from the earlier README-only profile.
@@ -241,7 +267,7 @@ test('consistent Unikraft evidence removes a false region from the full reposito
 });
 
 test('the data structure server profile covers the Redis region without a duplicate seed', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeGforth();
   const candidate = corpus.paradigms.find((p) => p.name === 'Data structure server');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
@@ -258,7 +284,7 @@ test('the data structure server profile covers the Redis region without a duplic
 });
 
 test('seL4 increases four-repository separation and exposes an OS search region', () => {
-  const current = require('../data/repo-scores.json');
+  const current = corpusBeforeGforth();
   // Exclude the later profile to retain the original repository discovery check.
   const corpus = { ...current,
     paradigms: current.paradigms.filter((p) => p.name !== 'Capability-based OS') };
@@ -277,7 +303,7 @@ test('seL4 increases four-repository separation and exposes an OS search region'
 });
 
 test('the existing capability OS profile removes the duplicate seL4 search candidate', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeGforth();
   const candidate = corpus.paradigms.find((p) => p.name === 'Capability-based OS');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
@@ -298,7 +324,7 @@ test('the existing capability OS profile removes the duplicate seL4 search candi
 });
 
 test('GHCi increases six-repository separation and exposes a language search region', () => {
-  const current = require('../data/repo-scores.json');
+  const current = corpusBeforeGforth();
   // Exclude the later profile to retain the original repository discovery check.
   const corpus = { ...current,
     paradigms: current.paradigms.filter((p) => p.name !== 'Functional programming') };
@@ -319,7 +345,7 @@ test('GHCi increases six-repository separation and exposes a language search reg
 });
 
 test('the existing functional seed profile removes the duplicate GHCi search candidate', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeGforth();
   const candidate = corpus.paradigms.find((p) => p.name === 'Functional programming');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,

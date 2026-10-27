@@ -491,6 +491,65 @@
           "source": "https://downloads.haskell.org/ghc/latest/docs/users_guide/ghci.html"
         }
       ]
+    },
+    {
+      "name": "Gforth",
+      "url": "https://github.com/forthy42/gforth",
+      "revision": "0bb0d0ee4524a001fac6a5a1fb914f55aba700bc",
+      "layer": "language",
+      "scope": "One local Gforth interpreter, its dictionary, and direct memory operations. Network services and external applications are outside this scope.",
+      "sources": [
+        "https://github.com/forthy42/gforth/blob/0bb0d0ee4524a001fac6a5a1fb914f55aba700bc/README.md",
+        "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Introducing-the-Text-Interpreter.html",
+        "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Memory-Tutorial.html",
+        "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Your-first-definition.html",
+        "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Error-messages.html",
+        "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Files-Tutorial.html"
+      ],
+      "scores": [
+        1,
+        0,
+        0,
+        10,
+        7,
+        1,
+        0,
+        1
+      ],
+      "reasons": [
+        {
+          "reason": "The interpreter executes explicit words in input order.",
+          "source": "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Introducing-the-Text-Interpreter.html"
+        },
+        {
+          "reason": "Store and fetch operations change memory cells in place.",
+          "source": "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Memory-Tutorial.html"
+        },
+        {
+          "reason": "This scope covers one local interpreter and its dictionary, without network services.",
+          "source": "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Introducing-the-Text-Interpreter.html"
+        },
+        {
+          "reason": "The session accepts new word definitions and revised definitions without a new system build.",
+          "source": "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Your-first-definition.html"
+        },
+        {
+          "reason": "Programs use addresses, cell sizes, and address arithmetic directly within a host process.",
+          "source": "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Memory-Tutorial.html"
+        },
+        {
+          "reason": "The same interpreter loads source files for utilities, games, and tests.",
+          "source": "https://github.com/forthy42/gforth/blob/0bb0d0ee4524a001fac6a5a1fb914f55aba700bc/README.md"
+        },
+        {
+          "reason": "Words share dictionary memory and stacks. An invalid memory access can reach the system exception handler.",
+          "source": "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Error-messages.html"
+        },
+        {
+          "reason": "Files require explicit application commands. This scope covers session memory rather than an application data store.",
+          "source": "https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Files-Tutorial.html"
+        }
+      ]
     }
   ],
   "paradigmScope": "Each profile describes one cited example of an existing seed. Scores do not describe every implementation of that paradigm.",
