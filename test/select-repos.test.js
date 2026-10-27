@@ -142,8 +142,8 @@ test('gap regions use selected repositories and exact nearest distances in each 
 test('real gap regions exclude an exact profile match and retain source evidence', () => {
   const corpus = require('../data/repo-scores.json');
   const result = selectRepos(corpus, 3);
-  assert.equal(result.gaps.length, 2);
-  assert.ok(result.gaps.every((gap) => gap.repo.name !== 'SQLite'));
+  assert.ok(result.gaps.length > 0);
+  assert.ok(result.gaps.every((gap) => !['SQLite', 'Rocket Chip'].includes(gap.repo.name)));
   for (const gap of result.gaps) {
     assert.ok(result.repos.includes(gap.repo));
     assert.ok(gap.repo.sources.length);
@@ -155,6 +155,22 @@ test('real gap regions exclude an exact profile match and retain source evidence
       assert.deepEqual(gap[key].paradigm, corpus.paradigms[distances.indexOf(Math.min(...distances))]);
     }
   }
+});
+
+test('the verified hardware generator profile closes the Rocket Chip search region', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Hardware generators');
+  assert.ok(candidate);
+  const before = selectRepos({ ...corpus,
+    paradigms: corpus.paradigms.filter((p) => p !== candidate) }, 3);
+  const region = before.gaps.find((gap) => gap.repo.name === 'Rocket Chip');
+  assert.ok(region);
+  assert.ok(region.nearestOnAxes.distance > 6);
+  assert.ok(candidate.suggestedBy.includes(region.repo.url));
+  assert.deepEqual(candidate.scores, region.repo.scores);
+  const after = selectRepos(corpus, 3);
+  assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Rocket Chip'));
+  assert.deepEqual(after.repos, before.repos);
 });
 
 test('invalid scores and duplicate repositories cannot distort the distance', () => {

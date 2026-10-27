@@ -102,6 +102,7 @@ const START = {
     ['Reconfigurable logic (FPGA)', 'Configurable logic blocks and interconnect form circuits rather than execute a fixed instruction stream.', 'https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw'],
     ['Neuromorphic hardware', 'Artificial neurons exchange sparse events, with memory and computation close together.', 'https://www.intel.com/content/www/us/en/research/neuromorphic-computing.html'],
     ['Hardware root of trust', 'Dedicated secure silicon provides a trust anchor for boot verification and device attestation.', 'https://opentitan.org/book/doc/introduction.html'],
+    ['Hardware generators', 'A parameterized program composes hardware components and emits a circuit description for a selected configuration.', 'https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html'],
   ],
   os: [
     ['Monolithic kernel', 'All operating system services run in one privileged address space.', `${W}Monolithic_kernel`],

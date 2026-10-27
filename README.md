@@ -102,6 +102,13 @@ The script omits regions with zero distance in either space, so an exact profile
 These regions suggest places to search for real paradigms. They do not name or verify new paradigms.
 Only input paradigm profiles bound these regions. Unscored seeds can already occupy them.
 
+The Rocket Chip region supplied the **Hardware generators** seed and its profile, with eight score reasons and a `suggestedBy` repository link.
+Reason: the study run placed Rocket Chip 6.71 units from its nearest paradigm across all eight axes.
+The [Rocket Chip report](https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html) confirms that a generator composes components and emits a circuit description.
+This paradigm covers the circuit generator, while **Pipelined RISC processor** covers one core architecture.
+The profile uses the repository scope and scores, so the joint map now omits that covered region.
+These scores remain manual estimates. The component isolation score still marks uncertain evidence.
+
 ## Interface
 
 The interface comes from a conceptual model: the objects, their relationships, their actions and their attributes. [docs/concepts.md](docs/concepts.md) has the model and the object-action matrix. The content fills the screen. The navigation and the primary action of each screen float above it at the bottom, within reach of your thumb. [docs/screens](docs/screens) has a screenshot of each screen at 375, 430 and 1280 px.

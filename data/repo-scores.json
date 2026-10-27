@@ -592,6 +592,63 @@
           "source": "https://www.sqlite.org/serverless.html"
         }
       ]
+    },
+    {
+      "name": "Hardware generators",
+      "layer": "hardware",
+      "definition": "A parameterized program composes hardware components and emits a circuit description for a selected configuration.",
+      "scope": "The generated Rocket Chip system, with the same scope as the repository profile.",
+      "sources": [
+        "https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html",
+        "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+      ],
+      "scores": [
+        8,
+        0,
+        2,
+        1,
+        10,
+        10,
+        5,
+        1
+      ],
+      "reasons": [
+        {
+          "reason": "Chisel descriptions and configuration parameters determine the generated circuit.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The generated cores contain mutable registers and caches.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The generated system connects components through an on-chip bus.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "Elaboration fixes the circuit before execution.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The output describes processor cores, caches, and interconnect hardware.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "Configuration parameters select components before circuit generation.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The README does not establish separate component failure boundaries. The midpoint marks uncertain evidence.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The documented output emphasizes cores and caches rather than durable data storage.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        }
+      ],
+      "suggestedBy": [
+        "https://github.com/chipsalliance/rocket-chip"
+      ]
     }
   ]
 }
