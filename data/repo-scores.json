@@ -613,6 +613,63 @@
           "source": "https://automerge.org/automerge/api-docs/js/functions/save.html"
         }
       ]
+    },
+    {
+      "name": "Kubo",
+      "url": "https://github.com/ipfs/kubo",
+      "revision": "833e04a240d8c533509ddaaa3c202b39b0bb3024",
+      "layer": "software",
+      "scope": "Content-addressed blocks across Kubo peers, with local pins for retention. Mutable names, MFS, and daemon metadata lie outside this scope.",
+      "sources": [
+        "https://github.com/ipfs/kubo/blob/833e04a240d8c533509ddaaa3c202b39b0bb3024/README.md",
+        "https://docs.ipfs.tech/concepts/immutability/",
+        "https://docs.ipfs.tech/concepts/how-ipfs-works/",
+        "https://docs.ipfs.tech/how-to/pin-files/"
+      ],
+      "scores": [
+        8,
+        10,
+        10,
+        9,
+        1,
+        1,
+        7,
+        10
+      ],
+      "reasons": [
+        {
+          "reason": "A CID specifies the desired content. The protocol locates peers and transfers blocks without explicit server addresses from the caller.",
+          "source": "https://docs.ipfs.tech/concepts/how-ipfs-works/"
+        },
+        {
+          "reason": "A content change creates new blocks and CIDs. Old blocks retain their contents while available.",
+          "source": "https://docs.ipfs.tech/concepts/immutability/"
+        },
+        {
+          "reason": "Peers use a distributed hash table and Bitswap to locate and exchange blocks across the network.",
+          "source": "https://docs.ipfs.tech/concepts/how-ipfs-works/"
+        },
+        {
+          "reason": "The CLI and RPC API accept content and node commands while the daemon runs.",
+          "source": "https://github.com/ipfs/kubo/blob/833e04a240d8c533509ddaaa3c202b39b0bb3024/README.md"
+        },
+        {
+          "reason": "The Go daemon exposes content through CLI, HTTP, and filesystem interfaces rather than direct hardware controls.",
+          "source": "https://github.com/ipfs/kubo/blob/833e04a240d8c533509ddaaa3c202b39b0bb3024/README.md"
+        },
+        {
+          "reason": "One daemon supports files, directories, gateways, and RPC clients without a task-specific build.",
+          "source": "https://github.com/ipfs/kubo/blob/833e04a240d8c533509ddaaa3c202b39b0bb3024/README.md"
+        },
+        {
+          "reason": "The distributed hash table tolerates node churn. Content availability still requires at least one reachable provider.",
+          "source": "https://docs.ipfs.tech/concepts/how-ipfs-works/"
+        },
+        {
+          "reason": "Local pins protect selected blocks from garbage collection. Other peers do not automatically guarantee permanent retention.",
+          "source": "https://docs.ipfs.tech/how-to/pin-files/"
+        }
+      ]
     }
   ],
   "paradigmScope": "Each profile describes one cited example of an existing seed. Scores do not describe every implementation of that paradigm.",

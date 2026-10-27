@@ -285,8 +285,13 @@ test('gap regions use selected repositories and exact nearest distances in each 
 });
 
 // Keep prior discovery checks on the repository pool that supplied their measurements.
-function corpusBeforeAutomerge() {
+function corpusBeforeKubo() {
   const corpus = require('../data/repo-scores.json');
+  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Kubo') };
+}
+
+function corpusBeforeAutomerge() {
+  const corpus = corpusBeforeKubo();
   return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Automerge'),
     paradigms: corpus.paradigms.filter((p) =>
       !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)',
@@ -599,7 +604,7 @@ test('the single-level store profile adds a distinct durable OS example', () => 
 });
 
 test('Automerge improves repository separation and exposes a replicated data region', () => {
-  const current = require('../data/repo-scores.json');
+  const current = corpusBeforeKubo();
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Conflict-free replicated data types') };
   const baseline = corpusBeforeAutomerge();
   for (const [count, beforeSquared, afterSquared] of [[2, 465, 488], [4, 214, 221], [8, 81, 100]]) {
@@ -621,7 +626,7 @@ test('Automerge improves repository separation and exposes a replicated data reg
 });
 
 test('the verified CRDT profile covers the Automerge region without a duplicate seed', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeKubo();
   const candidate = corpus.paradigms.find((p) => p.name === 'Conflict-free replicated data types');
   assert.ok(candidate);
   const previous = corpus.paradigms.filter((p) => p !== candidate);
@@ -643,7 +648,7 @@ test('the verified CRDT profile covers the Automerge region without a duplicate 
 });
 
 test('the FPGA profile adds hardware flexibility without a duplicate seed', () => {
-  const current = require('../data/repo-scores.json');
+  const current = corpusBeforeKubo();
   // Preserve the corpus for this historical measurement.
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Domain-specific accelerator') };
   const candidate = corpus.paradigms.find((p) => p.name === 'Reconfigurable logic (FPGA)');
@@ -664,7 +669,7 @@ test('the FPGA profile adds hardware flexibility without a duplicate seed', () =
 });
 
 test('the cluster profile adds a distributed hardware example without a duplicate seed', () => {
-  const current = require('../data/repo-scores.json');
+  const current = corpusBeforeKubo();
   // Preserve the corpus for this historical measurement.
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Distributed OS') };
   const candidate = corpus.paradigms.find((p) => p.name === 'Cluster (warehouse-scale computer)');
@@ -687,7 +692,7 @@ test('the cluster profile adds a distributed hardware example without a duplicat
 });
 
 test('the multikernel profile adds a distributed OS example without false isolation', () => {
-  const current = require('../data/repo-scores.json');
+  const current = corpusBeforeKubo();
   // Preserve the corpus for this historical measurement.
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Distributed OS') };
   const candidate = corpus.paradigms.find((p) => p.name === 'Multikernel');
@@ -714,7 +719,7 @@ test('the multikernel profile adds a distributed OS example without false isolat
 });
 
 test('the hardware root of trust profile adds a distinct durable device example', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeKubo();
   const candidate = corpus.paradigms.find((p) => p.name === 'Hardware root of trust');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'hardware');
@@ -737,7 +742,7 @@ test('the hardware root of trust profile adds a distinct durable device example'
 
 
 test('the microservices profile separates mutable services from immutable replicas', () => {
-  const current = require('../data/repo-scores.json');
+  const current = corpusBeforeKubo();
   // Preserve the corpus for this historical measurement.
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => !['Distributed OS', 'Constraint programming'].includes(p.name)) };
   const candidate = corpus.paradigms.find((p) => p.name === 'Microservices');
@@ -761,7 +766,7 @@ test('the microservices profile separates mutable services from immutable replic
 });
 
 test('the logic profile distinguishes mutable clauses from immutable functional values', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeKubo();
   const candidate = corpus.paradigms.find((p) => p.name === 'Logic programming');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'language');
@@ -784,7 +789,7 @@ test('the logic profile distinguishes mutable clauses from immutable functional 
 
 
 test('the distributed OS profile preserves private namespaces and mutable active files', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeKubo();
   const candidate = corpus.paradigms.find((p) => p.name === 'Distributed OS');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'os');
@@ -808,7 +813,7 @@ test('the distributed OS profile preserves private namespaces and mutable active
 });
 
 test('the event log profile preserves history without an assumed distributed deployment', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeKubo();
   const candidate = corpus.paradigms.find((p) => p.name === 'Event sourcing');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'software');
@@ -830,7 +835,7 @@ test('the event log profile preserves history without an assumed distributed dep
 
 
 test('the constraint profile separates fixed model values from mutable solver state', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeKubo();
   const candidate = corpus.paradigms.find((p) => p.name === 'Constraint programming');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'language');
@@ -854,7 +859,7 @@ test('the constraint profile separates fixed model values from mutable solver st
 });
 
 test('the separation kernel profile distinguishes fixed resources from immutable channel data', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeKubo();
   const candidate = corpus.paradigms.find((p) => p.name === 'Separation kernel');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'os');
@@ -881,7 +886,7 @@ test('the separation kernel profile distinguishes fixed resources from immutable
 
 
 test('the accelerator profile distinguishes fixed silicon from fixed runtime work', () => {
-  const corpus = require('../data/repo-scores.json');
+  const corpus = corpusBeforeKubo();
   const candidate = corpus.paradigms.find((p) => p.name === 'Domain-specific accelerator');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'hardware');
@@ -904,4 +909,24 @@ test('the accelerator profile distinguishes fixed silicon from fixed runtime wor
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
+});
+
+
+test('Kubo increases seven-repository separation and exposes an immutable content region', () => {
+  const corpus = require('../data/repo-scores.json');
+  const before = selectRepos(corpusBeforeKubo(), 7);
+  const after = selectRepos(corpus, 7);
+  assert.ok(Math.abs(before.minimumDistance - Math.sqrt(104)) < 1e-9);
+  assert.ok(Math.abs(after.minimumDistance - Math.sqrt(111)) < 1e-9);
+  assert.ok(after.minimumDistance > before.minimumDistance);
+  const region = after.gaps.find((gap) => gap.repo.name === 'Kubo');
+  assert.ok(region);
+  assert.equal(region.nearestOnAxes.paradigm.name, 'Conflict-free replicated data types');
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(27)) < 1e-9);
+  assert.equal(region.repo.scores[1], 10);
+  assert.match(region.repo.scope, /Mutable names, MFS, and daemon metadata lie outside/);
+  assert.match(region.repo.reasons[7].reason, /do not automatically guarantee permanent retention/);
+  assert.equal(region.repo.reasons.length, corpus.axes.length);
+  assert.ok(region.repo.reasons.every(({ source }) => region.repo.sources.includes(source)));
+  assert.ok(after.map.records.some(({ kind, record }) => kind === 'repo' && record === region.repo));
 });
