@@ -80,6 +80,14 @@ Scores have equal weight per axis. PCA subtracts each axis mean but does not div
 Two components can omit distance on other components. Use the full axis scores for repository selection.
 The script reads only its input file and does not open a Snowmobile database.
 
+Try `node scripts/select-repos.js data/repo-scores.json 3` for a source-backed subset.
+Reason: synthetic profiles cannot supply real sources for the paradigm search.
+The file records manual estimates, axis endpoints, per-score reasons, and source links, with a fixed Git revision for each README.
+Scores describe each record's stated scope. They do not measure performance or code quality.
+Some midpoint scores mark uncertain evidence. Review their reasons before a conclusion.
+These study axes do not replace your Stack axes. Score paradigms on the same definitions before joint PCA.
+This file supplies repositories for review. It does not yet establish empty map regions or new paradigms.
+
 ## Interface
 
 The interface comes from a conceptual model: the objects, their relationships, their actions and their attributes. [docs/concepts.md](docs/concepts.md) has the model and the object-action matrix. The content fills the screen. The navigation and the primary action of each screen float above it at the bottom, within reach of your thumb. [docs/screens](docs/screens) has a screenshot of each screen at 375, 430 and 1280 px.

@@ -13,6 +13,32 @@ const data = {
   repos: [profile('a', [0, 0]), profile('b', [1, 0]), profile('c', [10, 0]), profile('d', [0, 10])],
 };
 
+test('the real corpus has complete source evidence and yields a more distant subset', () => {
+  const corpus = require('../data/repo-scores.json');
+  assert.equal(corpus.axisDefinitions.length, corpus.axes.length);
+  for (const definition of corpus.axisDefinitions) {
+    assert.ok(definition.zero.trim());
+    assert.ok(definition.ten.trim());
+    assert.notEqual(definition.zero, definition.ten);
+  }
+  for (const repo of corpus.repos) {
+    assert.match(repo.revision, /^[a-f0-9]{40}$/);
+    assert.ok(repo.scope.trim());
+    assert.ok(repo.sources.includes(`${repo.url}/blob/${repo.revision}/README.md`));
+    assert.equal(repo.reasons.length, corpus.axes.length);
+    for (const evidence of repo.reasons) {
+      assert.ok(evidence.reason.trim());
+      assert.ok(repo.sources.includes(evidence.source));
+      assert.equal(new URL(evidence.source).protocol, 'https:');
+    }
+  }
+  const baseline = selectRepos({ ...corpus, repos: corpus.repos.slice(0, 3) }, 3);
+  const selected = selectRepos(corpus, 3);
+  assert.ok(selected.minimumDistance > baseline.minimumDistance);
+  assert.deepEqual(new Set(corpus.repos.map((repo) => repo.layer)),
+    new Set(['language', 'hardware', 'os', 'software']));
+});
+
 test('max-min selection increases minimum distance from 1 to 10 on a known geometry', () => {
   const before = selectRepos({ ...data, repos: data.repos.slice(0, 3) }, 3);
   const after = selectRepos(data, 3);

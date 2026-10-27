@@ -1,0 +1,381 @@
+{
+  "axes": [
+    "Declarative interface",
+    "Immutable state",
+    "Distributed operation",
+    "Runtime flexibility",
+    "Hardware proximity",
+    "Build specialization",
+    "Component isolation",
+    "Durable state"
+  ],
+  "axisDefinitions": [
+    {
+      "zero": "Explicit steps control the result.",
+      "ten": "A desired result controls the steps."
+    },
+    {
+      "zero": "Updates replace state in place.",
+      "ten": "Updates produce new values and preserve old values."
+    },
+    {
+      "zero": "One local instance performs the work.",
+      "ten": "Multiple network nodes coordinate the work."
+    },
+    {
+      "zero": "The build fixes system behavior.",
+      "ten": "Runtime commands can change system behavior."
+    },
+    {
+      "zero": "A managed interface hides machine details.",
+      "ten": "The system defines or directly controls hardware."
+    },
+    {
+      "zero": "One general artifact serves many tasks.",
+      "ten": "The build selects components for a specific task."
+    },
+    {
+      "zero": "Components share a failure boundary.",
+      "ten": "Independent boundaries contain component failures."
+    },
+    {
+      "zero": "State exists only during execution.",
+      "ten": "Durable state is a principal system function."
+    }
+  ],
+  "method": "Manual estimates from the cited sources. Scores describe the stated scope, not code quality or measured performance.",
+  "uncertainty": "A score of 5 can mark uncertain evidence, as its reason states. Review those scores before a substantive conclusion.",
+  "compatibility": "These study axes do not replace user axes. Joint PCA requires paradigm scores on these exact axis definitions.",
+  "sourceCheckDate": "2026-10-27",
+  "repos": [
+    {
+      "name": "SQLite",
+      "url": "https://github.com/sqlite/sqlite",
+      "revision": "5d1ee888094efc63d1fb25a58af93478b103d441",
+      "layer": "software",
+      "scope": "The database engine, not an application that embeds it.",
+      "sources": [
+        "https://github.com/sqlite/sqlite/blob/5d1ee888094efc63d1fb25a58af93478b103d441/README.md",
+        "https://sqlite.org/whentouse.html"
+      ],
+      "scores": [
+        9,
+        1,
+        0,
+        8,
+        3,
+        3,
+        1,
+        10
+      ],
+      "reasons": [
+        {
+          "reason": "SQL describes queries rather than explicit file operations.",
+          "source": "https://sqlite.org/whentouse.html"
+        },
+        {
+          "reason": "The database file holds mutable application data.",
+          "source": "https://sqlite.org/whentouse.html"
+        },
+        {
+          "reason": "The source describes local storage for individual applications and devices.",
+          "source": "https://sqlite.org/whentouse.html"
+        },
+        {
+          "reason": "Applications issue SQL queries during execution.",
+          "source": "https://sqlite.org/whentouse.html"
+        },
+        {
+          "reason": "The engine exposes database files rather than hardware interfaces.",
+          "source": "https://sqlite.org/whentouse.html"
+        },
+        {
+          "reason": "The documented uses span devices, desktop files, and websites.",
+          "source": "https://sqlite.org/whentouse.html"
+        },
+        {
+          "reason": "The embedded engine shares its application process.",
+          "source": "https://sqlite.org/whentouse.html"
+        },
+        {
+          "reason": "The database file is a principal output of the engine.",
+          "source": "https://sqlite.org/whentouse.html"
+        }
+      ]
+    },
+    {
+      "name": "Redis",
+      "url": "https://github.com/redis/redis",
+      "revision": "33c2a2a145d3f09b42503df27d3ffbc76f34e32c",
+      "layer": "software",
+      "scope": "The data structure server, with Redis Cluster available.",
+      "sources": [
+        "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md",
+        "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/",
+        "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/"
+      ],
+      "scores": [
+        3,
+        1,
+        9,
+        9,
+        2,
+        3,
+        6,
+        6
+      ],
+      "reasons": [
+        {
+          "reason": "The README describes commands for data structures as well as a query engine.",
+          "source": "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md"
+        },
+        {
+          "reason": "The README describes updates to lists, sets, and other data structures.",
+          "source": "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md"
+        },
+        {
+          "reason": "Redis Cluster distributes data across network nodes.",
+          "source": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/"
+        },
+        {
+          "reason": "The README describes commands, expiration policies, and optional modules.",
+          "source": "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md"
+        },
+        {
+          "reason": "Clients use a server interface rather than hardware interfaces.",
+          "source": "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md"
+        },
+        {
+          "reason": "The README describes one server for caches, queues, and queries.",
+          "source": "https://github.com/redis/redis/blob/33c2a2a145d3f09b42503df27d3ffbc76f34e32c/README.md"
+        },
+        {
+          "reason": "Cluster nodes provide separate failure boundaries, but large failures stop the cluster.",
+          "source": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/"
+        },
+        {
+          "reason": "Redis offers snapshots and an append-only log, but also permits a cache with no persistence.",
+          "source": "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/"
+        }
+      ]
+    },
+    {
+      "name": "Erlang/OTP",
+      "url": "https://github.com/erlang/otp",
+      "revision": "7df34693c103294b2065c694024b4be954c3a5a5",
+      "layer": "language",
+      "scope": "The Erlang runtime and its process model.",
+      "sources": [
+        "https://github.com/erlang/otp/blob/7df34693c103294b2065c694024b4be954c3a5a5/README.md",
+        "https://www.erlang.org/doc/system/conc_prog.html"
+      ],
+      "scores": [
+        5,
+        9,
+        10,
+        9,
+        1,
+        2,
+        9,
+        5
+      ],
+      "reasons": [
+        {
+          "reason": "Pattern matches select messages, while explicit functions control process behavior.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "Processes exchange values without shared data.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "The manual describes communication across distributed Erlang nodes.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "Processes can start new processes during execution.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "The runtime exposes processes and messages rather than hardware interfaces.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "The README offers a runtime and reusable libraries for many applications.",
+          "source": "https://github.com/erlang/otp/blob/7df34693c103294b2065c694024b4be954c3a5a5/README.md"
+        },
+        {
+          "reason": "Processes share no data and each process has its own message queue.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        },
+        {
+          "reason": "The process tutorial does not establish durability. The midpoint marks uncertain evidence.",
+          "source": "https://www.erlang.org/doc/system/conc_prog.html"
+        }
+      ]
+    },
+    {
+      "name": "Unikraft",
+      "url": "https://github.com/unikraft/unikraft",
+      "revision": "359307a2a4cc9c1feb22683d841650902b799e4d",
+      "layer": "os",
+      "scope": "The custom kernel artifact.",
+      "sources": [
+        "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+      ],
+      "scores": [
+        6,
+        5,
+        5,
+        2,
+        9,
+        10,
+        5,
+        5
+      ],
+      "reasons": [
+        {
+          "reason": "The README describes component selection for a custom kernel.",
+          "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+        },
+        {
+          "reason": "The README does not establish an immutable state model. The midpoint marks uncertain evidence.",
+          "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+        },
+        {
+          "reason": "Cloud deployment does not establish distributed coordination. The midpoint marks uncertain evidence.",
+          "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+        },
+        {
+          "reason": "The README emphasizes custom kernel construction rather than runtime component changes.",
+          "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+        },
+        {
+          "reason": "The README describes kernels and platform-specific optimizations.",
+          "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+        },
+        {
+          "reason": "The README explicitly selects only necessary OS components.",
+          "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+        },
+        {
+          "reason": "The README does not establish component failure boundaries. The midpoint marks uncertain evidence.",
+          "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+        },
+        {
+          "reason": "The README does not establish a durable state model. The midpoint marks uncertain evidence.",
+          "source": "https://github.com/unikraft/unikraft/blob/359307a2a4cc9c1feb22683d841650902b799e4d/README.md"
+        }
+      ]
+    },
+    {
+      "name": "Rocket Chip",
+      "url": "https://github.com/chipsalliance/rocket-chip",
+      "revision": "ece7b9ad544b07df39cd13b6fd7236562a26355d",
+      "layer": "hardware",
+      "scope": "The generated SoC.",
+      "sources": [
+        "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+      ],
+      "scores": [
+        8,
+        0,
+        2,
+        1,
+        10,
+        10,
+        5,
+        1
+      ],
+      "reasons": [
+        {
+          "reason": "Chisel describes hardware and the generator emits RTL for a configured SoC.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The generated core includes mutable registers and caches.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The README describes an on-chip TileLink bus rather than a network cluster.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The generator elaborates the hardware configuration before execution.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The generator emits RTL for cores, caches, buses, and peripheral devices.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "Configurations select core and SoC components before RTL generation.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The README does not establish component failure boundaries. The midpoint marks uncertain evidence.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        },
+        {
+          "reason": "The README emphasizes cores and caches rather than a durable data store.",
+          "source": "https://github.com/chipsalliance/rocket-chip/blob/ece7b9ad544b07df39cd13b6fd7236562a26355d/README.md"
+        }
+      ]
+    },
+    {
+      "name": "Nix",
+      "url": "https://github.com/NixOS/nix",
+      "revision": "0130f9ce8cdb22936b1794730c1ce90e7a8b0786",
+      "layer": "software",
+      "scope": "The package manager and its package model.",
+      "sources": [
+        "https://github.com/NixOS/nix/blob/0130f9ce8cdb22936b1794730c1ce90e7a8b0786/README.md",
+        "https://nix.dev/manual/nix/2.35/introduction.html"
+      ],
+      "scores": [
+        10,
+        10,
+        5,
+        5,
+        2,
+        9,
+        8,
+        10
+      ],
+      "reasons": [
+        {
+          "reason": "Nix expressions describe package dependencies and build tasks.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "Package contents never change after the build.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "Binary caches distribute artifacts, but do not establish distributed coordination. The midpoint marks uncertain evidence.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "Profiles can change at runtime, while package contents remain fixed.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "The package manager operates on packages and paths rather than hardware interfaces.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "Expressions select dependencies and variants before a package build.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "Separate store paths prevent one package upgrade from replacing another package dependency.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        },
+        {
+          "reason": "The store retains package versions and supports rollback.",
+          "source": "https://nix.dev/manual/nix/2.35/introduction.html"
+        }
+      ]
+    }
+  ]
+}
