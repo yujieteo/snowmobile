@@ -26,13 +26,19 @@ process.stdin.on('end', () => {
     const mismatch = prompt.includes('candidate consumer apps') ? 'Hardware and software disagree on where state lives.' : '';
     const why = { problem: 'Testers lose a day to flaky tests.', evidence_url: 'https://example.com/thread', conventional: 'Retry plugins',
       gain_axis: 'effort', gain: 'Restarts only changed tests; saves 50% of reruns.', mismatch };
+    if (prompt.includes('candidate consumer apps')) {
+      if (!prompt.includes('technical-debt | Technical debt | 62.4%') ||
+          !prompt.includes('https://survey.stackoverflow.co/2024/professional-developers/') ||
+          !prompt.includes('problem_ids') || !prompt.includes('developer tools')) throw new Error('No practical problem context.');
+    }
     out = { candidates: [
-      { name: 'Hashvisor', pitch: 'Restart tests by content hash.', component_ids: ids, ...why, verdict: 'survives', proof_url: '', proof_note: 'Nothing close.' },
-      { name: 'Killme', pitch: 'A plan with a weak part.', component_ids: ids, ...why, verdict: 'survives', proof_url: '', proof_note: '' },
+      { name: 'Hashvisor', pitch: 'Restart tests by content hash.', component_ids: ids, ...why, problem_ids: ['technical-debt', 'technical-debt', 'unknown'], verdict: 'survives', proof_url: '', proof_note: 'Nothing close.' },
+      { name: 'Killme', pitch: 'A plan with a weak part.', component_ids: ids, ...why, problem_ids: ['unreliable-tools'], verdict: 'survives', proof_url: '', proof_note: '' },
       { name: 'Oldnews', pitch: 'Already exists.', component_ids: ids, ...why, verdict: 'exists', proof_url: 'https://example.com', proof_note: 'Same thing.' },
       { name: 'Nosource', pitch: 'A pain without a source.', component_ids: ids, ...why, evidence_url: '', verdict: 'survives', proof_url: '', proof_note: 'Sounds good.' },
       { name: 'Nobetter', pitch: 'No better than today.', component_ids: ids, ...why, verdict: 'no clear gain', proof_url: 'https://example.com', proof_note: 'Retry plugins do the same.' },
     ] };
+    if (prompt.includes('candidate consumer apps')) [out.candidates[0], out.candidates[1]] = [out.candidates[1], out.candidates[0]];
   } else if (prompt.includes('design axes')) {
     out = { axes: ['state', 'binding', 'scheduling', 'parallelism'].map((n) => ({ name: n, low: `${n} low`, high: `${n} high` })) };
   } else if (prompt.includes('Score each paradigm')) {

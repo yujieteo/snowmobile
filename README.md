@@ -45,7 +45,7 @@ Everything stays in one SQLite file on your machine: `~/.snowmobile/snowmobile.d
 
 ## Stack mode
 
-Stack mode makes consumer apps from a stack of 4 paradigms: one programming language paradigm, one hardware paradigm, one operating system paradigm and one software paradigm. Tap **Stack** at the bottom of the screen.
+Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. The layers are programming language, hardware, operating system and software. Tap **Stack** at the bottom of the screen.
 
 ![The stack map: paradigms of 4 layers on the first two principal components, with a stack of 4 picked paradigms](docs/screens/stack-1280.jpg)
 
@@ -55,7 +55,15 @@ Stack mode makes consumer apps from a stack of 4 paradigms: one programming lang
 - **Practical problems.** The map page lists leading frustrations from the [2024 Stack Overflow survey](https://survey.stackoverflow.co/2024/professional-developers/#2-most-common-frustrations). Each problem shows its respondent share. Tap a problem to use it as the app seed. These shares describe the survey sample. Source links explain which mechanisms can reduce a problem or make it worse. Tap a linked paradigm to pick it for your stack. The page counts links and names problems without a documented reduction. These assessments describe specific mechanisms, not effects on survey shares. A paradigm without a link has no assessment. This does not prove that it has no benefit. A change to a paradigm name, layer or source removes its seed assessment.
   Reason: an API trial found no paradigm-problem links or measure of problems without a documented reduction.
 - **Gaps.** With 2 or more picked paradigms, the page shows the gap between them on each axis. A gap of 5 or more is a mismatch: a chance for a new idea.
-- **Create.** Write a consumer pain, pick a stack, or do both. If you do not pick a paradigm for a layer, Claude chooses one. Claude then proposes consumer apps that the stack makes possible, cheap or fast. The same checks as above send weak apps to the graveyard. The grill and the build brief are the same as in the other mode, and the brief also names the layer mismatch that the app uses.
+- **Create.** Write a practical problem, pick a stack, or do both. If you do not pick a paradigm for a layer, Claude chooses one. Claude then proposes consumer apps or developer tools that the stack makes possible, cheap or fast.
+  The prompt gives practical developer problems priority over novelty.
+  Each candidate names the sourced problems that it claims to reduce, or has no problem link.
+  Ideas appear in order of their greatest linked respondent share. Shares do not measure severity and never add together.
+  The page shows the fraction of all candidates with a problem link, also those in the graveyard.
+  Links are model claims. The problem evidence and gain still need review.
+  Old ideas retain their data and have no inferred problem links.
+  Reason: the Stack trial had no problem links, priority or coverage measure for generated ideas.
+  The same checks as above send weak apps to the graveyard. The grill and the build brief are the same as in the other mode, and the brief also names the layer mismatch that the app uses.
 
 ## Repository subset
 

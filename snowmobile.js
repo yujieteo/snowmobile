@@ -43,7 +43,7 @@ function openDb(file) {
   // Columns that came after the first release. Adding them keeps each existing row.
   for (const [table, column] of [['hunts', 'stack'], ['components', 'paradigm_id'], ['snowmobiles', 'mismatch'],
     ['snowmobiles', 'problem'], ['snowmobiles', 'evidence_url'], ['snowmobiles', 'conventional'],
-    ['snowmobiles', 'gain_axis'], ['snowmobiles', 'gain']]) {
+    ['snowmobiles', 'gain_axis'], ['snowmobiles', 'gain'], ['snowmobiles', 'problem_ids']]) {
     if (!db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === column)) {
       db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${column === 'paradigm_id' ? 'INTEGER' : 'TEXT'}`);
     }
@@ -190,6 +190,13 @@ function practicalProblems(paradigms) {
       unassessedParadigms: paradigms.length - new Set(links.map((l) => l.paradigm_id)).size,
       limit: 'Links are source-based assessments of specific mechanisms, not measured effects on survey shares. No link means no assessment, not no benefit.',
     } };
+}
+
+// Reason: the Stack trial had no measure of ideas that name a sourced practical problem.
+function ideaProblems(ids) {
+  const problems = PRACTICAL_PROBLEMS.items.filter((p) => Array.isArray(ids) && ids.includes(p.id));
+  return { problem_ids: problems.map((p) => p.id), practical_problems: problems,
+    problem_priority: Math.max(0, ...problems.map((p) => p.percent)) };
 }
 
 // Eigenvalues and eigenvectors of a symmetric matrix by cyclic Jacobi rotations.
@@ -366,19 +373,39 @@ function stackCreatePrompt(seed, comps, data) {
   return `A stack is one paradigm from each of 4 layers: ${Object.values(LAYERS).join(', ')}.
 Where two layers of a stack disagree on a design axis, there is a mismatch: a chance for a product that no conventional stack makes possible, cheap or fast.
 
-Seed (a consumer pain, a stack, or both): ${JSON.stringify(seed)}
+Seed (a practical problem, a stack, or both): ${JSON.stringify(seed)}
 Design axes (id | name | 0 means | 10 means):
 ${axes.map((a) => `${a.id} | ${a.name} | ${a.low} | ${a.high}`).join('\n') || '(none yet)'}
 Paradigms (id | layer | paradigm | summary | scores as axis id=score):
 ${comps.map((c) => `${c.id} | ${c.source_kind} | ${c.name} | ${c.mechanism} | ${axes.map((a) => `${a.id}=${scores[c.paradigm_id]?.[a.id]?.score ?? '?'}`).join(' ')}`).join('\n')}
 ${spread.length ? `Gaps of the fixed layers on each axis (max - min): ${spread.map((g) => `${g.name} ${g.gap}`).join(', ')}\n` : ''}
-Propose 5 candidate consumer apps: software that ordinary people use, not developer tools. Each candidate uses exactly one paradigm id from each layer as component_ids; a layer with only one paradigm above is fixed.
+Propose 5 candidate consumer apps or developer tools. Give practical developer problems priority over novelty.
+Set component_ids to exactly one paradigm id from each layer. A layer with only one paradigm above is fixed.
 The stack is the unfair advantage: it makes the app possible, cheap or fast where a conventional stack cannot.
-Each pitch is one concrete sentence: what a person does with the app and what the stack gives.
+Each pitch states what a person does with the app or tool and what the stack gives.
 Set mismatch to one sentence that names the 2 layers, their paradigms and the axis on which they disagree, and how the app uses that mismatch.
+Practical problems (id | name | respondent share):
+${PRACTICAL_PROBLEMS.items.map((p) => `${p.id} | ${p.name} | ${p.percent}%`).join('\n')}
+Source: ${PRACTICAL_PROBLEMS.source.url}
+${PRACTICAL_PROBLEMS.source.limit}
+Problems without a documented paradigm reduction: ${data.practicalProblems.coverage.withoutReduction.join(', ')}.
+For each candidate, set problem_ids to the listed problems that it directly reduces. Use [] for no direct reduction.
+Explain each claimed reduction in problem and gain. A survey link alone does not prove that the candidate helps.
+Prefer a greater respondent share when evidence and gain are comparable. Do not add shares or equate prevalence with severity.
 Search the web for the problem and for prior art for each candidate.
 ${PROBLEM}`;
 }
+
+// Reason: the Stack trial had no explicit problem links in generated ideas.
+const STACK_CREATE_SCHEMA = {
+  ...CREATE_SCHEMA,
+  properties: { candidates: { ...CREATE_SCHEMA.properties.candidates, items: {
+    ...CREATE_SCHEMA.properties.candidates.items,
+    required: [...CREATE_SCHEMA.properties.candidates.items.required, 'problem_ids'],
+    properties: { ...CREATE_SCHEMA.properties.candidates.items.properties,
+      problem_ids: { type: 'array', items: { enum: PRACTICAL_PROBLEMS.items.map((p) => p.id) } } },
+  } } },
+};
 
 const AXES_SCHEMA = {
   type: 'object', required: ['axes'],
@@ -522,17 +549,18 @@ async function runCreate(cfg, huntId) {
     const comps = db.prepare(`SELECT c.*, s.name AS source, s.kind AS source_kind FROM components c JOIN sources s ON s.id = c.source_id
       WHERE s.hunt_id = ? AND c.bad_reason IS NULL`).all(huntId);
     const prompt = hunt.stack ? stackCreatePrompt(hunt.seed, comps, stackData(db)) : createPrompt(hunt.seed, comps);
-    const out = await ask(cfg, prompt, CREATE_SCHEMA, { web: true });
+    const out = await ask(cfg, prompt, hunt.stack ? STACK_CREATE_SCHEMA : CREATE_SCHEMA, { web: true });
     const known = new Set(comps.map((c) => c.id));
     const add = db.prepare(`INSERT INTO snowmobiles (hunt_id, name, pitch, component_ids, status, proof_url, proof_note,
-      problem, evidence_url, conventional, gain_axis, gain, mismatch) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+      problem, evidence_url, conventional, gain_axis, gain, mismatch, problem_ids) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
     for (const c of out.candidates) {
       const ids = c.component_ids.filter((i) => known.has(i));
       const grave = graveOf(c);
       const proofUrl = grave === 'exists' ? c.proof_url : '';
       const note = grave && grave !== 'exists' ? `${grave[0].toUpperCase()}${grave.slice(1)}: ${c.proof_note}` : c.proof_note;
       add.run(huntId, c.name, c.pitch, JSON.stringify(ids), grave ? 'graveyard' : 'survivor', proofUrl, note,
-        c.problem, c.evidence_url, c.conventional, c.gain_axis, c.gain, hunt.stack ? c.mismatch : null);
+        c.problem, c.evidence_url, c.conventional, c.gain_axis, c.gain, hunt.stack ? c.mismatch : null,
+        hunt.stack ? JSON.stringify(ideaProblems(c.problem_ids).problem_ids) : null);
     }
     db.prepare(`UPDATE hunts SET status = 'created', error = NULL WHERE id = ?`).run(huntId);
   } catch (e) {
@@ -758,8 +786,14 @@ function huntView(db, id) {
   const sources = db.prepare(`SELECT * FROM sources WHERE hunt_id = ?`).all(id);
   for (const s of sources) s.components = db.prepare(`SELECT * FROM components WHERE source_id = ?`).all(s.id);
   const snowmobiles = db.prepare(`SELECT * FROM snowmobiles WHERE hunt_id = ? ORDER BY id`).all(id)
-    .map((s) => ({ ...s, component_ids: JSON.parse(s.component_ids) }));
-  return { hunt, sources, snowmobiles };
+    .map((s) => ({ ...s, component_ids: JSON.parse(s.component_ids), ...ideaProblems(JSON.parse(s.problem_ids || 'null')) }));
+  if (hunt.stack) snowmobiles.sort((a, b) => b.problem_priority - a.problem_priority);
+  const assessed = snowmobiles.filter((s) => s.problem_ids.length).length;
+  return { hunt, sources, snowmobiles, problemCoverage: hunt.stack ? {
+    total: snowmobiles.length, named: assessed, share: snowmobiles.length ? assessed / snowmobiles.length : null,
+    source: PRACTICAL_PROBLEMS.source,
+    limit: 'Counts include all candidates, also the graveyard. Links are model claims, not proof of a reduction.',
+  } : null };
 }
 
 function grillView(cfg, smId) {
@@ -971,4 +1005,4 @@ if (require.main === module) {
   }, (e) => { console.error(`snowmobile: ${e.message}`); process.exit(1); });
 }
 
-module.exports = { start, eigen, pca, gaps, practicalProblems };
+module.exports = { start, eigen, pca, gaps, practicalProblems, ideaProblems };

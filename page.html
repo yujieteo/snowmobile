@@ -330,6 +330,7 @@ function caseOf(s) {
   if (!s.problem) return '';
   return `<div class="small" style="margin:6px 0">
     <div><b>Problem:</b> ${esc(s.problem)} ${link(s.evidence_url, '(evidence)')}</div>
+    ${s.practical_problems?.length ? `<div><b>Practical problems:</b> ${s.practical_problems.map((p) => esc(p.name)).join(', ')} · priority ${s.problem_priority}% respondent share</div>` : ''}
     <div><b>Today:</b> ${esc(s.conventional)}</div>
     <div><b>Better on ${esc(s.gain_axis)}:</b> ${esc(s.gain)}</div>
     ${s.mismatch ? `<div><b>Layer mismatch:</b> ${esc(s.mismatch)}</div>` : ''}</div>`;
@@ -350,7 +351,7 @@ function smCard(s, comps, first) {
 }
 
 async function hunt(id, tab) {
-  const { hunt: h, sources, snowmobiles } = await api(`/api/hunts/${id}`);
+  const { hunt: h, sources, snowmobiles, problemCoverage } = await api(`/api/hunts/${id}`);
   const comps = {};
   sources.forEach((s) => s.components.forEach((c) => (comps[c.id] = { ...c, source: s.name })));
   const busy = h.status === 'hunting' || h.status === 'creating';
@@ -382,6 +383,9 @@ async function hunt(id, tab) {
     <div class="status">${busy ? `<span class="spin"></span> ${STEP[h.status]}` : ''}
       ${h.error ? `<div class="err">${esc(h.error)}</div>` : ''}</div>
     <nav class="tabs">${tabs.map(([k, label, n]) => `<a href="#/hunt/${id}/${k}" ${k === tab ? 'aria-current="page"' : ''}>${label} <span class="n">${n}</span></a>`).join('')}</nav>
+    ${problemCoverage ? `<p class="small dim">${problemCoverage.named}/${problemCoverage.total} candidates name a sourced practical problem${problemCoverage.share === null ? '' : ` (${Math.round(problemCoverage.share * 100)}%)`}.
+      Ideas with a greater respondent share appear first. ${esc(problemCoverage.limit)}
+      ${link(problemCoverage.source.url, problemCoverage.source.title)}. ${esc(problemCoverage.source.limit)}</p>` : ''}
     ${body}`, 'home');
   const create = async () => {
     try { await api(`/api/hunts/${id}/create`, {}); } catch (e) { return fail(e); }
@@ -566,7 +570,7 @@ async function stack() {
   const pain = document.getElementById('pain')?.value || '';
   shell(`<h1>Stack</h1>
     <p class="dim">Paradigms of 4 layers on one map. A large gap between the layers of your stack is a mismatch:
-    a chance for a consumer app that a conventional stack cannot give.</p>
+    a chance for an app or developer tool that reduces a practical problem.</p>
     <div class="status">${busy ? `<span class="spin"></span> ${JOB[s.job.step]}` : ''}${s.job?.error ? `<div class="err">${esc(s.job.error)}</div>` : ''}</div>
     <div class="legend">${Object.entries(s.layers).map(([k, v]) => `<span><svg width="14" height="14">${mark(k, 7, 7, 5)}</svg>${esc(v)}</span>`).join('')}</div>
     ${s.map ? `<div class="map" id="map"></div><p class="hint">Tap a mark to pick it for its layer. Tap an empty point to ask which paradigm would live there.</p>
@@ -594,7 +598,7 @@ async function stack() {
         ${p ? `<b>${link(p.url, p.name)}</b><div class="small dim">${esc(p.summary)}</div>` : '<span class="dim">any (the LLM chooses)</span>'}</div>
         ${p ? `<button class="x" data-clear="${k}" aria-label="clear ${esc(v)}">×</button>` : ''}</div>`;
     }).join('')}</div>
-    <form class="row" id="f"><input type="text" id="pain" placeholder="a consumer pain (optional with a stack)" autocomplete="off" aria-label="consumer pain" value="${esc(pain)}">
+    <form class="row" id="f"><input type="text" id="pain" placeholder="a practical problem (optional with a stack)" autocomplete="off" aria-label="practical problem" value="${esc(pain)}">
       <button>Create apps</button></form>
     <p class="small dim">With a pain and no stack, the LLM chooses a paradigm for each layer.</p>
     ${s.gaps.length ? `<h2>Gaps on each axis</h2><p class="small dim">Edit a score to correct it. A new score from the LLM never replaces your edit.</p>

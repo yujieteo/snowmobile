@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
-const { start, eigen, pca, gaps, practicalProblems } = require('../snowmobile.js');
+const { start, eigen, pca, gaps, practicalProblems, ideaProblems } = require('../snowmobile.js');
 
 // Reason: a stale link can assign a source assessment to a different user paradigm.
 test('problem coverage excludes absent or changed paradigms and does not count harm as a reduction', () => {
@@ -26,6 +26,17 @@ test('problem coverage excludes absent or changed paradigms and does not count h
     assert.strictEqual(changed.coverage.unassessedParadigms, 1);
     assert.deepStrictEqual(changed.coverage.withoutReduction, empty.coverage.withoutReduction);
   }
+});
+
+// Reason: invalid IDs and duplicate IDs must not inflate idea coverage or priority.
+test('idea problem priority uses the greatest sourced share and ignores invalid IDs', () => {
+  for (const ids of [null, undefined, 'technical-debt', [], ['unknown']]) {
+    assert.deepStrictEqual(ideaProblems(ids), { problem_ids: [], practical_problems: [], problem_priority: 0 });
+  }
+  const result = ideaProblems(['unreliable-tools', 'technical-debt', 'technical-debt', 'unknown']);
+  assert.deepStrictEqual(result.problem_ids, ['technical-debt', 'unreliable-tools']);
+  assert.strictEqual(result.problem_priority, 62.4);
+  assert.strictEqual(result.practical_problems.length, 2);
 });
 
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} is not ${b}`);
@@ -77,6 +88,7 @@ test('an old database keeps its data and gains the stack tables, columns and sta
   assert.strictEqual(cfg.db.prepare(`SELECT seed FROM hunts`).get().seed, 'old seed');
   const sm = cfg.db.prepare(`SELECT * FROM snowmobiles`).get();
   assert.strictEqual(sm.name, 'Old idea');
+  assert.strictEqual(sm.problem_ids, null);
   assert.ok('mismatch' in sm && 'problem' in sm && 'gain' in sm);
   const layers = cfg.db.prepare(`SELECT layer, COUNT(*) AS n FROM paradigms GROUP BY layer ORDER BY layer`).all();
   assert.deepStrictEqual(layers.map((l) => l.layer), ['hardware', 'language', 'os', 'software']);
@@ -231,6 +243,18 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   const h = await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'created');
   assert.deepStrictEqual(h.sources.map((x) => x.kind), Object.keys(s.layers));
   assert.deepStrictEqual(h.snowmobiles.map((x) => x.status), ['survivor', 'survivor', 'graveyard', 'graveyard', 'graveyard']);
+  // Reason: model order must not outrank a sourced problem, and all candidates must count.
+  assert.deepStrictEqual(h.snowmobiles.slice(0, 2).map((s) => s.name), ['Hashvisor', 'Killme']);
+  assert.ok(h.snowmobiles[0].id > h.snowmobiles[1].id);
+  assert.deepStrictEqual(h.snowmobiles[0].problem_ids, ['technical-debt']);
+  assert.strictEqual(h.snowmobiles[0].problem_priority, 62.4);
+  assert.deepStrictEqual(h.snowmobiles[2].problem_ids, []);
+  assert.strictEqual(h.problemCoverage.named, 2);
+  assert.strictEqual(h.problemCoverage.total, 5);
+  assert.strictEqual(h.problemCoverage.share, 0.4);
+  assert.strictEqual(h.problemCoverage.source.url, problems.source.url);
+  assert.deepStrictEqual(JSON.parse(cfg.db.prepare('SELECT problem_ids FROM snowmobiles WHERE id = ?')
+    .get(h.snowmobiles[0].id).problem_ids), ['technical-debt']);
   const app = h.snowmobiles[0];
   assert.strictEqual(app.component_ids.length, 4);
   assert.match(app.mismatch, /Hardware and software/);
