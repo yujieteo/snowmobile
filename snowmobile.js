@@ -378,6 +378,9 @@ ${PROBLEM}`;
 
 function stackCreatePrompt(seed, comps, data) {
   const { axes, scores } = data;
+  // Reason: the brainstorm prompt omitted all five source assessments, which include a harmful effect.
+  const available = new Set(comps.map((c) => c.paradigm_id));
+  const assessments = data.practicalProblems.links.filter((l) => available.has(l.paradigm_id));
   const fixed = Object.keys(LAYERS).filter((l) => comps.filter((c) => c.source_kind === l).length === 1);
   const ids = comps.filter((c) => fixed.includes(c.source_kind)).map((c) => c.paradigm_id);
   const spread = ids.length > 1 ? gaps(axes, scores, ids) : [];
@@ -400,6 +403,11 @@ ${PRACTICAL_PROBLEMS.items.map((p) => `${p.id} | ${p.name} | ${p.percent}%`).joi
 Source: ${PRACTICAL_PROBLEMS.source.url}
 ${PRACTICAL_PROBLEMS.source.limit}
 Problems without a documented paradigm reduction: ${data.practicalProblems.coverage.withoutReduction.join(', ')}.
+Source assessments for available paradigms (JSON):
+${JSON.stringify(assessments)}
+Use these mechanisms and limits to assess each candidate. State how the chosen stack can reduce its named problems.
+If a chosen paradigm can worsen a named problem, explain that cost in gain and compare it with the benefit.
+A source assessment does not prove that a candidate works. No assessment means an unknown effect.
 For each candidate, set problem_ids to the listed problems that it directly reduces. Use [] for no direct reduction.
 Explain each claimed reduction in problem and gain. A survey link alone does not prove that the candidate helps.
 Prefer a greater respondent share when evidence and gain are comparable. Do not add shares or equate prevalence with severity.

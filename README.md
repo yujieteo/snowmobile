@@ -62,6 +62,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
 - **Gaps.** With 2 or more picked paradigms, the page shows the gap between them on each axis. A gap of 5 or more is a mismatch: a chance for a new idea.
 - **Create.** Write a practical problem, pick a stack, or do both. If you do not pick a paradigm for a layer, Claude chooses one. Claude then proposes consumer apps or developer tools that the stack makes possible, cheap or fast.
   The prompt gives practical developer problems priority over novelty.
+  The prompt includes source assessments only for available paradigms, with their mechanisms and limits.
+  Each candidate must explain any documented harm to a named problem and compare that cost with its benefit.
+  Reason: the brainstorm prompt omitted all five source assessments, which include a harmful effect.
   Each candidate names the sourced problems that it claims to reduce, or has no problem link.
   Ideas appear in order of their greatest linked respondent share. Shares do not measure severity and never add together.
   The page shows the fraction of all candidates with a problem link, also those in the graveyard.

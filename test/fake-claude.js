@@ -27,6 +27,7 @@ process.stdin.on('end', () => {
     const why = { problem: 'Testers lose a day to flaky tests.', evidence_url: 'https://example.com/thread', conventional: 'Retry plugins',
       gain_axis: 'effort', gain: 'Restarts only changed tests; saves 50% of reruns.', mismatch };
     if (prompt.includes('candidate consumer apps')) {
+      require('node:fs').writeFileSync('stack-prompt', prompt);
       if (!prompt.includes('technical-debt | Technical debt | 62.4%') ||
           !prompt.includes('https://survey.stackoverflow.co/2024/professional-developers/') ||
           !prompt.includes('problem_ids') || !prompt.includes('developer tools')) throw new Error('No practical problem context.');

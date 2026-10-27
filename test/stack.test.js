@@ -260,8 +260,23 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.strictEqual((await call('/api/hunts', { stack: [pick[0], s.paradigms.filter((p) => p.layer === 'language')[1].id] })).status, 400);
   assert.strictEqual((await call('/api/hunts', { stack: [] })).status, 400);
 
+  // Reason: the brainstorm omitted all source assessments, which include a harmful effect.
+  const actor = s.paradigms.find((p) => p.name === 'Actor model');
+  const broad = (await call('/api/hunts', { seed: 'reliable tools', stack: [actor.id] })).body;
+  await until(`/api/hunts/${broad.id}`, (b) => b.hunt.status === 'created');
+  const prompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
+  const assessments = JSON.parse(prompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);
+  assert.deepStrictEqual(assessments, s.practicalProblems.links);
+  assert.strictEqual(assessments.length, 5);
+  assert.ok(assessments.some((l) => l.effect === 'worsens'));
+  assert.match(prompt, /explain that cost in gain and compare it with the benefit/);
+  assert.match(prompt, /No assessment means an unknown effect/);
+
   const { id } = (await call('/api/hunts', { seed: 'lost photos', stack: pick })).body;
   const h = await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'created');
+  // Reason: an unavailable paradigm must not supply a candidate with a claimed benefit.
+  const fixedPrompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
+  assert.match(fixedPrompt, /Source assessments for available paradigms \(JSON\):\n\[\]/);
   assert.deepStrictEqual(h.sources.map((x) => x.kind), Object.keys(s.layers));
   assert.deepStrictEqual(h.snowmobiles.map((x) => x.status), ['survivor', 'survivor', 'graveyard', 'graveyard', 'graveyard']);
   // Reason: model order must not outrank a sourced problem, and all candidates must count.
