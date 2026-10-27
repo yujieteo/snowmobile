@@ -289,7 +289,8 @@ function corpusBeforeAutomerge() {
   const corpus = require('../data/repo-scores.json');
   return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Automerge'),
     paradigms: corpus.paradigms.filter((p) =>
-      !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)'].includes(p.name)) };
+      !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)',
+        'Cluster (warehouse-scale computer)'].includes(p.name)) };
 }
 
 function corpusBeforeGforth() {
@@ -656,5 +657,26 @@ test('the FPGA profile adds hardware flexibility without a duplicate seed', () =
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
+  assert.equal(map.coverage.radius, map.coverage.baseline.radius);
+});
+
+test('the cluster profile adds a distributed hardware example without a duplicate seed', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Cluster (warehouse-scale computer)');
+  const previous = corpus.paradigms.filter((p) => p !== candidate);
+  assert.equal(candidate.layer, 'hardware');
+  assert.ok(candidate.scores[2] > Math.max(...previous.filter((p) => p.layer === 'hardware').map((p) => p.scores[2])));
+  const nearest = Math.min(...previous.map((p) =>
+    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]))));
+  assert.ok(Math.abs(nearest - Math.sqrt(86)) < 1e-9);
+  const source = fs.readFileSync(path.join(__dirname, '../snowmobile.js'), 'utf8');
+  assert.equal(source.split("['Cluster (warehouse-scale computer)',").length - 1, 1);
+  const before = selectRepos({ ...corpus, paradigms: previous }, corpus.repos.length);
+  const after = selectRepos(corpus, corpus.repos.length);
+  assert.deepEqual(after.repos, before.repos);
+  assert.equal(after.minimumDistance, before.minimumDistance);
+  assert.deepEqual(after.gaps, []);
+  const { map } = selectRepos({ ...corpus,
+    coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
 });

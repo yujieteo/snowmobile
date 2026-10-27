@@ -1407,6 +1407,60 @@
           "source": "https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw"
         }
       ]
+    },
+    {
+      "name": "Cluster (warehouse-scale computer)",
+      "layer": "hardware",
+      "definition": "Many cheap servers connected by a network act as one computer.",
+      "scope": "One warehouse-scale computer with networked servers, resource management, and distributed disk or flash storage. Application frameworks lie outside this scope.",
+      "sources": [
+        "https://research.google/pubs/the-datacenter-as-a-computer-designing-warehouse-scale-machines/",
+        "https://link.springer.com/content/pdf/10.1007/978-3-031-01761-2.pdf"
+      ],
+      "scores": [
+        4,
+        0,
+        10,
+        8,
+        10,
+        2,
+        7,
+        10
+      ],
+      "reasons": [
+        {
+          "reason": "Section 2.3.1 describes both manual machine allocation and declarative job resource requests.",
+          "source": "https://link.springer.com/content/pdf/10.1007/978-3-031-01761-2.pdf"
+        },
+        {
+          "reason": "Section 2.4.1 describes transactional data updates. This profile does not require immutable application values.",
+          "source": "https://link.springer.com/content/pdf/10.1007/978-3-031-01761-2.pdf"
+        },
+        {
+          "reason": "Sections 1.6.1 and 2.3 describe networked servers with cluster-wide resource and storage services.",
+          "source": "https://link.springer.com/content/pdf/10.1007/978-3-031-01761-2.pdf"
+        },
+        {
+          "reason": "Sections 2.2 and 2.3.1 describe live workload migration and task allocation across available machines.",
+          "source": "https://link.springer.com/content/pdf/10.1007/978-3-031-01761-2.pdf"
+        },
+        {
+          "reason": "Section 1.6 describes physical server boards, storage devices, and Ethernet switches as the system components.",
+          "source": "https://link.springer.com/content/pdf/10.1007/978-3-031-01761-2.pdf"
+        },
+        {
+          "reason": "Section 2.4.1 favors general-purpose hardware for diverse workloads despite some specialized accelerators.",
+          "source": "https://link.springer.com/content/pdf/10.1007/978-3-031-01761-2.pdf"
+        },
+        {
+          "reason": "Sections 7.6 and 7.2.2 describe machine, rack, and power failure domains, but shared infrastructure still permits correlated faults.",
+          "source": "https://link.springer.com/content/pdf/10.1007/978-3-031-01761-2.pdf"
+        },
+        {
+          "reason": "Section 1.6.2 describes distributed disk and flash services that preserve durable application data.",
+          "source": "https://link.springer.com/content/pdf/10.1007/978-3-031-01761-2.pdf"
+        }
+      ]
     }
   ]
 }
