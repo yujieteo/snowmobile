@@ -142,6 +142,18 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   let s = (await call('/api/stack')).body;
   assert.strictEqual(s.axes.length, 0);
   assert.strictEqual(s.map, null);
+  // Reason: a problem share without its source or sample scope can imply a false priority.
+  const problems = s.practicalProblems;
+  assert.deepStrictEqual(problems.items.map((p) => [p.id, p.percent]), [
+    ['technical-debt', 62.4], ['build-complexity', 32.9],
+    ['deployment-complexity', 32.3], ['unreliable-tools', 31.5],
+  ]);
+  assert.strictEqual(problems.source.url,
+    'https://survey.stackoverflow.co/2024/professional-developers/#2-most-common-frustrations');
+  assert.strictEqual(problems.source.respondents, 28251);
+  assert.match(problems.source.scope, /Professional Developer/);
+  assert.match(problems.source.measure, /more than one/);
+  assert.match(problems.source.limit, /do not measure severity/);
   const n = s.paradigms.length;
 
   await call('/api/stack/axes', {});

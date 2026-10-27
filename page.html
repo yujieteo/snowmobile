@@ -572,6 +572,14 @@ async function stack() {
     ${s.map ? `<div class="map" id="map"></div><p class="hint">Tap a mark to pick it for its layer. Tap an empty point to ask which paradigm would live there.</p>
       <div id="point"></div><p class="small dim">${pcLabel(s, 0)}<br>${pcLabel(s, 1)}</p>`
       : `<div class="card dim">The map needs axes and a score for each paradigm. <a href="#axes" data-jump>Propose the axes below.</a></div>`}
+    <h2>Practical problems</h2>
+    <p class="small dim">${s.practicalProblems.items.length} sourced problems. Select a problem as your app seed.</p>
+    <div class="card">
+      ${s.practicalProblems.items.map((p) => `<button type="button" class="chip" data-problem="${esc(p.id)}">${esc(p.name)} · ${p.percent}%</button>`).join('')}
+      <p class="small">${link(s.practicalProblems.source.url, s.practicalProblems.source.title)} · ${s.practicalProblems.source.respondents.toLocaleString()} respondents</p>
+      <p class="small dim">${esc(s.practicalProblems.source.scope)} ${esc(s.practicalProblems.source.measure)}</p>
+      <p class="small dim">${esc(s.practicalProblems.source.limit)}</p>
+    </div>
     <h2>Your stack</h2>
     <div class="slots">${Object.entries(s.layers).map(([k, v]) => {
       const p = byId[stackPick[k]];
@@ -602,6 +610,12 @@ async function stack() {
       : '<p class="small dim">Claude proposes 8 to 12 design axes that run through all 4 layers, then scores each paradigm on each axis.</p>'}`, 'stack');
 
   document.querySelectorAll('[data-pick]').forEach((b) => (b.onclick = () => choose(byId[Number(b.dataset.pick)])));
+  document.querySelectorAll('[data-problem]').forEach((b) => (b.onclick = () => {
+    const problem = s.practicalProblems.items.find((p) => p.id === b.dataset.problem);
+    const input = document.getElementById('pain');
+    input.value = `Reduce ${problem.name.toLowerCase()}.`;
+    input.focus();
+  }));
   document.querySelectorAll('[data-clear]').forEach((b) => (b.onclick = () => {
     const layer = b.dataset.clear, was = stackPick[layer];
     delete stackPick[layer]; stack();

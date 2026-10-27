@@ -74,6 +74,25 @@ function token(db) {
 // The four layers of a stack, from the program down to the machine and back up to the product.
 const LAYERS = { language: 'Programming language', hardware: 'Hardware', os: 'Operating system', software: 'Software' };
 
+// Reason: the Stack API had no sourced practical problems for the map or idea seed.
+const PRACTICAL_PROBLEMS = {
+  source: {
+    title: 'Stack Overflow Developer Survey 2024: most common frustrations',
+    url: 'https://survey.stackoverflow.co/2024/professional-developers/#2-most-common-frustrations',
+    checked: '2026-10-28',
+    respondents: 28251,
+    scope: 'Professional Developer section, all respondents to the frustrations question.',
+    measure: 'Share of respondents who select each frustration. Respondents can select more than one.',
+    limit: 'These shares describe this survey sample. They do not measure severity or rank all practical problems.',
+  },
+  items: [
+    { id: 'technical-debt', name: 'Technical debt', percent: 62.4 },
+    { id: 'build-complexity', name: 'Build stack complexity', percent: 32.9 },
+    { id: 'deployment-complexity', name: 'Deployment stack complexity', percent: 32.3 },
+    { id: 'unreliable-tools', name: 'Tool and system unreliability', percent: 31.5 },
+  ],
+};
+
 // The start list includes taxonomies, papers, project documentation and architecture styles.
 const W = 'https://en.wikipedia.org/wiki/';
 const START = {
@@ -206,7 +225,8 @@ function stackData(db) {
   for (const s of db.prepare(`SELECT * FROM scores`).all()) (scores[s.paradigm_id] ||= {})[s.axis_id] = s;
   const full = paradigms.filter((p) => axes.length && axes.every((a) => scores[p.id]?.[a.id]));
   const map = pca(full.map((p) => axes.map((a) => scores[p.id][a.id].score)));
-  return { axes, paradigms, scores, map: map && { ...map, ids: full.map((p) => p.id) } };
+  return { axes, paradigms, scores, practicalProblems: PRACTICAL_PROBLEMS,
+    map: map && { ...map, ids: full.map((p) => p.id) } };
 }
 
 function stackView(cfg, pick) {
