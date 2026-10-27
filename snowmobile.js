@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Event sourcing trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Event sourcing', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'Fowler describes event replay to restore application state after a crash. Assessment: a retained event log can support state recovery. This does not prevent every fault or replace protection for the event log.',
+    source: { title: 'Martin Fowler: event replay and external updates', url: 'https://martinfowler.com/eaaDev/EventSourcing.html' },
+  },
+  {
+    paradigm: 'Event sourcing', layer: 'software', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'Fowler warns that event replay can repeat updates to external systems. Assessment: replay can cause incorrect external state unless gateways suppress repeat updates. This cost depends on external effects and replay controls.',
+    source: { title: 'Martin Fowler: event replay and external updates', url: 'https://martinfowler.com/eaaDev/EventSourcing.html' },
+  },
   // Reason: the Microkernel trial found no reliability assessment and four problem gaps.
   {
     paradigm: 'Microkernel', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
