@@ -94,7 +94,7 @@ const START = {
     ['Pipelined RISC processor', 'Simple fixed-length instructions overlap in a five-stage pipeline.', `${W}Classic_RISC_pipeline`],
     ['Out-of-order superscalar', 'Hardware finds independent instructions at run time and issues several in each cycle.', `${W}Out-of-order_execution`],
     ['VLIW', 'The compiler packs independent operations into one long instruction at build time.', `${W}Very_long_instruction_word`],
-    ['Vector processor', 'One instruction operates on a whole vector of data elements.', `${W}Vector_processor`],
+    ['Vector processor', 'One instruction operates on a whole vector of data elements.', 'https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html'],
     ['GPU (SIMT)', 'Thousands of threads run in lockstep groups and hide memory latency by switching groups.', `${W}Single_instruction,_multiple_threads`],
     ['Shared-memory multiprocessor', 'Several cores share one coherent address space through caches.', `${W}Symmetric_multiprocessing`],
     ['Cluster (warehouse-scale computer)', 'Many cheap servers connected by a network act as one computer.', `${W}Computer_cluster`],

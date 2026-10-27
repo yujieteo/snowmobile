@@ -2063,6 +2063,59 @@
           "source": "https://docs.ipfs.tech/how-to/pin-files/"
         }
       ]
+    },
+    {
+      "name": "Vector processor",
+      "layer": "hardware",
+      "definition": "One instruction operates on a whole vector of data elements.",
+      "scope": "The RISC-V V 1.0 instruction set on one hart, not a specific circuit or a distributed application.",
+      "sources": [
+        "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+      ],
+      "scores": [
+        2,
+        0,
+        0,
+        9,
+        10,
+        2,
+        5,
+        0
+      ],
+      "reasons": [
+        {
+          "reason": "Explicit instructions select vector operations and memory accesses.",
+          "source": "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+        },
+        {
+          "reason": "Instructions overwrite vector registers and memory elements.",
+          "source": "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+        },
+        {
+          "reason": "Vector operations use one hart. The specification defines no network protocol.",
+          "source": "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+        },
+        {
+          "reason": "Runtime instructions select vector length, element width, and register groups.",
+          "source": "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+        },
+        {
+          "reason": "The interface exposes registers, memory addresses, and hardware vector limits.",
+          "source": "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+        },
+        {
+          "reason": "Portable binaries can run across different vector register lengths without a task-specific circuit.",
+          "source": "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+        },
+        {
+          "reason": "The specification describes traps and context state, but not independent hardware fault boundaries. The midpoint marks uncertain evidence.",
+          "source": "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+        },
+        {
+          "reason": "Vector registers hold execution state. The instruction set defines no durable store.",
+          "source": "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+        }
+      ]
     }
   ]
 }
