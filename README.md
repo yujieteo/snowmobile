@@ -161,8 +161,15 @@ The [GHCi manual](https://downloads.haskell.org/ghc/latest/docs/users_guide/ghci
 This profile includes IO actions but excludes external services and foreign code. It does not score the compiler implementation.
 The region lies 11.96 axis units from the nearest scored paradigm and 3.79 units on the joint map.
 The first two components retain 68.64% of variance. The four-repository subset stays the same.
-Review **Functional programming**, an existing seed, before any new seed for this region.
+The region matches the existing **Functional programming** seed.
+Reason: the eight-repository run exposed a search candidate that the seed already describes.
+The [Haskell report](https://www.haskell.org/onlinereport/haskell2010/haskellch1.html) identifies Haskell as a purely functional language.
+The study adds its profile with eight score reasons and the GHC repository link.
+The profile uses the GHCi session scope, with IO actions, rather than pure expressions alone.
 These scores are manual estimates. Other Haskell execution scopes can differ.
+This profile reduces search regions from one to zero for both six-repository and eight-repository subsets.
+Scored profiles increase from nine to ten. The first two components now retain 65.20% of joint variance.
+Zero regions covers these repository profiles. It does not establish complete seed coverage.
 
 ## Interface
 

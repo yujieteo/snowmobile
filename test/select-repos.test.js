@@ -298,7 +298,10 @@ test('the existing capability OS profile removes the duplicate seL4 search candi
 });
 
 test('GHCi increases six-repository separation and exposes a language search region', () => {
-  const corpus = require('../data/repo-scores.json');
+  const current = require('../data/repo-scores.json');
+  // Exclude the later profile to retain the original repository discovery check.
+  const corpus = { ...current,
+    paradigms: current.paradigms.filter((p) => p.name !== 'Functional programming') };
   const baseline = { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'GHCi') };
   const before = selectRepos(baseline, 6);
   const after = selectRepos(corpus, 6);
@@ -313,6 +316,26 @@ test('GHCi increases six-repository separation and exposes a language search reg
   assert.equal(region.nearestOnAxes.paradigm.name, 'Embedded database');
   assert.equal(corpus.repos.filter((repo) => repo.layer === 'language').length,
     baseline.repos.filter((repo) => repo.layer === 'language').length + 1);
+});
+
+test('the existing functional seed profile removes the duplicate GHCi search candidate', () => {
+  const corpus = require('../data/repo-scores.json');
+  const candidate = corpus.paradigms.find((p) => p.name === 'Functional programming');
+  assert.ok(candidate);
+  const before = selectRepos({ ...corpus,
+    paradigms: corpus.paradigms.filter((p) => p !== candidate) }, corpus.repos.length);
+  const region = before.gaps.find((gap) => gap.repo.name === 'GHCi');
+  assert.ok(region);
+  assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(143)) < 1e-9);
+  assert.ok(candidate.suggestedBy.includes(region.repo.url));
+  assert.equal(candidate.scope, region.repo.scope);
+  assert.deepEqual(candidate.scores, region.repo.scores);
+  const after = selectRepos(corpus, corpus.repos.length);
+  assert.equal(before.gaps.length, after.gaps.length + 1);
+  assert.deepEqual(after.gaps, []);
+  assert.deepEqual(selectRepos(corpus, 6).gaps, []);
+  assert.deepEqual(after.repos, before.repos);
+  assert.equal(after.minimumDistance, before.minimumDistance);
 });
 
 test('invalid scores and duplicate repositories cannot distort the distance', () => {
