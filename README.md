@@ -92,6 +92,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [OpenMP memory model](https://www.openmp.org/spec-html/5.2/openmpsu9.html) links Shared-memory multiprocessor to faults from unordered access to shared memory.
   The cost depends on shared data access and synchronization controls. It does not imply faults in every shared-memory program.
   Reason: a shared-memory trial found no assessments and four problem gaps.
+  The [MPI assessment](https://www.mpi-forum.org/docs/mpi-5.0/mpi50-report/node73.htm) links Cluster to deadlock risks from incorrect message order.
+  The cost depends on the communication pattern and protocol controls. MPI asynchronous operations can avoid this order constraint.
+  This does not imply faults in every cluster application or apply to every cluster protocol.
+  Reason: a Cluster trial found no assessments and four problem gaps.
   The [FreeRTOS assessments](https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md) link Real-time OS to task memory protection benefits and memory region maintenance costs.
   Protection requires suitable hardware, an MPU port and correct permissions. Privileged code still needs controls.
   These assessments do not prove whole-system reliability or apply to every real-time OS.

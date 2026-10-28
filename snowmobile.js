@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Cluster trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Cluster (warehouse-scale computer)', layer: 'hardware', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'MPI requires a suitable send and receive order to avoid deadlock with synchronous communication. Assessment: incorrect message order can stop a cluster application. The risk depends on the communication pattern and protocol controls. MPI asynchronous operations can avoid this order constraint. This does not imply faults in every cluster application or apply to every cluster protocol.',
+    source: { title: 'MPI 5.0: asynchronous communication and deadlock', url: 'https://www.mpi-forum.org/docs/mpi-5.0/mpi50-report/node73.htm' },
+  },
   // Reason: the shared-memory trial found no assessments and four problem gaps.
   {
     paradigm: 'Shared-memory multiprocessor', layer: 'hardware', problem_id: 'unreliable-tools', effect: 'worsens',
