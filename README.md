@@ -147,6 +147,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [Xen assessment](https://xenproject.org/projects/hypervisor/) links Hypervisor to driver fault isolation through a separate virtual machine.
   The benefit requires driver isolation. This does not prove whole-system reliability or apply to every hypervisor.
   Reason: a Hypervisor trial found no assessment and four problem gaps.
+  The [Plan 9 assessment](https://9p.io/sys/doc/9.html) links Distributed OS to less custom resource access code through common file interfaces.
+  The benefit requires services that expose compatible file interfaces.
+  This does not address all technical debt or apply to every distributed OS.
+  Reason: a Distributed OS trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

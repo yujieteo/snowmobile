@@ -75,6 +75,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const capabilities = { id: 113, layer: 'os', name: 'Capability-based OS', url: 'https://en.wikipedia.org/wiki/Capability-based_security' };
   const hypervisor = { id: 114, layer: 'os', name: 'Hypervisor', url: 'https://en.wikipedia.org/wiki/Hypervisor' };
   const generators = { id: 115, layer: 'hardware', name: 'Hardware generators', url: 'https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html' };
+  const distributed = { id: 116, layer: 'os', name: 'Distributed OS', url: 'https://9p.io/sys/doc/9.html' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
@@ -233,7 +234,6 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(virtual.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(virtual.links[0].source.url, 'https://xenproject.org/projects/hypervisor/');
   assert.match(virtual.links[0].reason, /requires driver isolation.*does not prove whole-system reliability or apply to every hypervisor/);
-  const emptyProblemCount = practicalProblems([]).items.length;
   // Reason: circuit reuse must not imply complete debt removal or correct generated circuits.
   const generated = practicalProblems([generators]);
   assert.deepStrictEqual(generated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
@@ -242,7 +242,16 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(generated.coverage.unassessedParadigms, 0);
   assert.strictEqual(generated.links[0].source.url, generators.url);
   assert.match(generated.links[0].reason, /duplicate circuit description code.*requires compatible generator interfaces.*still need validation.*does not address all technical debt or apply to every hardware generator/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators]) {
+  // Reason: uniform resource access must not imply complete debt removal for every distributed OS.
+  const uniform = practicalProblems([distributed]);
+  assert.deepStrictEqual(uniform.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[116, 'technical-debt', 'reduces']]);
+  assert.deepStrictEqual(uniform.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
+  assert.strictEqual(uniform.coverage.unassessedParadigms, 0);
+  assert.strictEqual(uniform.links[0].source.url, distributed.url);
+  assert.match(uniform.links[0].reason, /custom resource access code.*requires services that expose compatible file interfaces.*does not address all technical debt or apply to every distributed OS/);
+  const emptyProblemCount = practicalProblems([]).items.length;
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

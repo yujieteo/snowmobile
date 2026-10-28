@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Distributed OS trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Distributed OS', layer: 'os', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Plan 9 exposes local and remote resources through file interfaces and the 9P protocol. Applications can use the same file operations for both. Assessment: this can reduce custom resource access code. The benefit requires services that expose compatible file interfaces. This does not address all technical debt or apply to every distributed OS.',
+    source: { title: 'Plan 9 from Bell Labs: Design', url: 'https://9p.io/sys/doc/9.html' },
+  },
   // Reason: the Hardware generators trial found no assessment and four problem gaps.
   {
     paradigm: 'Hardware generators', layer: 'hardware', problem_id: 'technical-debt', effect: 'reduces',
