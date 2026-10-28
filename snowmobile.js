@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Capability-based OS trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Capability-based OS', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'In seL4, capabilities control access to kernel objects and resources. Each capability specifies access rights. Assessment: this can limit damage from unauthorized resource operations. The benefit requires correct capability allocation. Authorized code can still cause faults. This does not prove whole-system reliability or apply to every capability-based OS.',
+    source: { title: 'seL4 tutorial: capabilities', url: 'https://docs.sel4.systems/Tutorials/capabilities.html' },
+  },
   // Reason: the Unikernel trial found no assessment and four problem gaps.
   {
     paradigm: 'Unikernel', layer: 'os', problem_id: 'deployment-complexity', effect: 'reduces',

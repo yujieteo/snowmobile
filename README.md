@@ -140,6 +140,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [Mirage assessment](https://dave.recoil.org/papers/final/asplos2013.pdf) links Unikernel to less service configuration work and extra build work for static configuration changes.
   The benefit requires suitable libraries. The cost depends on which parameters are static. These assessments do not apply to every unikernel.
   Reason: a Unikernel trial found no assessment and four problem gaps.
+  The [seL4 assessment](https://docs.sel4.systems/Tutorials/capabilities.html) links Capability-based OS to less damage from unauthorized resource operations.
+  The benefit requires correct capability allocation. Authorized code can still cause faults.
+  This does not prove whole-system reliability or apply to every capability-based OS.
+  Reason: a Capability-based OS trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

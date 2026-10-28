@@ -72,6 +72,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const effects = { id: 109, layer: 'language', name: 'Algebraic effects', url: 'https://koka-lang.github.io/koka/doc/book.html' };
   const constraint = { id: 111, layer: 'language', name: 'Constraint programming', url: 'https://docs.minizinc.dev/en/stable/modelling.html' };
   const unikernel = { id: 112, layer: 'os', name: 'Unikernel', url: 'https://en.wikipedia.org/wiki/Unikernel' };
+  const capabilities = { id: 113, layer: 'os', name: 'Capability-based OS', url: 'https://en.wikipedia.org/wiki/Capability-based_security' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
@@ -216,8 +217,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(appliance.links.every((l) => l.source.url === 'https://dave.recoil.org/papers/final/asplos2013.pdf'));
   assert.match(appliance.links[0].reason, /requires libraries that fit the application.*does not remove all deployment costs or apply to every unikernel/);
   assert.match(appliance.links[1].reason, /new compilation.*depends on which parameters are static/);
+  // Reason: resource access controls must not imply correct authorized code or complete system reliability.
+  const restricted = practicalProblems([capabilities]);
+  assert.deepStrictEqual(restricted.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[113, 'unreliable-tools', 'reduces']]);
+  assert.deepStrictEqual(restricted.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.strictEqual(restricted.links[0].source.url, 'https://docs.sel4.systems/Tutorials/capabilities.html');
+  assert.match(restricted.links[0].reason, /correct capability allocation.*Authorized code can still cause faults.*does not prove whole-system reliability or apply to every capability-based OS/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
