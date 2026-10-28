@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Multikernel trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Multikernel', layer: 'os', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'The Barrelfish paper separates hardware transport and device interfaces from OS structure. Assessment: this can reduce code changes across components for new hardware. The benefit requires hardware details to remain behind these interfaces. This does not address all technical debt or apply to every multikernel.',
+    source: { title: 'The Multikernel: hardware-neutral OS structure, section 3.2', url: 'https://barrelfish.org/publications/barrelfish_sosp09.pdf' },
+  },
+  {
+    paradigm: 'Multikernel', layer: 'os', problem_id: 'technical-debt', effect: 'worsens',
+    reason: 'The Barrelfish paper identifies obscure control flow as a concern with asynchronous messages. Assessment: this can make code maintenance harder. The cost depends on message handlers and control flow tools. This does not apply to every multikernel.',
+    source: { title: 'The Multikernel: message-based software concerns, section 2.6', url: 'https://barrelfish.org/publications/barrelfish_sosp09.pdf' },
+  },
   // Reason: the Concatenative programming trial found no assessment and four problem gaps.
   {
     paradigm: 'Concatenative programming', layer: 'language', problem_id: 'unreliable-tools', effect: 'reduces',

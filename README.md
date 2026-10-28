@@ -78,6 +78,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Fowler reports extra complexity, lower productivity and greater risk in that case.
   The assessment infers a technical debt cost. It does not apply to every CQRS use.
   Reason: a CQRS trial found no assessment of its cost for technical debt.
+  The [Barrelfish assessments](https://barrelfish.org/publications/barrelfish_sosp09.pdf) link Multikernel to fewer hardware-dependent code changes and harder control flow.
+  These inferred debt effects depend on interface boundaries, message handlers and control flow tools. They do not apply to every multikernel.
+  Reason: a Multikernel trial found no assessments and four problem gaps.
   The [Factor assessment](https://docs.factorcode.org/content/article-inference.html) links Concatenative programming to fewer faults from invalid stack effects.
   The benefit requires code that passes the static stack checker. Dynamic code still needs controls.
   This does not prove whole-system reliability or apply to every concatenative language.
