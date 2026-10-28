@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Logic programming trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Logic programming', layer: 'language', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'SWI-Prolog documents tabled execution that avoids infinite recursion in a finite graph query. Assessment: this can prevent query failure through nontermination. The benefit requires suitable tabled predicates. This does not guarantee termination for every query or whole-system reliability or apply to every logic program.',
+    source: { title: 'SWI-Prolog: recursive query termination', url: 'https://www.swi-prolog.org/pldoc/man?section=tabling-non-termination' },
+  },
+  {
+    paradigm: 'Logic programming', layer: 'language', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'SWI-Prolog documents that default answer tables do not automatically reflect changes to their source predicates. Assessment: stale answers can cause incorrect results after facts change. Control requires explicit table invalidation or suitable incremental tables. This does not apply to every logic program.',
+    source: { title: 'SWI-Prolog: answer table consistency', url: 'https://www.swi-prolog.org/pldoc/man?section=tabling' },
+  },
   // Reason: the Object-oriented programming trial found no assessment and four problem gaps.
   {
     paradigm: 'Object-oriented programming', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',

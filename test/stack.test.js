@@ -78,6 +78,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const distributed = { id: 116, layer: 'os', name: 'Distributed OS', url: 'https://9p.io/sys/doc/9.html' };
   const dataflow = { id: 118, layer: 'language', name: 'Dataflow programming', url: 'https://en.wikipedia.org/wiki/Dataflow_programming' };
   const objects = { id: 119, layer: 'language', name: 'Object-oriented programming', url: 'https://en.wikipedia.org/wiki/Object-oriented_programming' };
+  const logic = { id: 120, layer: 'language', name: 'Logic programming', url: 'https://en.wikipedia.org/wiki/Logic_programming' };
   const clientServer = { id: 117, layer: 'software', name: 'Client-server', url: 'https://en.wikipedia.org/wiki/Client%E2%80%93server_model' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
@@ -280,8 +281,18 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(encapsulated.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
   assert.strictEqual(encapsulated.links[0].source.url, 'https://docs.oracle.com/javase/tutorial/java/concepts/object.html');
   assert.match(encapsulated.links[0].reason, /dependencies on internal implementation details.*requires stable method contracts and encapsulated state.*does not address all technical debt or apply to every object-oriented design/);
+  // Reason: query termination benefits must not hide stale answers or imply whole-system reliability.
+  const queries = practicalProblems([logic]);
+  assert.deepStrictEqual(queries.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[120, 'unreliable-tools', 'reduces'], [120, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(queries.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.deepStrictEqual(queries.links.map((l) => l.source.url), [
+    'https://www.swi-prolog.org/pldoc/man?section=tabling-non-termination',
+    'https://www.swi-prolog.org/pldoc/man?section=tabling']);
+  assert.match(queries.links[0].reason, /finite graph query.*requires suitable tabled predicates.*does not guarantee termination for every query or whole-system reliability/);
+  assert.match(queries.links[1].reason, /stale answers.*after facts change.*explicit table invalidation or suitable incremental tables.*does not apply to every logic program/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
