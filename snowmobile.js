@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Real-time OS trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Real-time OS', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'FreeRTOS MPU ports restrict task access to memory and peripherals. Assessment: this can contain faults from unauthorized task memory access. The benefit requires suitable hardware, an MPU port and correct access permissions. Privileged code still needs controls. This does not prove whole-system reliability or apply to every real-time OS.',
+    source: { title: 'FreeRTOS: MPU costs and benefits', url: 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md' },
+  },
+  {
+    paradigm: 'Real-time OS', layer: 'os', problem_id: 'technical-debt', effect: 'worsens',
+    reason: 'FreeRTOS states that MPU restrictions add application design complexity. Developers must define memory regions and respect task access limits. Assessment: these constraints can add maintenance work. The cost depends on the memory layout and task boundaries. This does not apply to every real-time OS.',
+    source: { title: 'FreeRTOS: MPU costs and benefits', url: 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md' },
+  },
   // Reason: the Exokernel trial found no assessments and four problem gaps.
   {
     paradigm: 'Exokernel', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',

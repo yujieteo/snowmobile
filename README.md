@@ -85,6 +85,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Recovery requires intact logs. Full logs can stop replication. Applications must protect persistent data and handle processor faults.
   This does not prove whole-system reliability or apply to every splitkernel.
   Reason: a Splitkernel trial found no assessment and four problem gaps.
+  The [FreeRTOS assessments](https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md) link Real-time OS to task memory protection benefits and memory region maintenance costs.
+  Protection requires suitable hardware, an MPU port and correct permissions. Privileged code still needs controls.
+  These assessments do not prove whole-system reliability or apply to every real-time OS.
+  Reason: a Real-time OS trial found no assessments and four problem gaps.
   The [Factor assessment](https://docs.factorcode.org/content/article-inference.html) links Concatenative programming to fewer faults from invalid stack effects.
   The benefit requires code that passes the static stack checker. Dynamic code still needs controls.
   This does not prove whole-system reliability or apply to every concatenative language.
