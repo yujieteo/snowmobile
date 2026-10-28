@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Functional reactive programming trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Functional reactive programming', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Reactive-banana provides combinators to filter, merge and accumulate events and compose values that vary with time. Assessment: these shared operations can reduce custom event coordination code. The benefit requires event and value models that fit the application. External effects still need controls. This does not address all technical debt or apply to every functional reactive program.',
+    source: { title: 'Reactive-banana: event and behavior combinators', url: 'https://hackage-content.haskell.org/package/reactive-banana-1.3.2.0/docs/Reactive-Banana-Combinators.html' },
+  },
   // Reason: the Logic programming trial found no assessment and four problem gaps.
   {
     paradigm: 'Logic programming', layer: 'language', problem_id: 'unreliable-tools', effect: 'reduces',

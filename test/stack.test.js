@@ -79,6 +79,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const dataflow = { id: 118, layer: 'language', name: 'Dataflow programming', url: 'https://en.wikipedia.org/wiki/Dataflow_programming' };
   const objects = { id: 119, layer: 'language', name: 'Object-oriented programming', url: 'https://en.wikipedia.org/wiki/Object-oriented_programming' };
   const logic = { id: 120, layer: 'language', name: 'Logic programming', url: 'https://en.wikipedia.org/wiki/Logic_programming' };
+  const reactive = { id: 121, layer: 'language', name: 'Functional reactive programming', url: 'https://en.wikipedia.org/wiki/Functional_reactive_programming' };
   const clientServer = { id: 117, layer: 'software', name: 'Client-server', url: 'https://en.wikipedia.org/wiki/Client%E2%80%93server_model' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
@@ -291,8 +292,15 @@ test('debt and reliability assessments follow only the documented seed definitio
     'https://www.swi-prolog.org/pldoc/man?section=tabling']);
   assert.match(queries.links[0].reason, /finite graph query.*requires suitable tabled predicates.*does not guarantee termination for every query or whole-system reliability/);
   assert.match(queries.links[1].reason, /stale answers.*after facts change.*explicit table invalidation or suitable incremental tables.*does not apply to every logic program/);
+  // Reason: event combinators must not imply complete debt removal or safe external effects.
+  const coordinated = practicalProblems([reactive]);
+  assert.deepStrictEqual(coordinated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[121, 'technical-debt', 'reduces']]);
+  assert.deepStrictEqual(coordinated.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
+  assert.strictEqual(coordinated.links[0].source.url, 'https://hackage-content.haskell.org/package/reactive-banana-1.3.2.0/docs/Reactive-Banana-Combinators.html');
+  assert.match(coordinated.links[0].reason, /custom event coordination code.*requires event and value models that fit the application.*External effects still need controls.*does not address all technical debt or apply to every functional reactive program/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
