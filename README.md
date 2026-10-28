@@ -109,6 +109,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [CRDT assessment](https://crdt.tech/) links automatic conflict resolution to less custom merge code and offline updates to network outage tolerance.
   These benefits require suitable data types. Convergence does not prove application correctness or protect against device loss.
   Reason: a CRDT trial found no assessment and four problem gaps.
+  The [Clojure assessment](https://clojure.org/about/state#_functional_programming) links Functional programming to local behavior that simplifies maintenance and removes mutable state from pure code.
+  Effects and shared state still need controls. These benefits do not prove whole-system reliability or address all technical debt.
+  Reason: a Functional programming trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

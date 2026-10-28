@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Functional programming trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Functional programming', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Clojure documents local function behavior that makes pure functions easier to understand and test. Assessment: this can reduce maintenance costs from hidden effects. This applies to the pure portion of a program and does not address all technical debt.',
+    source: { title: 'Clojure: pure functions and state', url: 'https://clojure.org/about/state#_functional_programming' },
+  },
+  {
+    paradigm: 'Functional programming', layer: 'language', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'Clojure documents that pure functions have no mutable state to coordinate between threads. Assessment: this can prevent concurrency faults within pure code. Effects and shared state still need controls. This does not prove whole-system reliability.',
+    source: { title: 'Clojure: pure functions and state', url: 'https://clojure.org/about/state#_functional_programming' },
+  },
   // Reason: the CRDT trial found no assessment and four problem gaps.
   {
     paradigm: 'Conflict-free replicated data types', layer: 'software', problem_id: 'technical-debt', effect: 'reduces',

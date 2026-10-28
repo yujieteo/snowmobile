@@ -53,6 +53,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const filters = { id: 102, layer: 'software', name: 'Pipes and filters', url: 'https://en.wikipedia.org/wiki/Pipeline_(software)' };
   const eventDriven = { id: 103, layer: 'software', name: 'Event-driven architecture', url: 'https://en.wikipedia.org/wiki/Event-driven_architecture' };
   const peers = { id: 104, layer: 'software', name: 'Peer-to-peer', url: 'https://docs.ipfs.tech/concepts/how-ipfs-works/' };
+  const functional = { id: 106, layer: 'language', name: 'Functional programming', url: 'https://en.wikipedia.org/wiki/Functional_programming' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
@@ -145,7 +146,16 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(merged.coverage.unassessedParadigms, 0);
   assert.match(merged.links[0].reason, /application-specific merge code.*requires suitable data types.*does not address all technical debt/);
   assert.match(merged.links[1].reason, /network outages.*does not prove application correctness or protect against device loss/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt]) {
+  // Reason: pure functions must not imply fault-free effects or complete debt removal.
+  const pure = practicalProblems([functional]);
+  assert.deepStrictEqual(pure.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[106, 'technical-debt', 'reduces'], [106, 'unreliable-tools', 'reduces']]);
+  assert.deepStrictEqual(pure.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
+  assert.strictEqual(pure.coverage.unassessedParadigms, 0);
+  assert.ok(pure.links.every((l) => l.source.url === 'https://clojure.org/about/state#_functional_programming'));
+  assert.match(pure.links[0].reason, /local function behavior.*does not address all technical debt/);
+  assert.match(pure.links[1].reason, /no mutable state.*Effects and shared state still need controls.*does not prove whole-system reliability/);
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -397,24 +407,6 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   const prompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
   const assessments = JSON.parse(prompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);
   assert.deepStrictEqual(assessments, s.practicalProblems.links);
-  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Conflict-free replicated data types').map((l) => [l.problem_id, l.effect]),
-    [['technical-debt', 'reduces'], ['unreliable-tools', 'reduces']]);
-  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Peer-to-peer').map((l) => [l.problem_id, l.effect]),
-    [['unreliable-tools', 'reduces'], ['unreliable-tools', 'worsens']]);
-  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Local-first software').map((l) => [l.problem_id, l.effect]),
-    [['unreliable-tools', 'reduces'], ['unreliable-tools', 'worsens']]);
-  assert.ok(assessments.some((l) => l.paradigm === 'CQRS' && l.problem_id === 'technical-debt' && l.effect === 'worsens'));
-  assert.ok(assessments.some((l) => l.paradigm === 'Microkernel' && l.problem_id === 'unreliable-tools' && l.effect === 'reduces'));
-  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Event sourcing').map((l) => [l.problem_id, l.effect]),
-    [['unreliable-tools', 'reduces'], ['unreliable-tools', 'worsens']]);
-  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Embedded database').map((l) => [l.problem_id, l.effect]),
-    [['deployment-complexity', 'reduces'], ['unreliable-tools', 'worsens']]);
-  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Serverless').map((l) => [l.problem_id, l.effect]),
-    [['deployment-complexity', 'reduces'], ['unreliable-tools', 'worsens']]);
-  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Pipes and filters').map((l) => [l.problem_id, l.effect]),
-    [['technical-debt', 'reduces'], ['unreliable-tools', 'worsens']]);
-  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Event-driven architecture').map((l) => [l.problem_id, l.effect]),
-    [['technical-debt', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.ok(assessments.some((l) => l.effect === 'worsens'));
   assert.match(prompt, /explain that cost in gain and compare it with the benefit/);
   assert.match(prompt, /No assessment means an unknown effect/);
