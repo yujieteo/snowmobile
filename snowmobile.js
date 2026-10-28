@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Serverless trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Serverless', layer: 'software', problem_id: 'deployment-complexity', effect: 'reduces',
+    reason: 'AWS Lambda manages servers, capacity and patches. Assessment: this removes server setup and maintenance from application deployment. Application configuration and service integration costs remain.',
+    source: { title: 'AWS Lambda: managed infrastructure', url: 'https://docs.aws.amazon.com/lambda/latest/dg/welcome.html' },
+  },
+  {
+    paradigm: 'Serverless', layer: 'software', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'AWS Lambda Event Functions reject requests when no concurrency capacity remains. Assessment: shared account limits can cause request failures across functions. This cost depends on demand, quotas and concurrency controls, not every serverless application.',
+    source: { title: 'AWS Lambda: concurrency limits and controls', url: 'https://docs.aws.amazon.com/lambda/latest/dg/lambda-concurrency.html' },
+  },
   // Reason: the Local-first software trial found no assessment and four problem gaps.
   {
     paradigm: 'Local-first software', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',

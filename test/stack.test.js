@@ -49,6 +49,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const microkernel = { id: 98, layer: 'os', name: 'Microkernel', url: 'https://en.wikipedia.org/wiki/Microkernel' };
   const events = { id: 99, layer: 'software', name: 'Event sourcing', url: 'https://martinfowler.com/eaaDev/EventSourcing.html' };
   const localFirst = { id: 100, layer: 'software', name: 'Local-first software', url: 'https://www.inkandswitch.com/local-first/' };
+  const serverless = { id: 101, layer: 'software', name: 'Serverless', url: 'https://en.wikipedia.org/wiki/Serverless_computing' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.strictEqual(assessed.coverage.unassessedParadigms, 0);
@@ -100,7 +101,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(offline.coverage.unassessedParadigms, 0);
   assert.match(offline.links[0].reason, /network outage.*does not protect against device loss or local faults/);
   assert.match(offline.links[1].reason, /CRDT change history.*depends on the implementation and workload/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst]) {
+  // Reason: server management removal must not hide request failures at concurrency limits.
+  const managed = practicalProblems([serverless]);
+  assert.deepStrictEqual(managed.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[101, 'deployment-complexity', 'reduces'], [101, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(managed.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'unreliable-tools']);
+  assert.strictEqual(managed.coverage.unassessedParadigms, 0);
+  assert.match(managed.links[0].reason, /removes server setup.*configuration and service integration costs remain/);
+  assert.match(managed.links[1].reason, /reject requests.*depends on demand, quotas and concurrency controls/);
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -259,9 +268,9 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.match(problems.source.scope, /Professional Developer/);
   assert.match(problems.source.measure, /more than one/);
   assert.match(problems.source.limit, /do not measure severity/);
-  assert.strictEqual(problems.links.length, 14);
+  assert.strictEqual(problems.links.length, 16);
   assert.deepStrictEqual(problems.coverage.withoutReduction, []);
-  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 10);
+  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 11);
   for (const l of problems.links) {
     assert.ok(s.paradigms.some((p) => p.id === l.paradigm_id && p.name === l.paradigm));
     assert.ok(problems.items.some((p) => p.id === l.problem_id));
@@ -360,6 +369,8 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Event sourcing').map((l) => [l.problem_id, l.effect]),
     [['unreliable-tools', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Embedded database').map((l) => [l.problem_id, l.effect]),
+    [['deployment-complexity', 'reduces'], ['unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Serverless').map((l) => [l.problem_id, l.effect]),
     [['deployment-complexity', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.ok(assessments.some((l) => l.effect === 'worsens'));
   assert.match(prompt, /explain that cost in gain and compare it with the benefit/);

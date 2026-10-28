@@ -91,6 +91,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [Ink & Switch assessment](https://www.inkandswitch.com/essay/local-first/) links Local-first software to offline access and resource costs from retained CRDT history.
   Offline access does not protect against device loss. Resource costs depend on the implementation and workload.
   Reason: a Local-first software trial found no assessment and four problem gaps.
+  The [AWS Lambda assessments](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html) link Serverless to less server setup and maintenance.
+  [Concurrency limits](https://docs.aws.amazon.com/lambda/latest/dg/lambda-concurrency.html) can cause request failures across functions in one account.
+  Application configuration costs remain. The reliability cost depends on demand, quotas and concurrency controls.
+  Reason: a Serverless trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.
