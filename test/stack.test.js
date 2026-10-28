@@ -74,6 +74,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const unikernel = { id: 112, layer: 'os', name: 'Unikernel', url: 'https://en.wikipedia.org/wiki/Unikernel' };
   const capabilities = { id: 113, layer: 'os', name: 'Capability-based OS', url: 'https://en.wikipedia.org/wiki/Capability-based_security' };
   const hypervisor = { id: 114, layer: 'os', name: 'Hypervisor', url: 'https://en.wikipedia.org/wiki/Hypervisor' };
+  const generators = { id: 115, layer: 'hardware', name: 'Hardware generators', url: 'https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
@@ -233,8 +234,16 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(virtual.links[0].source.url, 'https://xenproject.org/projects/hypervisor/');
   assert.match(virtual.links[0].reason, /requires driver isolation.*does not prove whole-system reliability or apply to every hypervisor/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor]) {
-    for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
+  // Reason: circuit reuse must not imply complete debt removal or correct generated circuits.
+  const generated = practicalProblems([generators]);
+  assert.deepStrictEqual(generated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[115, 'technical-debt', 'reduces']]);
+  assert.deepStrictEqual(generated.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
+  assert.strictEqual(generated.coverage.unassessedParadigms, 0);
+  assert.strictEqual(generated.links[0].source.url, generators.url);
+  assert.match(generated.links[0].reason, /duplicate circuit description code.*requires compatible generator interfaces.*still need validation.*does not address all technical debt or apply to every hardware generator/);
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators]) {
+    for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
       assert.strictEqual(result.coverage.withoutReduction.length, emptyProblemCount);
@@ -480,7 +489,7 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.strictEqual((await call('/api/hunts', { stack: [] })).status, 400);
 
   // Reason: the brainstorm omitted all source assessments, which include a harmful effect.
-  const broad = (await call('/api/hunts', { seed: 'reliable tools', stack: [first.id] })).body;
+  const broad = (await call('/api/hunts', { seed: 'reliable tools', stack: [] })).body;
   await until(`/api/hunts/${broad.id}`, (b) => b.hunt.status === 'created');
   const prompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
   const assessments = JSON.parse(prompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);

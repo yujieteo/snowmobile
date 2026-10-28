@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Hardware generators trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Hardware generators', layer: 'hardware', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Rocket Chip composes core, cache and interconnect generators from a library into a system on a chip. Assessment: reuse can reduce duplicate circuit description code across configurations. The benefit requires compatible generator interfaces. Generated circuits still need validation. This does not address all technical debt or apply to every hardware generator.',
+    source: { title: 'UC Berkeley: The Rocket Chip Generator', url: 'https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html' },
+  },
   // Reason: the Hypervisor trial found no assessment and four problem gaps.
   {
     paradigm: 'Hypervisor', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
