@@ -99,6 +99,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [Vivado assessment](https://docs.amd.com/r/2024.1-English/ug888-vivado-design-flows-overview-tutorial/Step-7-Synthesizing-and-Implementing-the-Design) links FPGA run options to extra build configuration work.
   This inferred cost depends on the design and toolchain. Vivado runs prerequisite stages automatically.
   Reason: an FPGA trial found no assessments and four problem gaps.
+  The [OpenTitan assessments](https://opentitan.org/book/doc/security/specs/secure_boot/) link Hardware root of trust to secure boot benefits and firmware release costs.
+  These inferred effects require trusted keys and correct verification controls. Authorized code can still contain faults.
+  Verification errors can prevent boot. The overview has Pre-RFC status and describes Earl Grey, rather than every hardware root of trust.
+  Reason: a Hardware root of trust trial found no assessments and four problem gaps.
   The [MPI assessment](https://www.mpi-forum.org/docs/mpi-5.0/mpi50-report/node73.htm) links Cluster to deadlock risks from incorrect message order.
   The cost depends on the communication pattern and protocol controls. MPI asynchronous operations can avoid this order constraint.
   This does not imply faults in every cluster application or apply to every cluster protocol.

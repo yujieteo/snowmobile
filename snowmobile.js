@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Hardware root of trust trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Hardware root of trust', layer: 'hardware', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'OpenTitan Earl Grey checks code signatures before control passes to device owner code. Assessment: these checks can prevent faults from unauthorized boot code. The benefit requires trusted keys and correct verification controls. Authorized code can still contain faults. The source marks this overview Pre-RFC. This does not prove whole-system reliability or apply to every hardware root of trust.',
+    source: { title: 'OpenTitan Earl Grey: secure boot', url: 'https://opentitan.org/book/doc/security/specs/secure_boot/' },
+  },
+  {
+    paradigm: 'Hardware root of trust', layer: 'hardware', problem_id: 'deployment-complexity', effect: 'worsens',
+    reason: 'OpenTitan Earl Grey requires valid code signatures from trusted keys and fails to boot after verification errors. Assessment: firmware releases can require extra key and signature controls to avoid deployment failures. The cost depends on key configuration and release procedures. The source marks this overview Pre-RFC. This does not apply to every hardware root of trust.',
+    source: { title: 'OpenTitan Earl Grey: secure boot', url: 'https://opentitan.org/book/doc/security/specs/secure_boot/' },
+  },
   // Reason: the FPGA trial found no assessments and four problem gaps.
   {
     paradigm: 'Reconfigurable logic (FPGA)', layer: 'hardware', problem_id: 'build-complexity', effect: 'worsens',
