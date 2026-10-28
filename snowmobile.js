@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Dataflow programming trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Dataflow programming', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Apache Beam supports reusable composite transforms in dataflow pipelines. Assessment: shared transforms can reduce duplicate pipeline code. This requires compatible transform interfaces. This does not address all technical debt or apply to every dataflow system.',
+    source: { title: 'Apache Beam: composite transforms', url: 'https://beam.apache.org/documentation/programming-guide/#composite-transforms' },
+  },
+  {
+    paradigm: 'Dataflow programming', layer: 'language', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'Apache Beam can execute transform functions more than once after a retry. Assessment: repeat external updates can cause incorrect state without idempotent operations. This risk depends on the runner and external effect controls. This does not apply to every dataflow system.',
+    source: { title: 'Apache Beam: idempotence', url: 'https://beam.apache.org/documentation/programming-guide/#idempotence' },
+  },
   // Reason: the Client-server trial found no assessment and four problem gaps.
   {
     paradigm: 'Client-server', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',

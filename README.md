@@ -78,6 +78,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Fowler reports extra complexity, lower productivity and greater risk in that case.
   The assessment infers a technical debt cost. It does not apply to every CQRS use.
   Reason: a CQRS trial found no assessment of its cost for technical debt.
+  The [Apache Beam assessments](https://beam.apache.org/documentation/programming-guide/) link Dataflow programming to less duplicate pipeline code and retry risks.
+  Reuse requires compatible transform interfaces. Repeat external updates require idempotent operations or other controls.
+  These assessments do not apply to every dataflow system or address all technical debt.
+  Reason: a Dataflow programming trial found no assessment and four problem gaps.
   The [SQLite assessment](https://www.sqlite.org/serverless.html) links Embedded database to less database server setup and less isolation from client memory faults.
   The same source links Client-server to database process isolation and extra deployment work for a self-managed server.
   A managed service can transfer server administration to the provider. Authorized requests can still cause faults.
