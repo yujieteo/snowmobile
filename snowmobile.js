@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Event-driven architecture trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Event-driven architecture', layer: 'software', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Microsoft describes new consumers without changes to producers or other consumers. Assessment: this can reduce debt from direct component dependencies. Event contracts still need maintenance. This does not address all technical debt.',
+    source: { title: 'Azure Architecture Center: event dependencies and data loss', url: 'https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven' },
+  },
+  {
+    paradigm: 'Event-driven architecture', layer: 'software', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'Microsoft warns that a component crash before event transfer can cause data loss. Assessment: this can leave downstream state incomplete. This risk depends on durable event storage and receipt controls, not every event-driven system.',
+    source: { title: 'Azure Architecture Center: event dependencies and data loss', url: 'https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven' },
+  },
   // Reason: the Pipes and filters trial found no assessment and four problem gaps.
   {
     paradigm: 'Pipes and filters', layer: 'software', problem_id: 'technical-debt', effect: 'reduces',

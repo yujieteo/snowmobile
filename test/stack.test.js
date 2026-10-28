@@ -51,6 +51,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const localFirst = { id: 100, layer: 'software', name: 'Local-first software', url: 'https://www.inkandswitch.com/local-first/' };
   const serverless = { id: 101, layer: 'software', name: 'Serverless', url: 'https://en.wikipedia.org/wiki/Serverless_computing' };
   const filters = { id: 102, layer: 'software', name: 'Pipes and filters', url: 'https://en.wikipedia.org/wiki/Pipeline_(software)' };
+  const eventDriven = { id: 103, layer: 'software', name: 'Event-driven architecture', url: 'https://en.wikipedia.org/wiki/Event-driven_architecture' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.strictEqual(assessed.coverage.unassessedParadigms, 0);
@@ -118,7 +119,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(pipeline.coverage.unassessedParadigms, 0);
   assert.match(pipeline.links[0].reason, /duplicate pipeline logic.*compatible data schemas.*does not address all technical debt/);
   assert.match(pipeline.links[1].reason, /retries after filter faults.*depends on retry controls/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters]) {
+  // Reason: fewer dependencies must not hide event loss after a component crash.
+  const decoupled = practicalProblems([eventDriven]);
+  assert.deepStrictEqual(decoupled.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[103, 'technical-debt', 'reduces'], [103, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(decoupled.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
+  assert.strictEqual(decoupled.coverage.unassessedParadigms, 0);
+  assert.match(decoupled.links[0].reason, /without changes to producers.*Event contracts still need maintenance.*does not address all technical debt/);
+  assert.match(decoupled.links[1].reason, /crash before event transfer.*depends on durable event storage and receipt controls/);
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -381,6 +390,8 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Serverless').map((l) => [l.problem_id, l.effect]),
     [['deployment-complexity', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Pipes and filters').map((l) => [l.problem_id, l.effect]),
+    [['technical-debt', 'reduces'], ['unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Event-driven architecture').map((l) => [l.problem_id, l.effect]),
     [['technical-debt', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.ok(assessments.some((l) => l.effect === 'worsens'));
   assert.match(prompt, /explain that cost in gain and compare it with the benefit/);

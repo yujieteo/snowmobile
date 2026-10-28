@@ -98,6 +98,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [Microsoft assessment](https://learn.microsoft.com/en-us/azure/architecture/patterns/pipes-and-filters) links Pipes and filters to less duplicate code and faults from repeat state updates.
   Shared filters require compatible data schemas. Retry controls affect the risk from repeat updates.
   Reason: a Pipes and filters trial found no assessment and four problem gaps.
+  The [Microsoft assessment](https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven) links Event-driven architecture to fewer component dependencies and data loss after a crash.
+  Event contracts still need maintenance. Durable event storage and receipt controls affect the data-loss risk.
+  These assessments do not prove whole-system outcomes.
+  Reason: an Event-driven architecture trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.
