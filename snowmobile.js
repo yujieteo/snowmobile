@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Local-first software trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Local-first software', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'Ink & Switch describes local data access without a network connection. Assessment: local operations can continue through a network outage. This does not protect against device loss or local faults.',
+    source: { title: 'Ink & Switch: local-first benefits and prototype costs', url: 'https://www.inkandswitch.com/essay/local-first/' },
+  },
+  {
+    paradigm: 'Local-first software', layer: 'software', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'Ink & Switch reports performance, memory and disk costs from CRDT change history in its prototypes. Assessment: retained history can exhaust device resources. This cost depends on the implementation and workload, not every local-first application.',
+    source: { title: 'Ink & Switch: local-first benefits and prototype costs', url: 'https://www.inkandswitch.com/essay/local-first/' },
+  },
   // Reason: the Event sourcing trial found no assessment and four problem gaps.
   {
     paradigm: 'Event sourcing', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',

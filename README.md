@@ -88,6 +88,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   A retained event log can support recovery. Gateways must suppress repeat external updates during replay.
   These assessments do not prove whole-system reliability.
   Reason: an Event sourcing trial found no assessment and four problem gaps.
+  The [Ink & Switch assessment](https://www.inkandswitch.com/essay/local-first/) links Local-first software to offline access and resource costs from retained CRDT history.
+  Offline access does not protect against device loss. Resource costs depend on the implementation and workload.
+  Reason: a Local-first software trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

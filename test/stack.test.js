@@ -48,6 +48,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const embedded = { id: 97, layer: 'software', name: 'Embedded database', url: 'https://www.sqlite.org/serverless.html' };
   const microkernel = { id: 98, layer: 'os', name: 'Microkernel', url: 'https://en.wikipedia.org/wiki/Microkernel' };
   const events = { id: 99, layer: 'software', name: 'Event sourcing', url: 'https://martinfowler.com/eaaDev/EventSourcing.html' };
+  const localFirst = { id: 100, layer: 'software', name: 'Local-first software', url: 'https://www.inkandswitch.com/local-first/' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.strictEqual(assessed.coverage.unassessedParadigms, 0);
@@ -91,7 +92,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(replay.coverage.unassessedParadigms, 0);
   assert.match(replay.links[0].reason, /retained event log.*does not prevent every fault/);
   assert.match(replay.links[1].reason, /unless gateways suppress repeat updates.*depends on external effects and replay controls/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events]) {
+  // Reason: offline access must not hide resource costs from retained history.
+  const offline = practicalProblems([localFirst]);
+  assert.deepStrictEqual(offline.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[100, 'unreliable-tools', 'reduces'], [100, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(offline.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.strictEqual(offline.coverage.unassessedParadigms, 0);
+  assert.match(offline.links[0].reason, /network outage.*does not protect against device loss or local faults/);
+  assert.match(offline.links[1].reason, /CRDT change history.*depends on the implementation and workload/);
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -250,9 +259,9 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.match(problems.source.scope, /Professional Developer/);
   assert.match(problems.source.measure, /more than one/);
   assert.match(problems.source.limit, /do not measure severity/);
-  assert.strictEqual(problems.links.length, 12);
+  assert.strictEqual(problems.links.length, 14);
   assert.deepStrictEqual(problems.coverage.withoutReduction, []);
-  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 9);
+  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 10);
   for (const l of problems.links) {
     assert.ok(s.paradigms.some((p) => p.id === l.paradigm_id && p.name === l.paradigm));
     assert.ok(problems.items.some((p) => p.id === l.problem_id));
@@ -344,6 +353,8 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   const prompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
   const assessments = JSON.parse(prompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);
   assert.deepStrictEqual(assessments, s.practicalProblems.links);
+  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Local-first software').map((l) => [l.problem_id, l.effect]),
+    [['unreliable-tools', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.ok(assessments.some((l) => l.paradigm === 'CQRS' && l.problem_id === 'technical-debt' && l.effect === 'worsens'));
   assert.ok(assessments.some((l) => l.paradigm === 'Microkernel' && l.problem_id === 'unreliable-tools' && l.effect === 'reduces'));
   assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Event sourcing').map((l) => [l.problem_id, l.effect]),
