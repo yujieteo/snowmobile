@@ -120,6 +120,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Recovery requires intact persistence files. Data-loss risk depends on the persistence policy.
   These assessments do not prove whole-system reliability or apply to every data structure server.
   Reason: a Data structure server trial found no assessment and four problem gaps.
+  The [Muen assessment](https://muen.sk/) links Separation kernel to component isolation under a security policy.
+  This can contain faults from unauthorized component memory access. The benefit requires a correct isolation policy.
+  This does not prove whole-system reliability or apply to every separation kernel.
+  Reason: a Separation kernel trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

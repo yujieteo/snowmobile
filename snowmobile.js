@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Separation kernel trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Separation kernel', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'Muen documents component isolation with communication only through a security policy. Assessment: this can contain faults from unauthorized component memory access. The benefit requires a correct isolation policy. This does not prove whole-system reliability or apply to every separation kernel.',
+    source: { title: 'Muen: component isolation and system policy', url: 'https://muen.sk/' },
+  },
   // Reason: the Data structure server trial found no assessment and four problem gaps.
   {
     paradigm: 'Data structure server', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',

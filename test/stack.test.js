@@ -60,6 +60,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const peers = { id: 104, layer: 'software', name: 'Peer-to-peer', url: 'https://docs.ipfs.tech/concepts/how-ipfs-works/' };
   const functional = { id: 106, layer: 'language', name: 'Functional programming', url: 'https://en.wikipedia.org/wiki/Functional_programming' };
   const structures = { id: 107, layer: 'software', name: 'Data structure server', url: 'https://redis.io/docs/latest/develop/data-types/' };
+  const separation = { id: 108, layer: 'os', name: 'Separation kernel', url: 'https://muen.sk/' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
@@ -168,7 +169,13 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(persisted.links.every((l) => l.source.url === 'https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/'));
   assert.match(persisted.links[0].reason, /replay.*requires intact persistence files.*does not prove whole-system reliability/);
   assert.match(persisted.links[1].reason, /lose recent writes.*depends on the persistence policy/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures]) {
+  // Reason: component isolation must not imply complete system reliability.
+  const partitioned = practicalProblems([separation]);
+  assert.deepStrictEqual(partitioned.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[108, 'unreliable-tools', 'reduces']]);
+  assert.deepStrictEqual(partitioned.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.match(partitioned.links[0].reason, /Muen.*correct isolation policy.*does not prove whole-system reliability or apply to every separation kernel/);
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
