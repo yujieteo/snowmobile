@@ -102,6 +102,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Event contracts still need maintenance. Durable event storage and receipt controls affect the data-loss risk.
   These assessments do not prove whole-system outcomes.
   Reason: an Event-driven architecture trial found no assessment and four problem gaps.
+  The [IPFS assessment](https://docs.ipfs.tech/concepts/persistence/) links Peer-to-peer to access through remote copies and data loss from temporary caches.
+  The benefit requires retained copies on reachable peers. Temporary caches do not guarantee data retention.
+  These assessments do not prove whole-system reliability or apply to every peer-to-peer system.
+  Reason: a Peer-to-peer trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

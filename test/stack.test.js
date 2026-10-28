@@ -52,6 +52,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const serverless = { id: 101, layer: 'software', name: 'Serverless', url: 'https://en.wikipedia.org/wiki/Serverless_computing' };
   const filters = { id: 102, layer: 'software', name: 'Pipes and filters', url: 'https://en.wikipedia.org/wiki/Pipeline_(software)' };
   const eventDriven = { id: 103, layer: 'software', name: 'Event-driven architecture', url: 'https://en.wikipedia.org/wiki/Event-driven_architecture' };
+  const peers = { id: 104, layer: 'software', name: 'Peer-to-peer', url: 'https://docs.ipfs.tech/concepts/how-ipfs-works/' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.strictEqual(assessed.coverage.unassessedParadigms, 0);
@@ -127,7 +128,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(decoupled.coverage.unassessedParadigms, 0);
   assert.match(decoupled.links[0].reason, /without changes to producers.*Event contracts still need maintenance.*does not address all technical debt/);
   assert.match(decoupled.links[1].reason, /crash before event transfer.*depends on durable event storage and receipt controls/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven]) {
+  // Reason: remote copies must not hide data loss from temporary peer caches.
+  const replicated = practicalProblems([peers]);
+  assert.deepStrictEqual(replicated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[104, 'unreliable-tools', 'reduces'], [104, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(replicated.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.strictEqual(replicated.coverage.unassessedParadigms, 0);
+  assert.match(replicated.links[0].reason, /reachable peers.*requires explicit data retention.*does not prove whole-system reliability/);
+  assert.match(replicated.links[1].reason, /temporary peer caches.*depends on retained copies/);
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -379,6 +388,8 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   const prompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
   const assessments = JSON.parse(prompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);
   assert.deepStrictEqual(assessments, s.practicalProblems.links);
+  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Peer-to-peer').map((l) => [l.problem_id, l.effect]),
+    [['unreliable-tools', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Local-first software').map((l) => [l.problem_id, l.effect]),
     [['unreliable-tools', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.ok(assessments.some((l) => l.paradigm === 'CQRS' && l.problem_id === 'technical-debt' && l.effect === 'worsens'));

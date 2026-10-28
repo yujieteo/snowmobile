@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Peer-to-peer trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Peer-to-peer', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'IPFS documents remote copies that preserve access when the original device goes offline. Assessment: retained copies on reachable peers can reduce outage effects. This requires explicit data retention and does not prove whole-system reliability.',
+    source: { title: 'IPFS: data retention and availability limits', url: 'https://docs.ipfs.tech/concepts/persistence/' },
+  },
+  {
+    paradigm: 'Peer-to-peer', layer: 'software', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'IPFS can delete cached data to free disk space. Assessment: reliance on temporary peer caches can cause data loss without explicit retention. This risk depends on retained copies, not every peer-to-peer system.',
+    source: { title: 'IPFS: data retention and availability limits', url: 'https://docs.ipfs.tech/concepts/persistence/' },
+  },
   // Reason: the Event-driven architecture trial found no assessment and four problem gaps.
   {
     paradigm: 'Event-driven architecture', layer: 'software', problem_id: 'technical-debt', effect: 'reduces',
