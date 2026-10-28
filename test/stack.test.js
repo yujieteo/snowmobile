@@ -80,6 +80,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const objects = { id: 119, layer: 'language', name: 'Object-oriented programming', url: 'https://en.wikipedia.org/wiki/Object-oriented_programming' };
   const logic = { id: 120, layer: 'language', name: 'Logic programming', url: 'https://en.wikipedia.org/wiki/Logic_programming' };
   const multikernel = { id: 123, layer: 'os', name: 'Multikernel', url: 'https://barrelfish.org/publications/barrelfish_sosp09.pdf' };
+  const exokernel = { id: 125, layer: 'os', name: 'Exokernel', url: 'https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf' };
   const splitkernel = { id: 124, layer: 'os', name: 'Splitkernel', url: 'https://www.usenix.org/conference/osdi18/presentation/shan' };
   const concatenative = { id: 122, layer: 'language', name: 'Concatenative programming', url: 'https://concatenative.org/wiki/view/Concatenative%20language' };
   const reactive = { id: 121, layer: 'language', name: 'Functional reactive programming', url: 'https://en.wikipedia.org/wiki/Functional_reactive_programming' };
@@ -326,8 +327,16 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(restored.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(restored.links[0].source.url, 'https://www.usenix.org/system/files/osdi18-shan.pdf');
   assert.match(restored.links[0].reason, /requires intact backup logs.*full backup log can stop replication.*protect persistent data and handle processor faults.*does not prove whole-system reliability or apply to every splitkernel/);
+  // Reason: fault containment must not hide direct interface portability costs.
+  const libraries = practicalProblems([exokernel]);
+  assert.deepStrictEqual(libraries.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[125, 'unreliable-tools', 'reduces'], [125, 'technical-debt', 'worsens']]);
+  assert.deepStrictEqual(libraries.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.ok(libraries.links.every((l) => l.source.url === exokernel.url));
+  assert.match(libraries.links[0].reason, /Wrong arguments.*affect only that application.*requires correct kernel resource protection.*does not prove whole-system reliability or apply to every exokernel/);
+  assert.match(libraries.links[1].reason, /hardware-dependent maintenance work.*applies to direct interface use.*standard interface can preserve portability.*does not apply to every exokernel application/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -499,7 +508,7 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.strictEqual(s.selectedProblemCoverage, null);
   const microservices = s.paradigms.find((p) => p.name === 'Microservices');
   const nix = s.paradigms.find((p) => p.name === 'Functional package management');
-  const unassessed = s.paradigms.find((p) => p.name === 'Exokernel');
+  const unassessed = s.paradigms.find((p) => !problems.links.some((l) => l.paradigm_id === p.id));
   const selectedServices = (await call(`/api/stack?pick=${microservices.id}`)).body;
   assert.deepStrictEqual(selectedServices.practicalProblems.coverage.withoutReduction, []);
   assert.deepStrictEqual(selectedServices.selectedProblemCoverage.withoutReduction, ['build-complexity', 'deployment-complexity']);

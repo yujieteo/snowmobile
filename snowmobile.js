@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Exokernel trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Exokernel', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'The Exokernel paper describes library OS isolation. Wrong arguments from an application affect only that application. Assessment: this can contain faults from invalid library calls. The benefit requires correct kernel resource protection. This does not prove whole-system reliability or apply to every exokernel.',
+    source: { title: 'Exokernel: library OS isolation, section 2.2', url: 'https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf' },
+  },
+  {
+    paradigm: 'Exokernel', layer: 'os', problem_id: 'technical-debt', effect: 'worsens',
+    reason: 'The Exokernel paper states that direct kernel interfaces expose hardware-specific information and prevent application portability. Assessment: this can add hardware-dependent maintenance work. The cost applies to direct interface use. A library OS with a standard interface can preserve portability. This does not apply to every exokernel application.',
+    source: { title: 'Exokernel: library OS portability, section 2.2', url: 'https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf' },
+  },
   // Reason: the Splitkernel trial found no assessment and four problem gaps.
   {
     paradigm: 'Splitkernel', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
