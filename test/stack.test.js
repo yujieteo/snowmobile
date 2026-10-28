@@ -77,6 +77,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const generators = { id: 115, layer: 'hardware', name: 'Hardware generators', url: 'https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html' };
   const distributed = { id: 116, layer: 'os', name: 'Distributed OS', url: 'https://9p.io/sys/doc/9.html' };
   const dataflow = { id: 118, layer: 'language', name: 'Dataflow programming', url: 'https://en.wikipedia.org/wiki/Dataflow_programming' };
+  const objects = { id: 119, layer: 'language', name: 'Object-oriented programming', url: 'https://en.wikipedia.org/wiki/Object-oriented_programming' };
   const clientServer = { id: 117, layer: 'software', name: 'Client-server', url: 'https://en.wikipedia.org/wiki/Client%E2%80%93server_model' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
@@ -272,8 +273,15 @@ test('debt and reliability assessments follow only the documented seed definitio
     'https://beam.apache.org/documentation/programming-guide/#idempotence']);
   assert.match(graph.links[0].reason, /duplicate pipeline code.*requires compatible transform interfaces.*does not address all technical debt or apply to every dataflow system/);
   assert.match(graph.links[1].reason, /repeat external updates.*without idempotent operations.*depends on the runner and external effect controls.*does not apply to every dataflow system/);
+  // Reason: encapsulation must not imply complete debt removal for every object-oriented design.
+  const encapsulated = practicalProblems([objects]);
+  assert.deepStrictEqual(encapsulated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[119, 'technical-debt', 'reduces']]);
+  assert.deepStrictEqual(encapsulated.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
+  assert.strictEqual(encapsulated.links[0].source.url, 'https://docs.oracle.com/javase/tutorial/java/concepts/object.html');
+  assert.match(encapsulated.links[0].reason, /dependencies on internal implementation details.*requires stable method contracts and encapsulated state.*does not address all technical debt or apply to every object-oriented design/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Object-oriented programming trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Object-oriented programming', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Oracle documents independent object maintenance and access to internal state through methods. Assessment: encapsulation can reduce dependencies on internal implementation details. This requires stable method contracts and encapsulated state. This does not address all technical debt or apply to every object-oriented design.',
+    source: { title: 'Oracle Java Tutorials: objects and encapsulation', url: 'https://docs.oracle.com/javase/tutorial/java/concepts/object.html' },
+  },
   // Reason: the Dataflow programming trial found no assessment and four problem gaps.
   {
     paradigm: 'Dataflow programming', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',

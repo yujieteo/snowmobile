@@ -78,6 +78,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Fowler reports extra complexity, lower productivity and greater risk in that case.
   The assessment infers a technical debt cost. It does not apply to every CQRS use.
   Reason: a CQRS trial found no assessment of its cost for technical debt.
+  The [Oracle assessment](https://docs.oracle.com/javase/tutorial/java/concepts/object.html) links Object-oriented programming to fewer dependencies on internal object details.
+  This inferred debt benefit requires stable method contracts and encapsulated state. It does not apply to every object-oriented design.
+  Reason: an Object-oriented programming trial found no assessment and four problem gaps.
   The [Apache Beam assessments](https://beam.apache.org/documentation/programming-guide/) link Dataflow programming to less duplicate pipeline code and retry risks.
   Reuse requires compatible transform interfaces. Repeat external updates require idempotent operations or other controls.
   These assessments do not apply to every dataflow system or address all technical debt.
