@@ -85,6 +85,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Recovery requires intact logs. Full logs can stop replication. Applications must protect persistent data and handle processor faults.
   This does not prove whole-system reliability or apply to every splitkernel.
   Reason: a Splitkernel trial found no assessment and four problem gaps.
+  The [TI C6000 assessments](https://downloads.ti.com/docs/esd/SPRUI04/what-you-need-to-know-to-write-linear-assembly-spru1874615.html) link VLIW to assembly maintenance costs and faults from invalid optimizer input.
+  The optimizer handles instruction order and register allocation by default. These costs depend on source choices and input validity.
+  They do not apply to every VLIW program.
+  Reason: a VLIW trial found no assessments and four problem gaps.
   The [CUDA memory model](https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/cuda-cpp-memory-model.html#data-races) links GPU (SIMT) to faults from incorrect synchronization scopes.
   The [NVCC guide](https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/nvcc.html) links compatible host compiler requirements and separate device compilation to extra build configuration work.
   Synchronization controls and toolchain choices affect these costs. nvcc coordinates compiler steps automatically. These costs do not apply to every GPU program or toolchain.

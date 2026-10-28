@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the VLIW trial found no assessments and four problem gaps.
+  {
+    paradigm: 'VLIW', layer: 'hardware', problem_id: 'technical-debt', effect: 'worsens',
+    reason: 'TI C6000 linear assembly can require code refinement and explicit register constraints for adequate performance. Assessment: target-specific assembly can add maintenance work. The optimizer handles instruction order and register allocation by default. The cost depends on performance needs and source choices. This does not apply to every VLIW program.',
+    source: { title: 'TI C6000: linear assembly requirements', url: 'https://downloads.ti.com/docs/esd/SPRUI04/what-you-need-to-know-to-write-linear-assembly-spru1874615.html' },
+  },
+  {
+    paradigm: 'VLIW', layer: 'hardware', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'TI warns that its linear assembly optimizer may accept illegal assembly with explicit instruction schedules and produce unintended results. Assessment: this input error can cause application faults. The risk requires invalid optimizer input. Correct linear assembly leaves instruction order optimization to the tool. This does not imply faults in every VLIW program.',
+    source: { title: 'TI C6000: invalid assembly input', url: 'https://downloads.ti.com/docs/esd/SPRUI04/what-you-need-to-know-to-write-linear-assembly-spru1874615.html' },
+  },
   // Reason: the Vector processor trial found no assessments and four problem gaps.
   {
     paradigm: 'Vector processor', layer: 'hardware', problem_id: 'technical-debt', effect: 'reduces',

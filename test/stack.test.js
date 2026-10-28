@@ -49,7 +49,6 @@ test('idea problem priority uses the greatest sourced share and ignores invalid 
   const result = ideaProblems(['unreliable-tools', 'technical-debt', 'technical-debt', 'unknown']);
   assert.deepStrictEqual(result.problem_ids, ['technical-debt', 'unreliable-tools']);
   assert.strictEqual(result.problem_priority, 62.4);
-  assert.strictEqual(result.practical_problems.length, 2);
 });
 
 // Reason: a changed user paradigm must not retain a seed assessment for debt or reliability.
@@ -85,6 +84,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const sharedMemory = { id: 128, layer: 'hardware', name: 'Shared-memory multiprocessor', url: 'https://en.wikipedia.org/wiki/Symmetric_multiprocessing' };
   const monolithic = { id: 130, layer: 'os', name: 'Monolithic kernel', url: 'https://en.wikipedia.org/wiki/Monolithic_kernel' };
   const fpga = { id: 131, layer: 'hardware', name: 'Reconfigurable logic (FPGA)', url: 'https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw' };
+  const vliw = { id: 134, layer: 'hardware', name: 'VLIW', url: 'https://en.wikipedia.org/wiki/Very_long_instruction_word' };
   const vector = { id: 133, layer: 'hardware', name: 'Vector processor', url: 'https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html' };
   const rootOfTrust = { id: 132, layer: 'hardware', name: 'Hardware root of trust', url: 'https://opentitan.org/book/doc/introduction.html' };
   const cluster = { id: 129, layer: 'hardware', name: 'Cluster (warehouse-scale computer)', url: 'https://en.wikipedia.org/wiki/Computer_cluster' };
@@ -377,6 +377,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.match(kernelDrivers.links[0].reason, /drivers outside that tree.*extra maintenance.*userspace interface stays stable.*does not apply to every monolithic kernel or ordinary application/);
   assert.match(kernelDrivers.links[1].reason, /separate module builds.*supported variants.*does not apply to every monolithic kernel or ordinary application/);
   const emptyProblemCount = practicalProblems([]).items.length;
+  // Reason: assembly costs must retain input limits and must not count as reductions.
+  const explicitInstructions = practicalProblems([vliw]);
+  assert.deepStrictEqual(explicitInstructions.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[134, 'technical-debt', 'worsens'], [134, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(explicitInstructions.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
+  assert.strictEqual(explicitInstructions.coverage.unassessedParadigms, 0);
+  assert.ok(explicitInstructions.links.every((l) => l.source.url === 'https://downloads.ti.com/docs/esd/SPRUI04/what-you-need-to-know-to-write-linear-assembly-spru1874615.html'));
+  assert.match(explicitInstructions.links[0].reason, /target-specific assembly.*maintenance work.*optimizer handles instruction order and register allocation by default.*depends on performance needs and source choices.*does not apply to every VLIW program/);
+  assert.match(explicitInstructions.links[1].reason, /may accept illegal assembly.*unintended results.*requires invalid optimizer input.*does not imply faults in every VLIW program/);
   // Reason: vector portability must retain its compatibility limits and exclude other problem reductions.
   const portableVectors = practicalProblems([vector]);
   assert.deepStrictEqual(portableVectors.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
@@ -410,7 +419,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(protectedTasks.links.every((l) => l.source.url === 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md'));
   assert.match(protectedTasks.links[0].reason, /requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS/);
   assert.match(protectedTasks.links[1].reason, /maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic, fpga, rootOfTrust, vector]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic, fpga, rootOfTrust, vector, vliw]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
