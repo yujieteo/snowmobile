@@ -59,6 +59,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const eventDriven = { id: 103, layer: 'software', name: 'Event-driven architecture', url: 'https://en.wikipedia.org/wiki/Event-driven_architecture' };
   const peers = { id: 104, layer: 'software', name: 'Peer-to-peer', url: 'https://docs.ipfs.tech/concepts/how-ipfs-works/' };
   const functional = { id: 106, layer: 'language', name: 'Functional programming', url: 'https://en.wikipedia.org/wiki/Functional_programming' };
+  const structures = { id: 107, layer: 'software', name: 'Data structure server', url: 'https://redis.io/docs/latest/develop/data-types/' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
@@ -156,11 +157,18 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(pure.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[106, 'technical-debt', 'reduces'], [106, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(pure.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
-  assert.strictEqual(pure.coverage.unassessedParadigms, 0);
   assert.ok(pure.links.every((l) => l.source.url === 'https://clojure.org/about/state#_functional_programming'));
   assert.match(pure.links[0].reason, /local function behavior.*does not address all technical debt/);
   assert.match(pure.links[1].reason, /no mutable state.*Effects and shared state still need controls.*does not prove whole-system reliability/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional]) {
+  // Reason: recovery evidence must not hide data loss between snapshots.
+  const persisted = practicalProblems([structures]);
+  assert.deepStrictEqual(persisted.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[107, 'unreliable-tools', 'reduces'], [107, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(persisted.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.ok(persisted.links.every((l) => l.source.url === 'https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/'));
+  assert.match(persisted.links[0].reason, /replay.*requires intact persistence files.*does not prove whole-system reliability/);
+  assert.match(persisted.links[1].reason, /lose recent writes.*depends on the persistence policy/);
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

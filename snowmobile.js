@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Data structure server trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Data structure server', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'Redis documents append-only logs that replay writes to restore data after a restart. Assessment: this supports recovery after process faults. Recovery requires intact persistence files. This does not prove whole-system reliability or apply to every data structure server.',
+    source: { title: 'Redis: persistence and recovery limits', url: 'https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/' },
+  },
+  {
+    paradigm: 'Data structure server', layer: 'software', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'Redis documents that periodic snapshots can lose recent writes after an unexpected shutdown. Assessment: a snapshot-only setup can lose updates between snapshots. This risk depends on the persistence policy and does not apply to every data structure server.',
+    source: { title: 'Redis: persistence and recovery limits', url: 'https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/' },
+  },
   // Reason: the Microservices trial found only deployment harm and four problem gaps.
   {
     paradigm: 'Microservices', layer: 'software', problem_id: 'technical-debt', effect: 'reduces',

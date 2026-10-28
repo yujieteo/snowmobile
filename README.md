@@ -116,6 +116,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Suitable service boundaries and fault controls in dependent services are necessary for these benefits.
   Cross-service changes still add maintenance costs. The deployment cost assessment still applies.
   Reason: a Microservices trial found only deployment harm and four problem gaps.
+  The [Redis assessment](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/) links Data structure server to recovery through append-only logs and data loss between snapshots.
+  Recovery requires intact persistence files. Data-loss risk depends on the persistence policy.
+  These assessments do not prove whole-system reliability or apply to every data structure server.
+  Reason: a Data structure server trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.
