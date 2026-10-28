@@ -71,6 +71,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const separation = { id: 108, layer: 'os', name: 'Separation kernel', url: 'https://muen.sk/' };
   const effects = { id: 109, layer: 'language', name: 'Algebraic effects', url: 'https://koka-lang.github.io/koka/doc/book.html' };
   const constraint = { id: 111, layer: 'language', name: 'Constraint programming', url: 'https://docs.minizinc.dev/en/stable/modelling.html' };
+  const unikernel = { id: 112, layer: 'os', name: 'Unikernel', url: 'https://en.wikipedia.org/wiki/Unikernel' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
@@ -207,8 +208,16 @@ test('debt and reliability assessments follow only the documented seed definitio
     [[111, 'technical-debt', 'reduces']]);
   assert.deepStrictEqual(reusable.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
   assert.match(reusable.links[0].reason, /duplicate constraint code.*requires a reusable model.*does not address all technical debt or prove that the constraints match the real problem/);
+  // Reason: less configuration work must not hide the cost of static configuration changes.
+  const appliance = practicalProblems([unikernel]);
+  assert.deepStrictEqual(appliance.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[112, 'deployment-complexity', 'reduces'], [112, 'deployment-complexity', 'worsens']]);
+  assert.deepStrictEqual(appliance.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'unreliable-tools']);
+  assert.ok(appliance.links.every((l) => l.source.url === 'https://dave.recoil.org/papers/final/asplos2013.pdf'));
+  assert.match(appliance.links[0].reason, /requires libraries that fit the application.*does not remove all deployment costs or apply to every unikernel/);
+  assert.match(appliance.links[1].reason, /new compilation.*depends on which parameters are static/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

@@ -137,6 +137,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [MiniZinc assessment](https://docs.minizinc.dev/en/stable/modelling.html#datafiles-and-assertions) links Constraint programming to less duplicate constraint code through model reuse with separate data files.
   The benefit requires a reusable model. This does not address all technical debt or prove that the constraints match the real problem.
   Reason: a Constraint programming trial found no assessment and four problem gaps.
+  The [Mirage assessment](https://dave.recoil.org/papers/final/asplos2013.pdf) links Unikernel to less service configuration work and extra build work for static configuration changes.
+  The benefit requires suitable libraries. The cost depends on which parameters are static. These assessments do not apply to every unikernel.
+  Reason: a Unikernel trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

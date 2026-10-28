@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Unikernel trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Unikernel', layer: 'os', problem_id: 'deployment-complexity', effect: 'reduces',
+    reason: 'The Mirage paper integrates service configuration into library calls and compiler checks instead of separate application configuration files. Assessment: this can reduce configuration work for compatible services. The benefit requires libraries that fit the application. This does not remove all deployment costs or apply to every unikernel.',
+    source: { title: 'ASPLOS 2013: Unikernels, sections 2.1 and 2.2', url: 'https://dave.recoil.org/papers/final/asplos2013.pdf' },
+  },
+  {
+    paradigm: 'Unikernel', layer: 'os', problem_id: 'deployment-complexity', effect: 'worsens',
+    reason: 'The Mirage paper states that fully static configuration requires a new compilation to reconfigure a service. Assessment: this can add build work to configuration changes. This cost depends on which parameters are static and does not apply to every configuration change.',
+    source: { title: 'ASPLOS 2013: Unikernels, sections 2.1 and 2.2', url: 'https://dave.recoil.org/papers/final/asplos2013.pdf' },
+  },
   // Reason: the Constraint programming trial found no assessment and four problem gaps.
   {
     paradigm: 'Constraint programming', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',
