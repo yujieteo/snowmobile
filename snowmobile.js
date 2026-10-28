@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Algebraic effects trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Algebraic effects', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Koka documents composable effect handlers that implement control abstractions as libraries instead of separate language extensions. Assessment: this can reduce maintenance costs from custom control mechanisms. This requires suitable handler interfaces and does not address all technical debt.',
+    source: { title: 'Koka: typed effect handlers', url: 'https://koka-lang.github.io/koka/doc/book.html' },
+  },
+  {
+    paradigm: 'Algebraic effects', layer: 'language', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'Koka tracks effects in function types and requires a handler for the documented yield effect. Assessment: this can expose absent effect handlers before execution. Correct handler behavior still needs checks. This does not prove whole-system reliability or apply to every algebraic effect implementation.',
+    source: { title: 'Koka: typed effect handlers', url: 'https://koka-lang.github.io/koka/doc/book.html' },
+  },
   // Reason: the Separation kernel trial found no assessment and four problem gaps.
   {
     paradigm: 'Separation kernel', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',

@@ -61,6 +61,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const functional = { id: 106, layer: 'language', name: 'Functional programming', url: 'https://en.wikipedia.org/wiki/Functional_programming' };
   const structures = { id: 107, layer: 'software', name: 'Data structure server', url: 'https://redis.io/docs/latest/develop/data-types/' };
   const separation = { id: 108, layer: 'os', name: 'Separation kernel', url: 'https://muen.sk/' };
+  const effects = { id: 109, layer: 'language', name: 'Algebraic effects', url: 'https://koka-lang.github.io/koka/doc/book.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
@@ -175,11 +176,19 @@ test('debt and reliability assessments follow only the documented seed definitio
     [[108, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(partitioned.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.match(partitioned.links[0].reason, /Muen.*correct isolation policy.*does not prove whole-system reliability or apply to every separation kernel/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation]) {
+  // Reason: typed handlers must not imply correct handler behavior or complete debt removal.
+  const handled = practicalProblems([effects]);
+  assert.deepStrictEqual(handled.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[109, 'technical-debt', 'reduces'], [109, 'unreliable-tools', 'reduces']]);
+  assert.deepStrictEqual(handled.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
+  assert.match(handled.links[0].reason, /suitable handler interfaces.*does not address all technical debt/);
+  assert.match(handled.links[1].reason, /absent effect handlers before execution.*Correct handler behavior still needs checks.*does not prove whole-system reliability/);
+  const emptyProblemCount = practicalProblems([]).items.length;
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
-      assert.strictEqual(result.coverage.withoutReduction.length, 4);
+      assert.strictEqual(result.coverage.withoutReduction.length, emptyProblemCount);
       assert.strictEqual(result.coverage.unassessedParadigms, 1);
     }
   }

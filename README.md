@@ -124,6 +124,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   This can contain faults from unauthorized component memory access. The benefit requires a correct isolation policy.
   This does not prove whole-system reliability or apply to every separation kernel.
   Reason: a Separation kernel trial found no assessment and four problem gaps.
+  The [Koka assessment](https://koka-lang.github.io/koka/doc/book.html) links Algebraic effects to control abstractions as libraries and typed handler requirements.
+  These mechanisms can reduce custom control code and expose absent handlers before execution.
+  Suitable handler interfaces and checks of handler behavior remain necessary. These assessments do not prove whole-system reliability or address all technical debt.
+  Reason: an Algebraic effects trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.
