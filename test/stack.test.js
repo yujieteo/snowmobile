@@ -83,6 +83,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const exokernel = { id: 125, layer: 'os', name: 'Exokernel', url: 'https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf' };
   const gpu = { id: 127, layer: 'hardware', name: 'GPU (SIMT)', url: 'https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads' };
   const sharedMemory = { id: 128, layer: 'hardware', name: 'Shared-memory multiprocessor', url: 'https://en.wikipedia.org/wiki/Symmetric_multiprocessing' };
+  const monolithic = { id: 130, layer: 'os', name: 'Monolithic kernel', url: 'https://en.wikipedia.org/wiki/Monolithic_kernel' };
   const cluster = { id: 129, layer: 'hardware', name: 'Cluster (warehouse-scale computer)', url: 'https://en.wikipedia.org/wiki/Computer_cluster' };
   const realtime = { id: 126, layer: 'os', name: 'Real-time OS', url: 'https://en.wikipedia.org/wiki/Real-time_operating_system' };
   const splitkernel = { id: 124, layer: 'os', name: 'Splitkernel', url: 'https://www.usenix.org/conference/osdi18/presentation/shan' };
@@ -363,6 +364,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(messages.coverage.unassessedParadigms, 0);
   assert.strictEqual(messages.links[0].source.url, 'https://www.mpi-forum.org/docs/mpi-5.0/mpi50-report/node73.htm');
   assert.match(messages.links[0].reason, /MPI.*deadlock.*incorrect message order.*depends on the communication pattern and protocol controls.*asynchronous operations can avoid this order constraint.*does not imply faults in every cluster application/);
+  // Reason: driver costs must not count as reductions or imply unstable application interfaces.
+  const kernelDrivers = practicalProblems([monolithic]);
+  assert.deepStrictEqual(kernelDrivers.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[130, 'technical-debt', 'worsens'], [130, 'build-complexity', 'worsens']]);
+  assert.deepStrictEqual(kernelDrivers.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
+  assert.strictEqual(kernelDrivers.coverage.unassessedParadigms, 0);
+  assert.ok(kernelDrivers.links.every((l) => l.source.url === 'https://docs.kernel.org/process/stable-api-nonsense.html'));
+  assert.match(kernelDrivers.links[0].reason, /drivers outside that tree.*extra maintenance.*userspace interface stays stable.*does not apply to every monolithic kernel or ordinary application/);
+  assert.match(kernelDrivers.links[1].reason, /separate module builds.*supported variants.*does not apply to every monolithic kernel or ordinary application/);
   const emptyProblemCount = practicalProblems([]).items.length;
   // Reason: optional MPU protection must not imply universal reliability or hide maintenance costs.
   const protectedTasks = practicalProblems([realtime]);
@@ -372,7 +382,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(protectedTasks.links.every((l) => l.source.url === 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md'));
   assert.match(protectedTasks.links[0].reason, /requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS/);
   assert.match(protectedTasks.links[1].reason, /maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

@@ -92,6 +92,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [OpenMP memory model](https://www.openmp.org/spec-html/5.2/openmpsu9.html) links Shared-memory multiprocessor to faults from unordered access to shared memory.
   The cost depends on shared data access and synchronization controls. It does not imply faults in every shared-memory program.
   Reason: a shared-memory trial found no assessments and four problem gaps.
+  The [Linux driver assessments](https://docs.kernel.org/process/stable-api-nonsense.html) link Monolithic kernel to external driver maintenance and module build costs.
+  These costs depend on internal interface changes and supported kernel variants. The userspace interface stays stable.
+  These assessments do not apply to every monolithic kernel or ordinary application.
+  Reason: a Monolithic kernel trial found no assessments and four problem gaps.
   The [MPI assessment](https://www.mpi-forum.org/docs/mpi-5.0/mpi50-report/node73.htm) links Cluster to deadlock risks from incorrect message order.
   The cost depends on the communication pattern and protocol controls. MPI asynchronous operations can avoid this order constraint.
   This does not imply faults in every cluster application or apply to every cluster protocol.

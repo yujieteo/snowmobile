@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Monolithic kernel trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Monolithic kernel', layer: 'os', problem_id: 'technical-debt', effect: 'worsens',
+    reason: 'Linux changes internal kernel interfaces and updates drivers in its source tree together. Assessment: drivers outside that tree can require extra maintenance after interface changes. The userspace interface stays stable. This cost does not apply to every monolithic kernel or ordinary application.',
+    source: { title: 'Linux: internal driver interfaces and maintenance', url: 'https://docs.kernel.org/process/stable-api-nonsense.html' },
+  },
+  {
+    paradigm: 'Monolithic kernel', layer: 'os', problem_id: 'build-complexity', effect: 'worsens',
+    reason: 'Linux documents separate module builds for different kernel configurations, compiler versions and processor architectures. Assessment: support for multiple kernel variants can add driver build work. The cost depends on the supported variants. This does not apply to every monolithic kernel or ordinary application.',
+    source: { title: 'Linux: binary kernel interface and module builds', url: 'https://docs.kernel.org/process/stable-api-nonsense.html' },
+  },
   // Reason: the Cluster trial found no assessments and four problem gaps.
   {
     paradigm: 'Cluster (warehouse-scale computer)', layer: 'hardware', problem_id: 'unreliable-tools', effect: 'worsens',
