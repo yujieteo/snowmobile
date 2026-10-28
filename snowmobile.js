@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Vector processor trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Vector processor', layer: 'hardware', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'RISC-V V permits one binary to run across different vector register lengths under stated constraints. Assessment: portable vector code can reduce duplicate implementations for different register lengths. The benefit requires compatible element types, instructions and portable code. This does not address all technical debt or apply to every vector processor.',
+    source: { title: 'RISC-V V 1.0: implementation parameters and portable code', url: 'https://raw.githubusercontent.com/riscv/riscv-v-spec/v1.0/v-spec.adoc' },
+  },
   // Reason: the Hardware root of trust trial found no assessments and four problem gaps.
   {
     paradigm: 'Hardware root of trust', layer: 'hardware', problem_id: 'unreliable-tools', effect: 'reduces',

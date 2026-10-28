@@ -85,6 +85,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const sharedMemory = { id: 128, layer: 'hardware', name: 'Shared-memory multiprocessor', url: 'https://en.wikipedia.org/wiki/Symmetric_multiprocessing' };
   const monolithic = { id: 130, layer: 'os', name: 'Monolithic kernel', url: 'https://en.wikipedia.org/wiki/Monolithic_kernel' };
   const fpga = { id: 131, layer: 'hardware', name: 'Reconfigurable logic (FPGA)', url: 'https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw' };
+  const vector = { id: 133, layer: 'hardware', name: 'Vector processor', url: 'https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html' };
   const rootOfTrust = { id: 132, layer: 'hardware', name: 'Hardware root of trust', url: 'https://opentitan.org/book/doc/introduction.html' };
   const cluster = { id: 129, layer: 'hardware', name: 'Cluster (warehouse-scale computer)', url: 'https://en.wikipedia.org/wiki/Computer_cluster' };
   const realtime = { id: 126, layer: 'os', name: 'Real-time OS', url: 'https://en.wikipedia.org/wiki/Real-time_operating_system' };
@@ -376,6 +377,14 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.match(kernelDrivers.links[0].reason, /drivers outside that tree.*extra maintenance.*userspace interface stays stable.*does not apply to every monolithic kernel or ordinary application/);
   assert.match(kernelDrivers.links[1].reason, /separate module builds.*supported variants.*does not apply to every monolithic kernel or ordinary application/);
   const emptyProblemCount = practicalProblems([]).items.length;
+  // Reason: vector portability must retain its compatibility limits and exclude other problem reductions.
+  const portableVectors = practicalProblems([vector]);
+  assert.deepStrictEqual(portableVectors.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[133, 'technical-debt', 'reduces']]);
+  assert.deepStrictEqual(portableVectors.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
+  assert.strictEqual(portableVectors.coverage.unassessedParadigms, 0);
+  assert.strictEqual(portableVectors.links[0].source.url, 'https://raw.githubusercontent.com/riscv/riscv-v-spec/v1.0/v-spec.adoc');
+  assert.match(portableVectors.links[0].reason, /one binary.*different vector register lengths.*reduce duplicate implementations.*requires compatible element types, instructions and portable code.*does not address all technical debt or apply to every vector processor/);
   // Reason: secure boot benefits must not hide release costs or imply correct authorized code.
   const verifiedBoot = practicalProblems([rootOfTrust]);
   assert.deepStrictEqual(verifiedBoot.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
@@ -401,7 +410,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(protectedTasks.links.every((l) => l.source.url === 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md'));
   assert.match(protectedTasks.links[0].reason, /requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS/);
   assert.match(protectedTasks.links[1].reason, /maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic, fpga, rootOfTrust]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic, fpga, rootOfTrust, vector]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
