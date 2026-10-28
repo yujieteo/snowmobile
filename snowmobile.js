@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Hypervisor trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Hypervisor', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'Xen permits a device driver to run in a separate virtual machine. After a driver crash, Xen can restart that virtual machine without damage to the rest of the system. Assessment: this can contain driver faults. The benefit requires driver isolation. This does not prove whole-system reliability or apply to every hypervisor.',
+    source: { title: 'Xen Project: Hypervisor driver isolation', url: 'https://xenproject.org/projects/hypervisor/' },
+  },
   // Reason: the Capability-based OS trial found no assessment and four problem gaps.
   {
     paradigm: 'Capability-based OS', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',

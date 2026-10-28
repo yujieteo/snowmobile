@@ -73,6 +73,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const constraint = { id: 111, layer: 'language', name: 'Constraint programming', url: 'https://docs.minizinc.dev/en/stable/modelling.html' };
   const unikernel = { id: 112, layer: 'os', name: 'Unikernel', url: 'https://en.wikipedia.org/wiki/Unikernel' };
   const capabilities = { id: 113, layer: 'os', name: 'Capability-based OS', url: 'https://en.wikipedia.org/wiki/Capability-based_security' };
+  const hypervisor = { id: 114, layer: 'os', name: 'Hypervisor', url: 'https://en.wikipedia.org/wiki/Hypervisor' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
@@ -224,8 +225,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(restricted.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(restricted.links[0].source.url, 'https://docs.sel4.systems/Tutorials/capabilities.html');
   assert.match(restricted.links[0].reason, /correct capability allocation.*Authorized code can still cause faults.*does not prove whole-system reliability or apply to every capability-based OS/);
+  // Reason: driver isolation must not imply complete system reliability for every hypervisor.
+  const virtual = practicalProblems([hypervisor]);
+  assert.deepStrictEqual(virtual.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[114, 'unreliable-tools', 'reduces']]);
+  assert.deepStrictEqual(virtual.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.strictEqual(virtual.links[0].source.url, 'https://xenproject.org/projects/hypervisor/');
+  assert.match(virtual.links[0].reason, /requires driver isolation.*does not prove whole-system reliability or apply to every hypervisor/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

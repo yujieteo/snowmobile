@@ -144,6 +144,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The benefit requires correct capability allocation. Authorized code can still cause faults.
   This does not prove whole-system reliability or apply to every capability-based OS.
   Reason: a Capability-based OS trial found no assessment and four problem gaps.
+  The [Xen assessment](https://xenproject.org/projects/hypervisor/) links Hypervisor to driver fault isolation through a separate virtual machine.
+  The benefit requires driver isolation. This does not prove whole-system reliability or apply to every hypervisor.
+  Reason: a Hypervisor trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.
