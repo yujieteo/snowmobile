@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the shared-memory trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Shared-memory multiprocessor', layer: 'hardware', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'OpenMP states that a data race between threads leaves the program result unspecified. Assessment: unordered access to shared memory can cause application faults. The risk depends on shared data access and synchronization controls. This does not imply faults in every shared-memory program or apply to every shared-memory model.',
+    source: { title: 'OpenMP 5.2: memory model and data races', url: 'https://www.openmp.org/spec-html/5.2/openmpsu9.html' },
+  },
   // Reason: the GPU trial found no assessments and four problem gaps.
   {
     paradigm: 'GPU (SIMT)', layer: 'hardware', problem_id: 'unreliable-tools', effect: 'worsens',

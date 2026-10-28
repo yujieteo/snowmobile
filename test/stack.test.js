@@ -82,6 +82,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const multikernel = { id: 123, layer: 'os', name: 'Multikernel', url: 'https://barrelfish.org/publications/barrelfish_sosp09.pdf' };
   const exokernel = { id: 125, layer: 'os', name: 'Exokernel', url: 'https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf' };
   const gpu = { id: 127, layer: 'hardware', name: 'GPU (SIMT)', url: 'https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads' };
+  const sharedMemory = { id: 128, layer: 'hardware', name: 'Shared-memory multiprocessor', url: 'https://en.wikipedia.org/wiki/Symmetric_multiprocessing' };
   const realtime = { id: 126, layer: 'os', name: 'Real-time OS', url: 'https://en.wikipedia.org/wiki/Real-time_operating_system' };
   const splitkernel = { id: 124, layer: 'os', name: 'Splitkernel', url: 'https://www.usenix.org/conference/osdi18/presentation/shan' };
   const concatenative = { id: 122, layer: 'language', name: 'Concatenative programming', url: 'https://concatenative.org/wiki/view/Concatenative%20language' };
@@ -345,6 +346,14 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(parallel.coverage.unassessedParadigms, 0);
   assert.match(parallel.links[0].reason, /incorrect synchronization scopes.*depends on shared memory access and synchronization controls.*does not imply faults in every GPU program/);
   assert.match(parallel.links[1].reason, /compatible host compiler.*explicit compiler flags and device linkage.*nvcc coordinates compiler steps automatically.*does not apply to every GPU toolchain/);
+  // Reason: a data race cost must not count as a reduction or imply faults in every shared-memory program.
+  const shared = practicalProblems([sharedMemory]);
+  assert.deepStrictEqual(shared.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[128, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(shared.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
+  assert.strictEqual(shared.coverage.unassessedParadigms, 0);
+  assert.strictEqual(shared.links[0].source.url, 'https://www.openmp.org/spec-html/5.2/openmpsu9.html');
+  assert.match(shared.links[0].reason, /OpenMP.*data race.*unordered access to shared memory.*depends on shared data access and synchronization controls.*does not imply faults in every shared-memory program/);
   const emptyProblemCount = practicalProblems([]).items.length;
   // Reason: optional MPU protection must not imply universal reliability or hide maintenance costs.
   const protectedTasks = practicalProblems([realtime]);
@@ -354,7 +363,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(protectedTasks.links.every((l) => l.source.url === 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md'));
   assert.match(protectedTasks.links[0].reason, /requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS/);
   assert.match(protectedTasks.links[1].reason, /maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

@@ -89,6 +89,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [NVCC guide](https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/nvcc.html) links compatible host compiler requirements and separate device compilation to extra build configuration work.
   Synchronization controls and toolchain choices affect these costs. nvcc coordinates compiler steps automatically. These costs do not apply to every GPU program or toolchain.
   Reason: a GPU trial found no assessments and four problem gaps.
+  The [OpenMP memory model](https://www.openmp.org/spec-html/5.2/openmpsu9.html) links Shared-memory multiprocessor to faults from unordered access to shared memory.
+  The cost depends on shared data access and synchronization controls. It does not imply faults in every shared-memory program.
+  Reason: a shared-memory trial found no assessments and four problem gaps.
   The [FreeRTOS assessments](https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md) link Real-time OS to task memory protection benefits and memory region maintenance costs.
   Protection requires suitable hardware, an MPU port and correct permissions. Privileged code still needs controls.
   These assessments do not prove whole-system reliability or apply to every real-time OS.
