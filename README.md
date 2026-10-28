@@ -134,6 +134,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [EROS assessment](https://www.usenix.org/legacy/event/usenix02/shapiro.html) links Single-level store to less storage boundary code and consistent durable state after a crash.
   Correct application transactions remain necessary. These assessments do not prove whole-system reliability or address all technical debt.
   Reason: a Single-level store trial found no assessments and four problem gaps.
+  The [MiniZinc assessment](https://docs.minizinc.dev/en/stable/modelling.html#datafiles-and-assertions) links Constraint programming to less duplicate constraint code through model reuse with separate data files.
+  The benefit requires a reusable model. This does not address all technical debt or prove that the constraints match the real problem.
+  Reason: a Constraint programming trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

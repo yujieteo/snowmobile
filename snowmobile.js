@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Constraint programming trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Constraint programming', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'MiniZinc separates model parameters from constraints through data files. The handbook reuses one model with different data files. Assessment: this can reduce duplicate constraint code and model edits for each dataset. The benefit requires a reusable model. This does not address all technical debt or prove that the constraints match the real problem.',
+    source: { title: 'MiniZinc Handbook: data files and assertions', url: 'https://docs.minizinc.dev/en/stable/modelling.html#datafiles-and-assertions' },
+  },
   // Reason: the Single-level store trial found no assessments and four problem gaps.
   {
     paradigm: 'Single-level store', layer: 'os', problem_id: 'technical-debt', effect: 'reduces',

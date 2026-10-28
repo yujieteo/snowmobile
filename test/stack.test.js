@@ -70,6 +70,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const structures = { id: 107, layer: 'software', name: 'Data structure server', url: 'https://redis.io/docs/latest/develop/data-types/' };
   const separation = { id: 108, layer: 'os', name: 'Separation kernel', url: 'https://muen.sk/' };
   const effects = { id: 109, layer: 'language', name: 'Algebraic effects', url: 'https://koka-lang.github.io/koka/doc/book.html' };
+  const constraint = { id: 111, layer: 'language', name: 'Constraint programming', url: 'https://docs.minizinc.dev/en/stable/modelling.html' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
@@ -200,8 +201,14 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(durable.links.every((l) => l.source.url === store.url));
   assert.match(durable.links[0].reason, /custom code at the storage boundary.*does not address all technical debt/);
   assert.match(durable.links[1].reason, /inconsistent stored state after a crash.*Correct application transactions remain necessary.*does not prove whole-system reliability/);
+  // Reason: model reuse must not imply correct constraints or complete debt removal.
+  const reusable = practicalProblems([constraint]);
+  assert.deepStrictEqual(reusable.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[111, 'technical-debt', 'reduces']]);
+  assert.deepStrictEqual(reusable.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
+  assert.match(reusable.links[0].reason, /duplicate constraint code.*requires a reusable model.*does not address all technical debt or prove that the constraints match the real problem/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
