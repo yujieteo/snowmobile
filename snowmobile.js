@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the CRDT trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Conflict-free replicated data types', layer: 'software', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'The CRDT reference describes automatic conflict resolution without custom conflict resolution code. Assessment: this can reduce debt from application-specific merge code. This requires suitable data types and does not address all technical debt.',
+    source: { title: 'CRDT reference: conflict resolution and offline replicas', url: 'https://crdt.tech/' },
+  },
+  {
+    paradigm: 'Conflict-free replicated data types', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'The CRDT reference describes independent updates on offline replicas and a consistent state after merge. Assessment: this can preserve local updates through network outages. Convergence does not prove application correctness or protect against device loss.',
+    source: { title: 'CRDT reference: conflict resolution and offline replicas', url: 'https://crdt.tech/' },
+  },
   // Reason: the Peer-to-peer trial found no assessment and four problem gaps.
   {
     paradigm: 'Peer-to-peer', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',
