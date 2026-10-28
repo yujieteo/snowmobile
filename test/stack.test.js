@@ -53,6 +53,7 @@ test('idea problem priority uses the greatest sourced share and ignores invalid 
 
 // Reason: a changed user paradigm must not retain a seed assessment for debt or reliability.
 test('debt and reliability assessments follow only the documented seed definitions', () => {
+  const accelerator = { id: 136, layer: 'hardware', name: 'Domain-specific accelerator', url: 'https://research.google/pubs/in-datacenter-performance-analysis-of-a-tensor-processing-unit/' };
   const imperative = { id: 135, layer: 'language', name: 'Imperative programming', url: 'https://en.wikipedia.org/wiki/Imperative_programming' };
   const ownership = { id: 95, layer: 'language', name: 'Ownership types', url: 'https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html' };
   const injection = { id: 93, layer: 'software', name: 'Dependency injection', url: 'https://martinfowler.com/articles/injection.html' };
@@ -428,7 +429,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(protectedTasks.links.every((l) => l.source.url === 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md'));
   assert.match(protectedTasks.links[0].reason, /requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS/);
   assert.match(protectedTasks.links[1].reason, /maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS/);
-  for (const original of [imperative, injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic, fpga, rootOfTrust, vector, vliw]) {
+  // Reason: accelerator build costs must retain model limits and must not count as problem reductions.
+  const accelerated = practicalProblems([accelerator]);
+  assert.deepStrictEqual(accelerated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[136, 'build-complexity', 'worsens']]);
+  assert.deepStrictEqual(accelerated.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
+  assert.strictEqual(accelerated.coverage.unassessedParadigms, 0);
+  assert.strictEqual(accelerated.links[0].source.url, 'https://coral.ai/docs/edgetpu/models-intro/');
+  assert.match(accelerated.links[0].reason, /custom models.*add build work.*depends on model compatibility and toolchain choices.*does not apply to every accelerator or imply manual execution/);
+  for (const original of [accelerator, imperative, injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic, fpga, rootOfTrust, vector, vliw]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

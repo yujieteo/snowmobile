@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the accelerator trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Domain-specific accelerator', layer: 'hardware', problem_id: 'build-complexity', effect: 'worsens',
+    reason: 'Coral requires model conversion, 8-bit quantization and Edge TPU compilation for custom models. Assessment: these target requirements can add build work. The cost depends on model compatibility and toolchain choices. This does not apply to every accelerator or imply manual execution of each step.',
+    source: { title: 'Coral: TensorFlow model compatibility with Edge TPU', url: 'https://coral.ai/docs/edgetpu/models-intro/' },
+  },
   // Reason: the Imperative programming trial found no assessments and four problem gaps.
   {
     paradigm: 'Imperative programming', layer: 'language', problem_id: 'unreliable-tools', effect: 'worsens',

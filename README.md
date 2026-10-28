@@ -88,6 +88,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [Clojure essay](https://clojure.org/about/state#_imperative_programming) links Imperative programming to coordination faults when concurrent tasks change shared mutable state.
   This inferred reliability cost depends on synchronization controls. It does not imply faults in every imperative program.
   Reason: an Imperative programming trial found no assessments and four problem gaps.
+  The [Coral assessment](https://coral.ai/docs/edgetpu/models-intro/) links Domain-specific accelerator to extra build work for custom models.
+  This inferred cost depends on model compatibility and toolchain choices.
+  The cost does not apply to every accelerator.
+  Reason: an accelerator trial found no assessments and four problem gaps.
   The [TI C6000 assessments](https://downloads.ti.com/docs/esd/SPRUI04/what-you-need-to-know-to-write-linear-assembly-spru1874615.html) link VLIW to assembly maintenance costs and faults from invalid optimizer input.
   The optimizer handles instruction order and register allocation by default. These costs depend on source choices and input validity.
   They do not apply to every VLIW program.
