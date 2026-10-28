@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the FPGA trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Reconfigurable logic (FPGA)', layer: 'hardware', problem_id: 'build-complexity', effect: 'worsens',
+    reason: 'Vivado exposes synthesis and implementation run options before bitstream creation. Assessment: these options can add build configuration work for FPGA designs. The Generate Bitstream command runs prerequisite stages automatically. The cost depends on the design and run options. This does not apply to every FPGA toolchain or imply manual execution of each stage.',
+    source: { title: 'AMD Vivado tutorial: synthesis and implementation run options', url: 'https://docs.amd.com/r/2024.1-English/ug888-vivado-design-flows-overview-tutorial/Step-7-Synthesizing-and-Implementing-the-Design' },
+  },
   // Reason: the Monolithic kernel trial found no assessments and four problem gaps.
   {
     paradigm: 'Monolithic kernel', layer: 'os', problem_id: 'technical-debt', effect: 'worsens',

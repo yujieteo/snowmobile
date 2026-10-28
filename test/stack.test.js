@@ -84,6 +84,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const gpu = { id: 127, layer: 'hardware', name: 'GPU (SIMT)', url: 'https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads' };
   const sharedMemory = { id: 128, layer: 'hardware', name: 'Shared-memory multiprocessor', url: 'https://en.wikipedia.org/wiki/Symmetric_multiprocessing' };
   const monolithic = { id: 130, layer: 'os', name: 'Monolithic kernel', url: 'https://en.wikipedia.org/wiki/Monolithic_kernel' };
+  const fpga = { id: 131, layer: 'hardware', name: 'Reconfigurable logic (FPGA)', url: 'https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw' };
   const cluster = { id: 129, layer: 'hardware', name: 'Cluster (warehouse-scale computer)', url: 'https://en.wikipedia.org/wiki/Computer_cluster' };
   const realtime = { id: 126, layer: 'os', name: 'Real-time OS', url: 'https://en.wikipedia.org/wiki/Real-time_operating_system' };
   const splitkernel = { id: 124, layer: 'os', name: 'Splitkernel', url: 'https://www.usenix.org/conference/osdi18/presentation/shan' };
@@ -374,6 +375,14 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.match(kernelDrivers.links[0].reason, /drivers outside that tree.*extra maintenance.*userspace interface stays stable.*does not apply to every monolithic kernel or ordinary application/);
   assert.match(kernelDrivers.links[1].reason, /separate module builds.*supported variants.*does not apply to every monolithic kernel or ordinary application/);
   const emptyProblemCount = practicalProblems([]).items.length;
+  // Reason: FPGA build costs must not imply manual stages or count as problem reductions.
+  const circuits = practicalProblems([fpga]);
+  assert.deepStrictEqual(circuits.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[131, 'build-complexity', 'worsens']]);
+  assert.deepStrictEqual(circuits.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
+  assert.strictEqual(circuits.coverage.unassessedParadigms, 0);
+  assert.strictEqual(circuits.links[0].source.url, 'https://docs.amd.com/r/2024.1-English/ug888-vivado-design-flows-overview-tutorial/Step-7-Synthesizing-and-Implementing-the-Design');
+  assert.match(circuits.links[0].reason, /synthesis and implementation run options.*build configuration work.*prerequisite stages automatically.*depends on the design and run options.*does not apply to every FPGA toolchain or imply manual execution/);
   // Reason: optional MPU protection must not imply universal reliability or hide maintenance costs.
   const protectedTasks = practicalProblems([realtime]);
   assert.deepStrictEqual(protectedTasks.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
@@ -382,7 +391,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(protectedTasks.links.every((l) => l.source.url === 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md'));
   assert.match(protectedTasks.links[0].reason, /requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS/);
   assert.match(protectedTasks.links[1].reason, /maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic, fpga]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

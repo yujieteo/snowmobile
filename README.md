@@ -96,6 +96,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   These costs depend on internal interface changes and supported kernel variants. The userspace interface stays stable.
   These assessments do not apply to every monolithic kernel or ordinary application.
   Reason: a Monolithic kernel trial found no assessments and four problem gaps.
+  The [Vivado assessment](https://docs.amd.com/r/2024.1-English/ug888-vivado-design-flows-overview-tutorial/Step-7-Synthesizing-and-Implementing-the-Design) links FPGA run options to extra build configuration work.
+  This inferred cost depends on the design and toolchain. Vivado runs prerequisite stages automatically.
+  Reason: an FPGA trial found no assessments and four problem gaps.
   The [MPI assessment](https://www.mpi-forum.org/docs/mpi-5.0/mpi50-report/node73.htm) links Cluster to deadlock risks from incorrect message order.
   The cost depends on the communication pattern and protocol controls. MPI asynchronous operations can avoid this order constraint.
   This does not imply faults in every cluster application or apply to every cluster protocol.
