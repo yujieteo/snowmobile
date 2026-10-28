@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Single-level store trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Single-level store', layer: 'os', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'The EROS paper describes one memory model across volatile and persistent storage. Assessment: this can reduce custom code at the storage boundary. This requires the single-level store model and does not address all technical debt.',
+    source: { title: 'USENIX: design evolution of the EROS single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' },
+  },
+  {
+    paradigm: 'Single-level store', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'The EROS paper describes transactional updates for globally consistent durable state. Assessment: this can prevent inconsistent stored state after a crash. Correct application transactions remain necessary. This does not prove whole-system reliability or apply to every persistent memory system.',
+    source: { title: 'USENIX: design evolution of the EROS single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' },
+  },
   // Reason: the Algebraic effects trial found no assessment and four problem gaps.
   {
     paradigm: 'Algebraic effects', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',

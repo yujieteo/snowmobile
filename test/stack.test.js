@@ -70,6 +70,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const structures = { id: 107, layer: 'software', name: 'Data structure server', url: 'https://redis.io/docs/latest/develop/data-types/' };
   const separation = { id: 108, layer: 'os', name: 'Separation kernel', url: 'https://muen.sk/' };
   const effects = { id: 109, layer: 'language', name: 'Algebraic effects', url: 'https://koka-lang.github.io/koka/doc/book.html' };
+  const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
@@ -191,8 +192,16 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(handled.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.match(handled.links[0].reason, /suitable handler interfaces.*does not address all technical debt/);
   assert.match(handled.links[1].reason, /absent effect handlers before execution.*Correct handler behavior still needs checks.*does not prove whole-system reliability/);
+  // Reason: consistent durable state must not imply correct application transactions or complete debt removal.
+  const durable = practicalProblems([store]);
+  assert.deepStrictEqual(durable.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[110, 'technical-debt', 'reduces'], [110, 'unreliable-tools', 'reduces']]);
+  assert.deepStrictEqual(durable.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
+  assert.ok(durable.links.every((l) => l.source.url === store.url));
+  assert.match(durable.links[0].reason, /custom code at the storage boundary.*does not address all technical debt/);
+  assert.match(durable.links[1].reason, /inconsistent stored state after a crash.*Correct application transactions remain necessary.*does not prove whole-system reliability/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

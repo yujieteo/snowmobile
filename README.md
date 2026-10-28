@@ -131,6 +131,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [Nix assessment](https://nix.dev/manual/nix/2.35/introduction.html#atomic-upgrades-and-rollbacks) links atomic upgrades to fewer crashes from partial package updates.
   Rollback requires retained versions. This does not prove application correctness or whole-system reliability.
   Reason: a Nix trial found no reliability assessment and two problem gaps.
+  The [EROS assessment](https://www.usenix.org/legacy/event/usenix02/shapiro.html) links Single-level store to less storage boundary code and consistent durable state after a crash.
+  Correct application transactions remain necessary. These assessments do not prove whole-system reliability or address all technical debt.
+  Reason: a Single-level store trial found no assessments and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.
