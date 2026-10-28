@@ -7,24 +7,29 @@ const { DatabaseSync } = require('node:sqlite');
 const { start, eigen, pca, gaps, practicalProblems, ideaProblems } = require('../snowmobile.js');
 
 // Reason: a stale link can assign a source assessment to a different user paradigm.
-test('problem coverage excludes absent or changed paradigms and does not count harm as a reduction', () => {
+test('problem coverage excludes changed paradigms and preserves costs beside benefits', () => {
   const microservices = { id: 71, layer: 'software', name: 'Microservices', url: 'https://en.wikipedia.org/wiki/Microservices' };
   const nix = { id: 92, layer: 'software', name: 'Functional package management', url: 'https://nix.dev/manual/nix/2.35/introduction.html' };
   const empty = practicalProblems([]);
   assert.strictEqual(empty.links.length, 0);
   assert.strictEqual(empty.coverage.withoutReduction.length, empty.items.length);
-  const harm = practicalProblems([microservices]);
-  assert.strictEqual(harm.links.length, 1);
-  assert.ok(harm.coverage.withoutReduction.includes('deployment-complexity'));
+  const service = practicalProblems([microservices]);
+  assert.deepStrictEqual(service.links.map((l) => [l.problem_id, l.effect]), [
+    ['technical-debt', 'reduces'], ['unreliable-tools', 'reduces'], ['deployment-complexity', 'worsens'],
+  ]);
+  assert.deepStrictEqual(service.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
+  assert.match(service.links[0].reason, /suitable service boundaries.*does not address all technical debt/);
+  assert.match(service.links[1].reason, /requires fault controls.*does not prove whole-system reliability/);
   const both = practicalProblems([microservices, nix]);
-  assert.deepStrictEqual(both.coverage.withoutReduction, ['technical-debt', 'unreliable-tools']);
+  assert.deepStrictEqual(both.coverage.withoutReduction, []);
   assert.strictEqual(both.coverage.unassessedParadigms, 0);
-  assert.deepStrictEqual(both.links.map((l) => l.paradigm_id), [92, 92, 71]);
+  assert.deepStrictEqual(both.links.map((l) => l.paradigm_id), [71, 71, 92, 92, 71]);
   for (const change of [{ name: 'My paradigm' }, { layer: 'os' }, { url: 'https://example.com/my-definition' }]) {
     const changed = practicalProblems([microservices, { ...nix, ...change }]);
-    assert.strictEqual(changed.links.length, 1);
+    assert.deepStrictEqual(changed.links, service.links);
     assert.strictEqual(changed.coverage.unassessedParadigms, 1);
-    assert.deepStrictEqual(changed.coverage.withoutReduction, empty.coverage.withoutReduction);
+    assert.deepStrictEqual(changed.coverage.withoutReduction, service.coverage.withoutReduction);
+    assert.strictEqual(practicalProblems([{ ...microservices, ...change }]).links.length, 0);
   }
 });
 
@@ -328,10 +333,10 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   const microservices = s.paradigms.find((p) => p.name === 'Microservices');
   const nix = s.paradigms.find((p) => p.name === 'Functional package management');
   const unassessed = s.paradigms.find((p) => p.name === 'Exokernel');
-  const harmOnly = (await call(`/api/stack?pick=${microservices.id}`)).body;
-  assert.deepStrictEqual(harmOnly.practicalProblems.coverage.withoutReduction, []);
-  assert.deepStrictEqual(harmOnly.selectedProblemCoverage.withoutReduction, problems.items.map((p) => p.id));
-  assert.strictEqual(harmOnly.selectedProblemCoverage.unassessedParadigms, 0);
+  const selectedServices = (await call(`/api/stack?pick=${microservices.id}`)).body;
+  assert.deepStrictEqual(selectedServices.practicalProblems.coverage.withoutReduction, []);
+  assert.deepStrictEqual(selectedServices.selectedProblemCoverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
+  assert.strictEqual(selectedServices.selectedProblemCoverage.unassessedParadigms, 0);
   const useful = (await call(`/api/stack?pick=${nix.id},${unassessed.id},${unassessed.id},999999`)).body;
   assert.deepStrictEqual(useful.selectedProblemCoverage.withoutReduction, ['technical-debt', 'unreliable-tools']);
   assert.strictEqual(useful.selectedProblemCoverage.unassessedParadigms, 1);

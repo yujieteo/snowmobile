@@ -112,6 +112,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [Clojure assessment](https://clojure.org/about/state#_functional_programming) links Functional programming to local behavior that simplifies maintenance and removes mutable state from pure code.
   Effects and shared state still need controls. These benefits do not prove whole-system reliability or address all technical debt.
   Reason: a Functional programming trial found no assessment and four problem gaps.
+  The [Microsoft assessment](https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/microservices#benefits) links Microservices to fewer code dependencies and fault isolation.
+  Suitable service boundaries and fault controls in dependent services are necessary for these benefits.
+  Cross-service changes still add maintenance costs. The deployment cost assessment still applies.
+  Reason: a Microservices trial found only deployment harm and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

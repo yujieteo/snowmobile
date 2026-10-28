@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Microservices trial found only deployment harm and four problem gaps.
+  {
+    paradigm: 'Microservices', layer: 'software', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Microsoft describes separate service codebases and private data stores that reduce code dependencies. Assessment: this can reduce debt from cross-component changes. This requires suitable service boundaries and does not address all technical debt. Cross-service changes still add maintenance costs.',
+    source: { title: 'Azure Architecture Center: microservices benefits', url: 'https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/microservices#benefits' },
+  },
+  {
+    paradigm: 'Microservices', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'Microsoft describes fault isolation when upstream services handle downstream faults correctly. Assessment: this can contain faults within one unavailable service. The benefit requires fault controls in dependent services. This does not prove whole-system reliability.',
+    source: { title: 'Azure Architecture Center: microservices benefits', url: 'https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/microservices#benefits' },
+  },
   // Reason: the Functional programming trial found no assessment and four problem gaps.
   {
     paradigm: 'Functional programming', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',
