@@ -50,6 +50,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const events = { id: 99, layer: 'software', name: 'Event sourcing', url: 'https://martinfowler.com/eaaDev/EventSourcing.html' };
   const localFirst = { id: 100, layer: 'software', name: 'Local-first software', url: 'https://www.inkandswitch.com/local-first/' };
   const serverless = { id: 101, layer: 'software', name: 'Serverless', url: 'https://en.wikipedia.org/wiki/Serverless_computing' };
+  const filters = { id: 102, layer: 'software', name: 'Pipes and filters', url: 'https://en.wikipedia.org/wiki/Pipeline_(software)' };
   const assessed = practicalProblems([injection, actor]);
   assert.deepStrictEqual(assessed.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.strictEqual(assessed.coverage.unassessedParadigms, 0);
@@ -109,7 +110,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(managed.coverage.unassessedParadigms, 0);
   assert.match(managed.links[0].reason, /removes server setup.*configuration and service integration costs remain/);
   assert.match(managed.links[1].reason, /reject requests.*depends on demand, quotas and concurrency controls/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless]) {
+  // Reason: filter reuse must not hide faults from repeat state updates.
+  const pipeline = practicalProblems([filters]);
+  assert.deepStrictEqual(pipeline.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[102, 'technical-debt', 'reduces'], [102, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(pipeline.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
+  assert.strictEqual(pipeline.coverage.unassessedParadigms, 0);
+  assert.match(pipeline.links[0].reason, /duplicate pipeline logic.*compatible data schemas.*does not address all technical debt/);
+  assert.match(pipeline.links[1].reason, /retries after filter faults.*depends on retry controls/);
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters]) {
     for (const change of [{ name: 'User definition' }, { layer: 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -268,9 +277,8 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.match(problems.source.scope, /Professional Developer/);
   assert.match(problems.source.measure, /more than one/);
   assert.match(problems.source.limit, /do not measure severity/);
-  assert.strictEqual(problems.links.length, 16);
   assert.deepStrictEqual(problems.coverage.withoutReduction, []);
-  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - 11);
+  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - new Set(problems.links.map((l) => l.paradigm_id)).size);
   for (const l of problems.links) {
     assert.ok(s.paradigms.some((p) => p.id === l.paradigm_id && p.name === l.paradigm));
     assert.ok(problems.items.some((p) => p.id === l.problem_id));
@@ -372,6 +380,8 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
     [['deployment-complexity', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Serverless').map((l) => [l.problem_id, l.effect]),
     [['deployment-complexity', 'reduces'], ['unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(assessments.filter((l) => l.paradigm === 'Pipes and filters').map((l) => [l.problem_id, l.effect]),
+    [['technical-debt', 'reduces'], ['unreliable-tools', 'worsens']]);
   assert.ok(assessments.some((l) => l.effect === 'worsens'));
   assert.match(prompt, /explain that cost in gain and compare it with the benefit/);
   assert.match(prompt, /No assessment means an unknown effect/);

@@ -95,6 +95,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   [Concurrency limits](https://docs.aws.amazon.com/lambda/latest/dg/lambda-concurrency.html) can cause request failures across functions in one account.
   Application configuration costs remain. The reliability cost depends on demand, quotas and concurrency controls.
   Reason: a Serverless trial found no assessment and four problem gaps.
+  The [Microsoft assessment](https://learn.microsoft.com/en-us/azure/architecture/patterns/pipes-and-filters) links Pipes and filters to less duplicate code and faults from repeat state updates.
+  Shared filters require compatible data schemas. Retry controls affect the risk from repeat updates.
+  Reason: a Pipes and filters trial found no assessment and four problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Pipes and filters trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Pipes and filters', layer: 'software', problem_id: 'technical-debt', effect: 'reduces',
+    reason: 'Microsoft describes independent filters that replace duplicate pipeline logic. Assessment: shared filters can reduce debt from duplicate code. This requires compatible data schemas and does not address all technical debt.',
+    source: { title: 'Azure Architecture Center: filter reuse and fault costs', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/pipes-and-filters' },
+  },
+  {
+    paradigm: 'Pipes and filters', layer: 'software', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'Microsoft warns that retries after filter faults can repeat state updates. Assessment: repeat updates can corrupt downstream state. This cost depends on retry controls and whether repeat operations preserve the result.',
+    source: { title: 'Azure Architecture Center: filter reuse and fault costs', url: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/pipes-and-filters' },
+  },
   // Reason: the Serverless trial found no assessment and four problem gaps.
   {
     paradigm: 'Serverless', layer: 'software', problem_id: 'deployment-complexity', effect: 'reduces',
