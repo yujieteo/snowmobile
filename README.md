@@ -128,6 +128,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   These mechanisms can reduce custom control code and expose absent handlers before execution.
   Suitable handler interfaces and checks of handler behavior remain necessary. These assessments do not prove whole-system reliability or address all technical debt.
   Reason: an Algebraic effects trial found no assessment and four problem gaps.
+  The [Nix assessment](https://nix.dev/manual/nix/2.35/introduction.html#atomic-upgrades-and-rollbacks) links atomic upgrades to fewer crashes from partial package updates.
+  Rollback requires retained versions. This does not prove application correctness or whole-system reliability.
+  Reason: a Nix trial found no reliability assessment and two problem gaps.
   Your stack also shows problems without a documented reduction among its selected paradigms.
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.

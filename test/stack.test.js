@@ -23,7 +23,15 @@ test('problem coverage excludes changed paradigms and preserves costs beside ben
   const both = practicalProblems([microservices, nix]);
   assert.deepStrictEqual(both.coverage.withoutReduction, []);
   assert.strictEqual(both.coverage.unassessedParadigms, 0);
-  assert.deepStrictEqual(both.links.map((l) => l.paradigm_id), [71, 71, 92, 92, 71]);
+  // Reason: atomic package updates must not imply correct application behavior or permanent rollback access.
+  const packages = practicalProblems([nix]);
+  assert.deepStrictEqual(packages.coverage.withoutReduction, ['technical-debt']);
+  const reliability = packages.links.filter((l) => l.problem_id === 'unreliable-tools');
+  assert.strictEqual(reliability.length, 1);
+  assert.strictEqual(reliability[0].effect, 'reduces');
+  assert.strictEqual(reliability[0].paradigm_id, nix.id);
+  assert.strictEqual(reliability[0].source.url, 'https://nix.dev/manual/nix/2.35/introduction.html#atomic-upgrades-and-rollbacks');
+  assert.match(reliability[0].reason, /partial package updates.*requires retained versions.*does not prove application correctness or whole-system reliability/);
   for (const change of [{ name: 'My paradigm' }, { layer: 'os' }, { url: 'https://example.com/my-definition' }]) {
     const changed = practicalProblems([microservices, { ...nix, ...change }]);
     assert.deepStrictEqual(changed.links, service.links);
@@ -362,7 +370,7 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.deepStrictEqual(selectedServices.selectedProblemCoverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.strictEqual(selectedServices.selectedProblemCoverage.unassessedParadigms, 0);
   const useful = (await call(`/api/stack?pick=${nix.id},${unassessed.id},${unassessed.id},999999`)).body;
-  assert.deepStrictEqual(useful.selectedProblemCoverage.withoutReduction, ['technical-debt', 'unreliable-tools']);
+  assert.deepStrictEqual(useful.selectedProblemCoverage.withoutReduction, ['technical-debt']);
   assert.strictEqual(useful.selectedProblemCoverage.unassessedParadigms, 1);
   assert.strictEqual((await call('/api/stack?pick=999999')).body.selectedProblemCoverage, null);
   assert.strictEqual((await call('/api/stack')).body.selectedProblemCoverage, null);

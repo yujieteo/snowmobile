@@ -337,6 +337,12 @@ const PROBLEM_LINKS = [
     reason: 'Immutable package versions permit atomic upgrades and rollback in Nix. This reduces the risk from partial package updates.',
     source: { title: 'Nix manual: atomic upgrades and rollbacks', url: 'https://nix.dev/manual/nix/2.34/introduction.html#atomic-upgrades-and-rollbacks' },
   },
+  // Reason: the Nix trial found no reliability assessment and two problem gaps.
+  {
+    paradigm: 'Functional package management', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'Nix documents atomic upgrades without a mix of old and new package files. Assessment: this can prevent crashes from partial package updates. Rollback requires retained versions. This does not prove application correctness or whole-system reliability or apply to every package manager.',
+    source: { title: 'Nix manual: atomic upgrades and rollbacks', url: 'https://nix.dev/manual/nix/2.35/introduction.html#atomic-upgrades-and-rollbacks' },
+  },
   {
     paradigm: 'Microservices', layer: 'software', problem_id: 'deployment-complexity', effect: 'worsens',
     reason: 'Compared with a monolith, more services add system complexity and require compatible service updates and mature operations.',
