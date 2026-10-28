@@ -80,6 +80,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const objects = { id: 119, layer: 'language', name: 'Object-oriented programming', url: 'https://en.wikipedia.org/wiki/Object-oriented_programming' };
   const logic = { id: 120, layer: 'language', name: 'Logic programming', url: 'https://en.wikipedia.org/wiki/Logic_programming' };
   const multikernel = { id: 123, layer: 'os', name: 'Multikernel', url: 'https://barrelfish.org/publications/barrelfish_sosp09.pdf' };
+  const splitkernel = { id: 124, layer: 'os', name: 'Splitkernel', url: 'https://www.usenix.org/conference/osdi18/presentation/shan' };
   const concatenative = { id: 122, layer: 'language', name: 'Concatenative programming', url: 'https://concatenative.org/wiki/view/Concatenative%20language' };
   const reactive = { id: 121, layer: 'language', name: 'Functional reactive programming', url: 'https://en.wikipedia.org/wiki/Functional_reactive_programming' };
   const clientServer = { id: 117, layer: 'software', name: 'Client-server', url: 'https://en.wikipedia.org/wiki/Client%E2%80%93server_model' };
@@ -318,8 +319,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(multicore.links.every((l) => l.source.url === multikernel.url));
   assert.match(multicore.links[0].reason, /code changes across components.*requires hardware details.*does not address all technical debt or apply to every multikernel/);
   assert.match(multicore.links[1].reason, /obscure control flow.*cost depends on message handlers and control flow tools.*does not apply to every multikernel/);
+  // Reason: best-effort memory recovery must not imply protection for all application data or processor faults.
+  const restored = practicalProblems([splitkernel]);
+  assert.deepStrictEqual(restored.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[124, 'unreliable-tools', 'reduces']]);
+  assert.deepStrictEqual(restored.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.strictEqual(restored.links[0].source.url, 'https://www.usenix.org/system/files/osdi18-shan.pdf');
+  assert.match(restored.links[0].reason, /requires intact backup logs.*full backup log can stop replication.*protect persistent data and handle processor faults.*does not prove whole-system reliability or apply to every splitkernel/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

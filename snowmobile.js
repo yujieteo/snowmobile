@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Splitkernel trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Splitkernel', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'LegoOS uses backup logs to restore memory after a primary memory component fails. Assessment: this can reduce application failures from memory component faults. The benefit requires intact backup logs. A full backup log can stop replication and leave memory without recovery. Applications must protect persistent data and handle processor faults. This does not prove whole-system reliability or apply to every splitkernel.',
+    source: { title: 'LegoOS: memory fault tolerance, section 4.7', url: 'https://www.usenix.org/system/files/osdi18-shan.pdf' },
+  },
   // Reason: the Multikernel trial found no assessments and four problem gaps.
   {
     paradigm: 'Multikernel', layer: 'os', problem_id: 'technical-debt', effect: 'reduces',

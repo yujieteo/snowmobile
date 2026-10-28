@@ -81,6 +81,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The [Barrelfish assessments](https://barrelfish.org/publications/barrelfish_sosp09.pdf) link Multikernel to fewer hardware-dependent code changes and harder control flow.
   These inferred debt effects depend on interface boundaries, message handlers and control flow tools. They do not apply to every multikernel.
   Reason: a Multikernel trial found no assessments and four problem gaps.
+  The [LegoOS assessment](https://www.usenix.org/system/files/osdi18-shan.pdf) links Splitkernel to memory recovery through backup logs.
+  Recovery requires intact logs. Full logs can stop replication. Applications must protect persistent data and handle processor faults.
+  This does not prove whole-system reliability or apply to every splitkernel.
+  Reason: a Splitkernel trial found no assessment and four problem gaps.
   The [Factor assessment](https://docs.factorcode.org/content/article-inference.html) links Concatenative programming to fewer faults from invalid stack effects.
   The benefit requires code that passes the static stack checker. Dynamic code still needs controls.
   This does not prove whole-system reliability or apply to every concatenative language.
