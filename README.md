@@ -79,8 +79,11 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   The assessment infers a technical debt cost. It does not apply to every CQRS use.
   Reason: a CQRS trial found no assessment of its cost for technical debt.
   The [SQLite assessment](https://www.sqlite.org/serverless.html) links Embedded database to less database server setup and less isolation from client memory faults.
+  The same source links Client-server to database process isolation and extra deployment work for a self-managed server.
+  A managed service can transfer server administration to the provider. Authorized requests can still cause faults.
   These assessments describe specific mechanisms. They do not prove a whole-application benefit or cost.
   Reason: an Embedded database trial found no assessment of deployment cost or fault isolation.
+  Reason: a Client-server trial found no assessments and four problem gaps.
   The [MINIX 3 assessment](https://wiki.minix3.org/doku.php?id=www:documentation:reliability) links Microkernel to driver fault isolation through separate processes and memory access limits.
   This can contain driver memory faults. It does not prove whole-system reliability or apply to every microkernel.
   Reason: a Microkernel trial found no reliability assessment and four problem gaps.

@@ -76,6 +76,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const hypervisor = { id: 114, layer: 'os', name: 'Hypervisor', url: 'https://en.wikipedia.org/wiki/Hypervisor' };
   const generators = { id: 115, layer: 'hardware', name: 'Hardware generators', url: 'https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html' };
   const distributed = { id: 116, layer: 'os', name: 'Distributed OS', url: 'https://9p.io/sys/doc/9.html' };
+  const clientServer = { id: 117, layer: 'software', name: 'Client-server', url: 'https://en.wikipedia.org/wiki/Client%E2%80%93server_model' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
   const crdt = { id: 105, layer: 'software', name: 'Conflict-free replicated data types', url: 'https://crdt.tech/' };
   const assessed = practicalProblems([injection, actor]);
@@ -250,8 +251,17 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(uniform.coverage.unassessedParadigms, 0);
   assert.strictEqual(uniform.links[0].source.url, distributed.url);
   assert.match(uniform.links[0].reason, /custom resource access code.*requires services that expose compatible file interfaces.*does not address all technical debt or apply to every distributed OS/);
+  // Reason: database isolation must not hide deployment costs or imply whole-system reliability.
+  const databaseServer = practicalProblems([clientServer]);
+  assert.deepStrictEqual(databaseServer.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[117, 'unreliable-tools', 'reduces'], [117, 'deployment-complexity', 'worsens']]);
+  assert.deepStrictEqual(databaseServer.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.strictEqual(databaseServer.coverage.unassessedParadigms, 0);
+  assert.ok(databaseServer.links.every((l) => l.source.url === 'https://www.sqlite.org/serverless.html'));
+  assert.match(databaseServer.links[0].reason, /requires a separate server process.*Authorized requests can still cause faults.*does not prove whole-system reliability or apply to every client-server system/);
+  assert.match(databaseServer.links[1].reason, /self-managed database server.*managed service can transfer server administration.*does not apply to every client-server system/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -511,7 +521,8 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   const h = await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'created');
   // Reason: an unavailable paradigm must not supply a candidate with a claimed benefit.
   const fixedPrompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
-  assert.match(fixedPrompt, /Source assessments for available paradigms \(JSON\):\n\[\]/);
+  const fixedAssessments = JSON.parse(fixedPrompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);
+  assert.deepStrictEqual(fixedAssessments, s.practicalProblems.links.filter((l) => pick.includes(l.paradigm_id)));
   assert.deepStrictEqual(h.sources.map((x) => x.kind), Object.keys(s.layers));
   assert.deepStrictEqual(h.snowmobiles.map((x) => x.status), ['survivor', 'survivor', 'graveyard', 'graveyard', 'graveyard']);
   // Reason: model order must not outrank a sourced problem, and all candidates must count.

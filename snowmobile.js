@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Client-server trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Client-server', layer: 'software', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'SQLite documents that stray pointers in a database client cannot corrupt memory in a separate database server process. Assessment: process isolation can contain client memory faults. The benefit requires a separate server process. Authorized requests can still cause faults. This does not prove whole-system reliability or apply to every client-server system.',
+    source: { title: 'SQLite: database server process isolation', url: 'https://www.sqlite.org/serverless.html' },
+  },
+  {
+    paradigm: 'Client-server', layer: 'software', problem_id: 'deployment-complexity', effect: 'worsens',
+    reason: 'SQLite contrasts embedded databases with a separate database server that needs installation, configuration and administration. Assessment: a self-managed database server adds deployment work. A managed service can transfer server administration to the provider. This cost does not apply to every client-server system.',
+    source: { title: 'SQLite: database server administration', url: 'https://www.sqlite.org/serverless.html' },
+  },
   // Reason: the Distributed OS trial found no assessment and four problem gaps.
   {
     paradigm: 'Distributed OS', layer: 'os', problem_id: 'technical-debt', effect: 'reduces',
