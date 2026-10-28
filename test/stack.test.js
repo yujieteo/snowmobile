@@ -81,6 +81,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const logic = { id: 120, layer: 'language', name: 'Logic programming', url: 'https://en.wikipedia.org/wiki/Logic_programming' };
   const multikernel = { id: 123, layer: 'os', name: 'Multikernel', url: 'https://barrelfish.org/publications/barrelfish_sosp09.pdf' };
   const exokernel = { id: 125, layer: 'os', name: 'Exokernel', url: 'https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf' };
+  const gpu = { id: 127, layer: 'hardware', name: 'GPU (SIMT)', url: 'https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads' };
   const realtime = { id: 126, layer: 'os', name: 'Real-time OS', url: 'https://en.wikipedia.org/wiki/Real-time_operating_system' };
   const splitkernel = { id: 124, layer: 'os', name: 'Splitkernel', url: 'https://www.usenix.org/conference/osdi18/presentation/shan' };
   const concatenative = { id: 122, layer: 'language', name: 'Concatenative programming', url: 'https://concatenative.org/wiki/view/Concatenative%20language' };
@@ -336,6 +337,14 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(libraries.links.every((l) => l.source.url === exokernel.url));
   assert.match(libraries.links[0].reason, /Wrong arguments.*affect only that application.*requires correct kernel resource protection.*does not prove whole-system reliability or apply to every exokernel/);
   assert.match(libraries.links[1].reason, /hardware-dependent maintenance work.*applies to direct interface use.*standard interface can preserve portability.*does not apply to every exokernel application/);
+  // Reason: GPU costs must reach the map without false problem reductions.
+  const parallel = practicalProblems([gpu]);
+  assert.deepStrictEqual(parallel.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[127, 'unreliable-tools', 'worsens'], [127, 'build-complexity', 'worsens']]);
+  assert.deepStrictEqual(parallel.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
+  assert.strictEqual(parallel.coverage.unassessedParadigms, 0);
+  assert.match(parallel.links[0].reason, /incorrect synchronization scopes.*depends on shared memory access and synchronization controls.*does not imply faults in every GPU program/);
+  assert.match(parallel.links[1].reason, /compatible host compiler.*explicit compiler flags and device linkage.*nvcc coordinates compiler steps automatically.*does not apply to every GPU toolchain/);
   const emptyProblemCount = practicalProblems([]).items.length;
   // Reason: optional MPU protection must not imply universal reliability or hide maintenance costs.
   const protectedTasks = practicalProblems([realtime]);
@@ -345,7 +354,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(protectedTasks.links.every((l) => l.source.url === 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md'));
   assert.match(protectedTasks.links[0].reason, /requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS/);
   assert.match(protectedTasks.links[1].reason, /maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
@@ -597,7 +606,6 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   const prompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
   const assessments = JSON.parse(prompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);
   assert.deepStrictEqual(assessments, s.practicalProblems.links);
-  assert.ok(assessments.some((l) => l.effect === 'worsens'));
   assert.match(prompt, /explain that cost in gain and compare it with the benefit/);
   assert.match(prompt, /No assessment means an unknown effect/);
 

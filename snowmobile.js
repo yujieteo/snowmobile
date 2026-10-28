@@ -160,6 +160,17 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the GPU trial found no assessments and four problem gaps.
+  {
+    paradigm: 'GPU (SIMT)', layer: 'hardware', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'CUDA documents undefined behavior from data races when atomic scopes do not include all participant threads. Assessment: incorrect synchronization scopes can cause application faults. The risk depends on shared memory access and synchronization controls. This does not imply faults in every GPU program or apply to every GPU platform.',
+    source: { title: 'CUDA guide: data races and thread scopes', url: 'https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/cuda-cpp-memory-model.html#data-races' },
+  },
+  {
+    paradigm: 'GPU (SIMT)', layer: 'hardware', problem_id: 'build-complexity', effect: 'worsens',
+    reason: 'CUDA requires a compatible host compiler for nvcc. Separate device compilation requires explicit compiler flags and device linkage. Assessment: these requirements can add build configuration work. nvcc coordinates compiler steps automatically. The cost depends on toolchain compatibility and compilation mode. This does not apply to every GPU toolchain.',
+    source: { title: 'CUDA guide: NVCC workflow and separate compilation', url: 'https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/nvcc.html' },
+  },
   // Reason: the Real-time OS trial found no assessments and four problem gaps.
   {
     paradigm: 'Real-time OS', layer: 'os', problem_id: 'unreliable-tools', effect: 'reduces',
