@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Concatenative programming trial found no assessment and four problem gaps.
+  {
+    paradigm: 'Concatenative programming', layer: 'language', problem_id: 'unreliable-tools', effect: 'reduces',
+    reason: 'Factor checks declared input and output counts before words execute. Its compiler rejects words that fail the stack checker. Assessment: these checks can prevent faults from invalid stack effects. The benefit requires code that passes the static stack checker. Dynamic code still needs controls. This does not prove whole-system reliability or apply to every concatenative language.',
+    source: { title: 'Factor handbook: stack effect checks', url: 'https://docs.factorcode.org/content/article-inference.html' },
+  },
   // Reason: the Functional reactive programming trial found no assessment and four problem gaps.
   {
     paradigm: 'Functional reactive programming', layer: 'language', problem_id: 'technical-debt', effect: 'reduces',

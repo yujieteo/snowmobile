@@ -79,6 +79,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   const dataflow = { id: 118, layer: 'language', name: 'Dataflow programming', url: 'https://en.wikipedia.org/wiki/Dataflow_programming' };
   const objects = { id: 119, layer: 'language', name: 'Object-oriented programming', url: 'https://en.wikipedia.org/wiki/Object-oriented_programming' };
   const logic = { id: 120, layer: 'language', name: 'Logic programming', url: 'https://en.wikipedia.org/wiki/Logic_programming' };
+  const concatenative = { id: 122, layer: 'language', name: 'Concatenative programming', url: 'https://concatenative.org/wiki/view/Concatenative%20language' };
   const reactive = { id: 121, layer: 'language', name: 'Functional reactive programming', url: 'https://en.wikipedia.org/wiki/Functional_reactive_programming' };
   const clientServer = { id: 117, layer: 'software', name: 'Client-server', url: 'https://en.wikipedia.org/wiki/Client%E2%80%93server_model' };
   const store = { id: 110, layer: 'os', name: 'Single-level store', url: 'https://www.usenix.org/legacy/event/usenix02/shapiro.html' };
@@ -299,8 +300,16 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(coordinated.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
   assert.strictEqual(coordinated.links[0].source.url, 'https://hackage-content.haskell.org/package/reactive-banana-1.3.2.0/docs/Reactive-Banana-Combinators.html');
   assert.match(coordinated.links[0].reason, /custom event coordination code.*requires event and value models that fit the application.*External effects still need controls.*does not address all technical debt or apply to every functional reactive program/);
+  // Reason: static stack checks must not imply safe dynamic code or whole-system reliability.
+  const checkedStack = practicalProblems([concatenative]);
+  assert.deepStrictEqual(checkedStack.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[122, 'unreliable-tools', 'reduces']]);
+  assert.deepStrictEqual(checkedStack.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
+  assert.strictEqual(checkedStack.coverage.unassessedParadigms, 0);
+  assert.strictEqual(checkedStack.links[0].source.url, 'https://docs.factorcode.org/content/article-inference.html');
+  assert.match(checkedStack.links[0].reason, /Factor.*invalid stack effects.*requires code that passes the static stack checker.*Dynamic code still needs controls.*does not prove whole-system reliability or apply to every concatenative language/);
   const emptyProblemCount = practicalProblems([]).items.length;
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive]) {
+  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);

@@ -78,6 +78,10 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Fowler reports extra complexity, lower productivity and greater risk in that case.
   The assessment infers a technical debt cost. It does not apply to every CQRS use.
   Reason: a CQRS trial found no assessment of its cost for technical debt.
+  The [Factor assessment](https://docs.factorcode.org/content/article-inference.html) links Concatenative programming to fewer faults from invalid stack effects.
+  The benefit requires code that passes the static stack checker. Dynamic code still needs controls.
+  This does not prove whole-system reliability or apply to every concatenative language.
+  Reason: a Concatenative programming trial found no assessment and four problem gaps.
   The [reactive-banana assessment](https://hackage-content.haskell.org/package/reactive-banana-1.3.2.0/docs/Reactive-Banana-Combinators.html) links Functional reactive programming to less custom event coordination code.
   This inferred debt benefit requires event and value models that fit the application. External effects still need controls.
   This does not address all technical debt or apply to every functional reactive program.
