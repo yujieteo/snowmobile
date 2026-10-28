@@ -160,6 +160,12 @@ const MISMATCH = 5;
 
 // Reason: the API trial found zero links and no measure of problems without a documented reduction.
 const PROBLEM_LINKS = [
+  // Reason: the Imperative programming trial found no assessments and four problem gaps.
+  {
+    paradigm: 'Imperative programming', layer: 'language', problem_id: 'unreliable-tools', effect: 'worsens',
+    reason: 'The Clojure essay describes error-prone coordination when concurrent tasks change shared mutable state. Assessment: incorrect coordination can cause faults. This cost requires concurrent access to shared mutable state and depends on synchronization controls. It does not imply faults in every imperative program.',
+    source: { title: 'Clojure: imperative state and concurrency', url: 'https://clojure.org/about/state#_imperative_programming' },
+  },
   // Reason: the VLIW trial found no assessments and four problem gaps.
   {
     paradigm: 'VLIW', layer: 'hardware', problem_id: 'technical-debt', effect: 'worsens',

@@ -53,6 +53,7 @@ test('idea problem priority uses the greatest sourced share and ignores invalid 
 
 // Reason: a changed user paradigm must not retain a seed assessment for debt or reliability.
 test('debt and reliability assessments follow only the documented seed definitions', () => {
+  const imperative = { id: 135, layer: 'language', name: 'Imperative programming', url: 'https://en.wikipedia.org/wiki/Imperative_programming' };
   const ownership = { id: 95, layer: 'language', name: 'Ownership types', url: 'https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html' };
   const injection = { id: 93, layer: 'software', name: 'Dependency injection', url: 'https://martinfowler.com/articles/injection.html' };
   const actor = { id: 94, layer: 'language', name: 'Actor model', url: 'https://en.wikipedia.org/wiki/Actor_model' };
@@ -376,6 +377,14 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(kernelDrivers.links.every((l) => l.source.url === 'https://docs.kernel.org/process/stable-api-nonsense.html'));
   assert.match(kernelDrivers.links[0].reason, /drivers outside that tree.*extra maintenance.*userspace interface stays stable.*does not apply to every monolithic kernel or ordinary application/);
   assert.match(kernelDrivers.links[1].reason, /separate module builds.*supported variants.*does not apply to every monolithic kernel or ordinary application/);
+  // Reason: a concurrency cost must retain its scope and must not count as a reduction.
+  const mutableState = practicalProblems([imperative]);
+  assert.deepStrictEqual(mutableState.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
+    [[135, 'unreliable-tools', 'worsens']]);
+  assert.deepStrictEqual(mutableState.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
+  assert.strictEqual(mutableState.coverage.unassessedParadigms, 0);
+  assert.strictEqual(mutableState.links[0].source.url, 'https://clojure.org/about/state#_imperative_programming');
+  assert.match(mutableState.links[0].reason, /concurrent tasks.*shared mutable state.*incorrect coordination can cause faults.*depends on synchronization controls.*does not imply faults in every imperative program/);
   const emptyProblemCount = practicalProblems([]).items.length;
   // Reason: assembly costs must retain input limits and must not count as reductions.
   const explicitInstructions = practicalProblems([vliw]);
@@ -419,7 +428,7 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.ok(protectedTasks.links.every((l) => l.source.url === 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md'));
   assert.match(protectedTasks.links[0].reason, /requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS/);
   assert.match(protectedTasks.links[1].reason, /maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS/);
-  for (const original of [injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic, fpga, rootOfTrust, vector, vliw]) {
+  for (const original of [imperative, injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic, fpga, rootOfTrust, vector, vliw]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
       assert.strictEqual(result.links.length, 0);
