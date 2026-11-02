@@ -5,7 +5,7 @@ Snowmobile hunts real software tools and programming paradigms for their parts, 
 ![A grill tree: settled decisions on top, the open round below with the recommended cards already selected](docs/screens/grill-1280.jpg)
 
 ```
-seed ──► hunt parts ──► recombine ──► prior-art check ──► grill tree ──► build brief
+seed ──► hunt parts ──► recombine ──► prior-art check ──► grill tree ──► state machine ──► build brief
          (web search)                  (dead ones go to                (a decision that kills the
                                         the graveyard)                  idea marks the bad part)
 ```
