@@ -56,15 +56,25 @@ process.stdin.on('end', () => {
     require('node:fs').writeFileSync('point-prompt', prompt);
     out = { layer: 'os', name: 'No verified match', exists: false, url: '', why: 'No verified match. The practical effect is unknown.' };
   } else {
-    const id = Number(prompt.match(/^(\d+) \|/m)[1]);
+    const id = Number((prompt.match(/^(\d+) \|/m) || [0, 0])[1]);
     // A part that is not in the plan: the plan's parts are inserted first in the tests.
     const foreign = id + 1;
+    if (prompt.includes('Write the state machine file')) {
+      require('node:fs').appendFileSync('machine-prompt', prompt);
+      return process.stdout.write(JSON.stringify({ type: 'result', is_error: false, structured_output: { file: [
+        '# Design', '', '## Requirements', '', '- R1: Small scope. — scope', '', '## Machine job', 'initial: idle', 'final: done', '',
+        ...(prompt.includes('Plan: Hidden.') ? ['HIDDEN'] : []), ...(prompt.includes('Plan: Garbled.') ? ['BROKEN'] : [])].join('\n') } }));
+    }
     out = prompt.includes('Plan: Blameless.') ? { verdict: 'killed', decisions: [], brief: '', killed_component_id: 0, reason: 'Nobody needs it.' }
       : prompt.includes('Plan: Blamer.') ? { verdict: 'killed', decisions: [], brief: '', killed_component_id: foreign, reason: 'Wrong part.' }
       : prompt.includes('Plan: Stranger.') && !prompt.includes('answer:') ? { verdict: 'open', brief: '', killed_component_id: 0, reason: '', decisions: [
           { id: 'mode', question: 'Mode?', depends_on: [], recommended: 1, options: [
             { label: 'Batch', why: 'Simple.', kills_component_id: 0 },
             { label: 'Stream', why: 'Live.', kills_component_id: foreign }] }] }
+      : prompt.includes('Check findings:') && !prompt.includes('already answered') ? { verdict: 'open', brief: '', killed_component_id: 0, reason: '', decisions: [
+          { id: 'closed-input', question: 'What happens when input arrives while a job runs?', depends_on: [], recommended: 0, options: [
+            { label: 'Queue it', why: 'Nothing is lost.', kills_component_id: 0 },
+            { label: 'Refuse it', why: 'Simple.', kills_component_id: 0 }] }] }
       : prompt.includes('answer:')
       ? { verdict: 'done', decisions: [], brief: '# Build\nDo it.', killed_component_id: 0, reason: '' }
       : { verdict: 'open', brief: '', killed_component_id: 0, reason: '', decisions: [
