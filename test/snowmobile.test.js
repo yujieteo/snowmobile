@@ -148,6 +148,11 @@ test('the owner leaves out a part, buries and restores an idea, and undoes a rou
   await call(`/api/components/${part.id}`, { out: false });
   h = (await call(`/api/hunts/${id}`)).body;
   assert.strictEqual(h.sources[1].components[0].bad_reason, null);
+  // An undo of "bring back" sends the earlier reason, so a part that a kill left out gets the reason of the kill back.
+  await call(`/api/components/${part.id}`, { out: true, reason: 'Killme: hashes are too slow' });
+  h = (await call(`/api/hunts/${id}`)).body;
+  assert.strictEqual(h.sources[1].components[0].bad_reason, 'Killme: hashes are too slow');
+  await call(`/api/components/${part.id}`, { out: false });
 
   await call(`/api/snowmobiles/${good.id}`, { status: 'graveyard' });
   h = (await call(`/api/hunts/${id}`)).body;
