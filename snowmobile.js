@@ -1447,9 +1447,10 @@ function handler(cfg) {
         return send(res, 200, {});
       }
       if (req.method === 'POST' && (r = m(/^\/api\/components\/(\d+)$/))) {
-        // The owner leaves a part out of the next creation, or brings it back.
-        const { out } = await readBody(req);
-        const ok = db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`).run(out ? LEFT_OUT : null, Number(r[1])).changes;
+        // The owner leaves a part out of the next creation, or brings it back. An undo of "bring back" sends the earlier reason.
+        const { out, reason } = await readBody(req);
+        const ok = db.prepare(`UPDATE components SET bad_reason = ? WHERE id = ?`)
+          .run(out ? (reason ? String(reason) : LEFT_OUT) : null, Number(r[1])).changes;
         return ok ? send(res, 200, {}) : send(res, 404, { error: 'no such part' });
       }
       if (req.method === 'POST' && (r = m(/^\/api\/snowmobiles\/(\d+)$/))) {

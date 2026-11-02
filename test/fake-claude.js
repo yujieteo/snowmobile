@@ -2,7 +2,9 @@
 // A stand-in for `claude -p`: answers each snowmobile prompt with fixed structured output.
 let prompt = '';
 process.stdin.on('data', (d) => (prompt += d));
-process.stdin.on('end', () => {
+// FAKE_CLAUDE_DELAY_MS keeps a job busy for that time, so that a browser test can see a page that polls.
+process.stdin.on('end', () => setTimeout(answer, Number(process.env.FAKE_CLAUDE_DELAY_MS) || 0));
+function answer() {
   if (prompt.includes('Plan: Broken.')) {
     // Runs in the snowmobile home, so the test can count the calls.
     require('node:fs').appendFileSync('broken-calls', 'x');
@@ -86,4 +88,4 @@ process.stdin.on('end', () => {
             { label: 'Rust', why: 'Speed.', kills_component_id: 0 }] }] };
   }
   process.stdout.write(JSON.stringify({ type: 'result', is_error: false, structured_output: out }));
-});
+}

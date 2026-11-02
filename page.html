@@ -8,8 +8,8 @@
 <title>snowmobile</title>
 <style>
 /* Two layers (see docs/concepts.md): the content, and a control layer that floats above it.
-   Each object has one elevation: a card 1, a sheet or a toast 6, the control layer 8. */
-:root {
+   Each object has one elevation: a card 1, a sheet or a toast 6, the control layer 8. The z-index of a layer is its elevation. */
+:root { color-scheme: light dark;
   --bg: #f6f7f9; --card: #fff; --ink: #15181d; --dim: #5d6673; --line: #d9dee5;
   --accent: #0b6bcb; --accent-ink: #fff; --good: #1a7f37; --bad: #c62828; --soft: #e8f1fb;
   --l-language: #2a78d6; --l-hardware: #eb6834; --l-os: #1baf7a; --l-software: #52514e;
@@ -17,27 +17,34 @@
   --e1: 0 1px 3px rgba(0, 0, 0, .10), 0 1px 2px rgba(0, 0, 0, .14);
   --e6: 0 6px 10px rgba(0, 0, 0, .14), 0 1px 18px rgba(0, 0, 0, .10), 0 3px 5px -1px rgba(0, 0, 0, .18);
   --e8: 0 8px 10px -5px rgba(0, 0, 0, .18), 0 16px 24px 2px rgba(0, 0, 0, .12), 0 6px 30px 5px rgba(0, 0, 0, .10);
+  --on-status: #fff; --z-toast: 6; --z-dock: 8;
   --tap: 44px; --dock: 64px; --gutter: 16px;
   --ease: cubic-bezier(.2, .8, .2, 1);
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #0f1216; --card: #181c22; --ink: #e8ecf1; --dim: #96a0ad; --line: #2b323c;
-    --accent: #4c9eff; --accent-ink: #061322; --good: #4cc26a; --bad: #ff6b6b; --soft: #13263a;
+    --accent: #4c9eff; --accent-ink: #061322; --good: #4cc26a; --bad: #ff6b6b; --soft: #13263a; --on-status: #0f1216;
     --l-language: #3987e5; --l-hardware: #d95926; --l-os: #199e70; --l-software: #c3c2b7;
     --glass: rgba(30, 35, 43, .72); --glass-line: rgba(255, 255, 255, .08);
     --e1: 0 1px 3px rgba(0, 0, 0, .5); --e6: 0 6px 18px rgba(0, 0, 0, .55); --e8: 0 12px 32px rgba(0, 0, 0, .6); }
 }
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+/* Focus that moves by keyboard stays above the dock. */
+html { -webkit-text-size-adjust: 100%; scroll-padding-bottom: calc(var(--dock) + 32px + env(safe-area-inset-bottom)); }
 body { margin: 0; background: var(--bg); color: var(--ink); overflow-x: hidden;
-  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-tap-highlight-color: transparent; }
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-tap-highlight-color: transparent; }
 a { color: var(--accent); }
 main { max-width: 1100px; margin: 0 auto;
   padding: calc(8px + env(safe-area-inset-top)) calc(var(--gutter) + env(safe-area-inset-right))
     calc(var(--dock) + 48px + env(safe-area-inset-bottom)) calc(var(--gutter) + env(safe-area-inset-left)); }
-main.enter > * { animation: enter .22s var(--ease); }
-@keyframes enter { from { opacity: 0; transform: translateY(6px); } }
+/* A line of prose stays short enough to read. */
+main p, main > div.dim, .brief { max-width: 692px; }
+.skip { position: fixed; z-index: var(--z-dock); top: 8px; left: 8px; transform: translateY(-200%); }
+.skip:focus { transform: none; }
 h1 { font-size: 24px; line-height: 1.2; margin: 8px 0 6px; overflow-wrap: anywhere; }
+h1:focus { outline: none; }
+h1, h2 { letter-spacing: -.02em; text-wrap: balance; }
+.n, .gaps, #primary, .steps { font-variant-numeric: tabular-nums; }
 h2 { font-size: 18px; margin: 28px 0 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 h2 .grow { flex: 1; }
 .dim { color: var(--dim); } .small { font-size: 13px; }
@@ -49,12 +56,20 @@ h2 .grow { flex: 1; }
 .steps span { background: var(--soft); border-radius: 999px; padding: 4px 10px; }
 form.row { display: flex; gap: 8px; margin: 12px 0; }
 input[type=text], input[type=search], input[type=number], textarea { flex: 1; min-width: 0; min-height: var(--tap);
-  font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
-textarea { width: 100%; resize: vertical; font-size: 15px; }
+  font: inherit; font-size: 16px; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+textarea { width: 100%; resize: vertical; }
 button, .btn { font: inherit; border: 0; border-radius: 10px; min-height: var(--tap); padding: 10px 16px; background: var(--accent);
   color: var(--accent-ink); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-  gap: 6px; text-decoration: none; touch-action: manipulation; transition: transform .12s var(--ease), background .12s; }
-button:active:not(:disabled) { transform: scale(.97); }
+  gap: 6px; text-decoration: none; touch-action: manipulation; transition: transform .12s var(--ease); }
+/* Each control that you tap shows the press. */
+.tabs a, .dock nav a, .back { transition: transform .12s var(--ease); }
+:is(button, .btn, .tabs a, .dock nav a, .back):active:not(:disabled) { transform: scale(.97); }
+.list > a:active { background: var(--soft); }
+/* A long press on a control does not select its text or open the link menu. */
+button, .chip, .tabs a, .dock nav a { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* A link in a line of text has a 44 px tall target. */
+a.src { position: relative; }
+a.src::after { content: ""; position: absolute; inset: -14px 0; }
 button.ghost, .btn.ghost { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1px var(--line); }
 button.quiet { background: transparent; color: var(--dim); padding: 10px 12px; }
 button:disabled { opacity: .5; cursor: default; }
@@ -86,10 +101,10 @@ button.chip.on { border: 2px solid var(--accent); background: var(--soft); font-
 /* a card that you swipe: it follows the finger, and the layer below names the action */
 .swipe { position: relative; border-radius: 12px; }
 .swipe > .under { position: absolute; inset: 0; border-radius: 12px; display: flex; align-items: center; padding: 0 20px;
-  font-weight: 700; color: #fff; opacity: 0; }
+  font-weight: 700; color: var(--on-status); opacity: 0; }
 .swipe > .under.left { justify-content: flex-end; background: var(--bad); }
 .swipe > .under.right { justify-content: flex-start; background: var(--good); }
-.swipe > .card { position: relative; touch-action: pan-y; will-change: transform; }
+.swipe > .card { position: relative; touch-action: pan-y; }
 .hint { font-size: 12px; color: var(--dim); }
 
 /* parts */
@@ -114,8 +129,8 @@ button.chip.on { border: 2px solid var(--accent); background: var(--soft); font-
   padding: 10px 12px; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 2px; }
 .opt b { display: block; } .opt .why { font-size: 13px; color: var(--dim); }
 .opt .flags { display: flex; gap: 8px; flex-wrap: wrap; min-height: 16px; }
-.opt .rec { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; }
-.opt .sel { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-left: auto; visibility: hidden; }
+.opt .rec { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+.opt .sel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-left: auto; visibility: hidden; }
 .opt.on { border-color: var(--accent); background: var(--soft); }
 .opt.on .sel { visibility: visible; color: var(--accent); }
 .opt.kills { border-style: dashed; } .opt.kills .rec { color: var(--bad); }
@@ -149,16 +164,17 @@ button.chip.on { border: 2px solid var(--accent); background: var(--soft); font-
 .gaps .m { color: var(--bad); font-weight: 700; }
 .gapbar { height: 6px; border-radius: 3px; background: var(--dim); margin-top: 4px; }
 .gapbar.m { background: var(--bad); }
-.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
 .axis { display: grid; gap: 6px; grid-template-columns: 1fr 1fr 1fr auto; margin: 6px 0; }
 @media (max-width: 600px) { .axis { grid-template-columns: 1fr; } }
 details > summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
 
 /* the control layer: navigation and the primary action float above the content, within reach of the thumb */
-.dock { position: fixed; z-index: 8; left: 50%; transform: translateX(-50%);
+.dock { position: fixed; z-index: var(--z-dock); left: 50%; transform: translateX(-50%);
   bottom: calc(12px + env(safe-area-inset-bottom)); width: min(calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)), 560px);
   min-height: var(--dock); display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 22px;
-  background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
+  /* The blur keeps the dock text readable over the content. It stays under 20 px. */
+  background: var(--glass); -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
   box-shadow: var(--e8), inset 0 0 0 1px var(--glass-line); }
 .dock nav { display: flex; }
 .dock nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 56px; min-height: 52px;
@@ -167,10 +183,10 @@ details > summary { min-height: var(--tap); display: flex; align-items: center; 
 .dock nav a[aria-current] { color: var(--accent); background: var(--soft); font-weight: 700; }
 .dock .primary { flex: 1; min-height: 52px; border-radius: 16px; margin-left: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dock .primary[hidden] { display: none; }
-.toast { position: fixed; z-index: 6; left: 50%; bottom: calc(var(--dock) + 24px + env(safe-area-inset-bottom));
+.toast { position: fixed; z-index: var(--z-toast); left: 50%; bottom: calc(var(--dock) + 24px + env(safe-area-inset-bottom));
   width: min(calc(100% - 24px), 560px); transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
   display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 16px; border-radius: 14px;
-  background: var(--ink); color: var(--bg); box-shadow: var(--e6); transition: transform .22s var(--ease), opacity .22s; }
+  background: var(--ink); color: var(--bg); box-shadow: var(--e6); transition: transform .22s var(--ease), opacity .22s var(--ease); }
 .toast.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
 .toast .msg { flex: 1; font-size: 14px; padding: 8px 0; }
 .toast button { background: transparent; color: var(--accent); filter: brightness(1.4); }
@@ -178,11 +194,16 @@ details > summary { min-height: var(--tap); display: flex; align-items: center; 
 @media (min-width: 900px) { h1 { font-size: 28px; } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-  .spin { border-top-color: var(--accent); }
+  /* Less motion, not none: the spinner pulses slowly. */
+  .spin { animation: pulse 1.6s ease-in-out infinite alternate !important; }
 }
+@keyframes pulse { to { opacity: .35; } }
 </style>
 </head>
 <body>
+<button class="skip" type="button" id="skip">Skip to the dock</button>
+<!-- The toast is first in the tab order, so that a keyboard reaches "Undo" at once. -->
+<div class="toast" id="toast" role="status" aria-live="polite" inert><span class="msg"></span><button type="button" aria-keyshortcuts="Control+Z Meta+Z" hidden>Undo</button></div>
 <main id="app"></main>
 <div class="dock" id="dock">
   <nav>
@@ -192,15 +213,26 @@ details > summary { min-height: var(--tap); display: flex; align-items: center; 
   </nav>
   <button class="primary" id="primary" hidden></button>
 </div>
-<div class="toast" id="toast" role="status" aria-live="polite"><span class="msg"></span><button type="button" hidden>Undo</button></div>
 <script>
 const T = new URLSearchParams(location.search).get('token') || '';
 const app = document.getElementById('app');
-let timer = null, view = 0, shownView = -1, lastTree = null, shownRound = null, dragging = false;
+let timer = null, view = 0, shownView = -1, shownHtml = '', lastTree = null, shownRound = null, dragging = false;
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const link = (url, text) => /^https?:\/\//i.test(url || '') ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text)}</a>` : esc(text);
+const link = (url, text) => /^https?:\/\//i.test(url || '') ? `<a class="src" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text)}</a>` : esc(text);
 const go = (h) => { location.hash = h; };
+const plural = (n, one, other) => `${n} ${new Intl.PluralRules('en').select(n) === 'one' ? one : other}`;
+// SQLite writes UTC without a zone. The page shows the local time.
+const when = (t) => {
+  const d = new Date(`${String(t).replace(' ', 'T')}Z`);
+  return isNaN(d) ? esc(t) : `<time datetime="${d.toISOString()}">${esc(d.toLocaleString())}</time>`;
+};
+
+// A second tap while an action runs does nothing, so that one tap makes one hunt.
+function once(fn) {
+  let run = null;
+  return (...a) => (run ||= (async () => { try { return await fn(...a); } finally { run = null; } })());
+}
 const still = matchMedia('(prefers-reduced-motion: reduce)');
 
 async function api(path, body) {
@@ -211,12 +243,36 @@ async function api(path, body) {
   return data;
 }
 
-// The content layer. A new view enters with a short motion; a poll of the same view does not move.
+// The control that has the keyboard focus, as a selector and an index, so that a redraw can find it again.
+function focusKey() {
+  const el = document.activeElement;
+  if (!el || !app.contains(el)) return null;
+  const sel = el.tagName + [...el.attributes].filter((a) => /^(id|href|name|aria-label|data-.*)$/.test(a.name))
+    .map((a) => `[${a.name}="${CSS.escape(a.value)}"]`).join('');
+  return { sel, i: [...app.querySelectorAll(sel)].indexOf(el), start: el.selectionStart, end: el.selectionEnd };
+}
+function refocus(k) {
+  const el = k && app.querySelectorAll(k.sel)[k.i];
+  if (!el) return false;
+  el.focus({ preventScroll: true });
+  if (typeof k.start === 'number') try { el.setSelectionRange(k.start, k.end); } catch {}
+  return document.activeElement === el;
+}
+
+// The content layer. A poll that changes nothing does not draw. A redraw keeps the focus on the same control.
+// A new view moves the focus to its heading, unless the focused control is also on the new view.
 function shell(inner, nav) {
-  app.classList.toggle('enter', shownView !== view && !still.matches);
-  shownView = view;
+  const fresh = shownView !== view;
+  if (!fresh && inner === shownHtml) return;
+  const k = focusKey();
+  shownView = view; shownHtml = inner;
   app.innerHTML = inner;
   document.querySelectorAll('[data-nav]').forEach((a) => a.toggleAttribute('aria-current', a.dataset.nav === nav));
+  const h1 = app.querySelector('h1');
+  if (h1) h1.tabIndex = -1;
+  document.title = h1 ? `${h1.textContent.trim()} · snowmobile` : 'snowmobile';
+  if (refocus(k) || !h1 || !(fresh || k)) return;
+  h1.focus({ preventScroll: true });
 }
 
 // The primary action of the screen, in the control layer.
@@ -228,18 +284,60 @@ function primary(label, onclick, { disabled = false, busy = false } = {}) {
   b.onclick = onclick || null;
 }
 
-// A toast floats above the content. An action that you can take back offers "Undo" here, so nothing asks for a confirmation.
-let toastTimer = null;
-function toast(msg, undo, error = false) {
-  const el = document.getElementById('toast'), b = el.querySelector('button');
-  el.querySelector('.msg').textContent = msg;
-  el.classList.toggle('error', error);
-  b.hidden = !undo;
-  b.onclick = async () => { el.classList.remove('show'); await undo(); };
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), undo ? 7000 : 4000);
+// A timer that stops while one or more holds are on it, and then continues with the time that it had left.
+function countdown(ms, done) {
+  let left = ms, at = 0, t = null, over = false;
+  const holds = new Set();
+  const run = () => {
+    if (over || holds.size || t) return;
+    at = performance.now();
+    t = setTimeout(() => { over = true; done(); }, left);
+  };
+  return {
+    hold(why) { holds.add(why); if (t) { clearTimeout(t); t = null; left -= performance.now() - at; } },
+    free(why) { holds.delete(why); run(); },
+    stop() { over = true; clearTimeout(t); },
+    start: run,
+  };
 }
+
+// A toast floats above the content. An action that you can take back offers "Undo" here, so nothing asks for a confirmation.
+// The toast stays while the pointer or the focus is on it, and while the page is hidden. Ctrl+Z or Cmd+Z also undoes.
+const toastEl = document.getElementById('toast');
+let toastClock = null;
+function hideToast() {
+  toastClock?.stop();
+  toastEl.classList.remove('show');
+  toastEl.inert = true;
+}
+function toast(msg, undo, error = false) {
+  const b = toastEl.querySelector('button');
+  toastEl.querySelector('.msg').textContent = msg;
+  toastEl.classList.toggle('error', error);
+  b.hidden = !undo;
+  b.onclick = async () => { hideToast(); await undo(); };
+  toastEl.inert = false;
+  toastEl.classList.add('show');
+  toastClock?.stop();
+  toastClock = countdown(undo ? 7000 : 4000, hideToast);
+  if (toastEl.matches(':hover')) toastClock.hold('pointer');
+  if (toastEl.contains(document.activeElement)) toastClock.hold('focus');
+  if (document.hidden) toastClock.hold('hidden');
+  toastClock.start();
+}
+toastEl.addEventListener('pointerenter', () => toastClock?.hold('pointer'));
+toastEl.addEventListener('pointerleave', () => toastClock?.free('pointer'));
+toastEl.addEventListener('focusin', () => toastClock?.hold('focus'));
+toastEl.addEventListener('focusout', () => toastClock?.free('focus'));
+document.addEventListener('visibilitychange', () => (document.hidden ? toastClock?.hold('hidden') : toastClock?.free('hidden')));
+document.addEventListener('keydown', (e) => {
+  const b = toastEl.querySelector('button');
+  if (e.key !== 'z' || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || !toastEl.classList.contains('show') || b.hidden) return;
+  if (e.target.closest?.('input, textarea')) return;
+  e.preventDefault();
+  b.click();
+});
+document.getElementById('skip').onclick = () => (document.querySelector('.dock nav a[aria-current]') || document.querySelector('.dock nav a')).focus();
 const fail = (e) => toast(e.message, null, true);
 
 function poll(fn, ms) {
@@ -250,43 +348,50 @@ function poll(fn, ms) {
 }
 
 // Makes a card follow a horizontal swipe. Past a third of its width, or with a fast flick, the card leaves and the action runs.
-// A finger can catch the card again while it moves, and redirect it.
+// The speed of a flick is the speed of the last 100 ms. A finger can catch the card again while it moves, and redirect it.
 function swipeable(card, dir, act) {
+  // A poll that changes nothing keeps the card, and its listeners.
+  if (card.swipe) return;
+  card.swipe = true;
   const sign = dir === 'left' ? -1 : 1;
-  let x0 = 0, y0 = 0, from = 0, x = 0, t0 = 0, axis = null, id = null, leaving = null;
+  let x0 = 0, y0 = 0, from = 0, x = 0, axis = null, id = null, leaving = null, track = [];
   const under = card.previousElementSibling;
   const set = (v, ease) => {
     x = v;
-    card.style.transition = ease && !still.matches ? 'transform .28s cubic-bezier(.2,.8,.2,1)' : 'none';
+    card.style.transition = ease && !still.matches ? 'transform .28s var(--ease)' : 'none';
     card.style.transform = v ? `translateX(${v}px)` : '';
     under.style.opacity = Math.min(1, Math.abs(v) / 80) * (v * sign > 0 ? 1 : 0);
   };
   card.addEventListener('pointerdown', (e) => {
-    if (e.button || e.target.closest('a, button, input, textarea')) return;
+    // A second finger does not take over a drag.
+    if (dragging || e.button || e.target.closest('a, button, input, textarea')) return;
     // Catch a card in motion where it is now.
     const m = new DOMMatrix(getComputedStyle(card).transform);
     clearTimeout(leaving); leaving = null;
     set(m.m41, false);
-    from = x; x0 = e.clientX; y0 = e.clientY; t0 = e.timeStamp; axis = null; id = e.pointerId;
+    from = x; x0 = e.clientX; y0 = e.clientY; axis = null; id = e.pointerId; track = [[e.timeStamp, x]];
   });
   card.addEventListener('pointermove', (e) => {
     if (e.pointerId !== id) return;
     const dx = e.clientX - x0, dy = e.clientY - y0;
     if (!axis && Math.hypot(dx, dy) > 8) {
       axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-      if (axis === 'x') { card.setPointerCapture(id); dragging = true; }
+      if (axis === 'x') { card.setPointerCapture(id); dragging = true; card.style.willChange = 'transform'; }
     }
     if (axis !== 'x') return;
     // Against the action, the card resists.
     const v = from + dx;
     set(v * sign >= 0 ? v : v / 4, false);
+    track.push([e.timeStamp, x]);
+    while (track.length > 2 && e.timeStamp - track[0][0] > 100) track.shift();
   });
   const end = (e) => {
     if (e.pointerId !== id) return;
-    id = null; dragging = false;
+    id = null; dragging = false; card.style.willChange = '';
     if (axis !== 'x') { if (x) set(0, true); return; }
-    const speed = (x - from) / Math.max(1, e.timeStamp - t0);
-    if (x * sign > card.offsetWidth / 3 || speed * sign > 0.6) {
+    const [t1, x1] = track[0];
+    const speed = (x - x1) / Math.max(1, e.timeStamp - t1);
+    if (x * sign > card.offsetWidth / 3 || speed * sign > 0.4) {
       set(sign * (card.offsetWidth + 40), true);
       leaving = setTimeout(act, still.matches ? 0 : 260);
     } else set(0, true);
@@ -308,15 +413,17 @@ async function home() {
     <div>${EXAMPLES.map((e) => `<button type="button" class="chip ex">${esc(e)}</button>`).join('')}</div>
     <h2>Recent hunts</h2><div id="recent" class="list dim">…</div>`, 'home');
   const seed = document.getElementById('seed');
-  const start = async () => {
-    try { const { id } = await api('/api/hunts', { seed: seed.value }); go(`#/hunt/${id}`); } catch (err) { fail(err); seed.focus(); }
-  };
+  const start = once(async () => {
+    primary('Hunt', null, { busy: true });
+    try { const { id } = await api('/api/hunts', { seed: seed.value }); go(`#/hunt/${id}`); }
+    catch (err) { fail(err); primary('Hunt', start); seed.focus(); }
+  });
   primary('Hunt', start);
   document.querySelectorAll('.ex').forEach((b) => (b.onclick = () => { seed.value = b.textContent; seed.focus(); }));
   document.getElementById('f').onsubmit = (e) => { e.preventDefault(); start(); };
   const { hunts } = await api('/api/search?q=');
   document.getElementById('recent').innerHTML = hunts.length
-    ? hunts.slice(0, 20).map((h) => `<a href="#/hunt/${h.id}"><b>${esc(h.seed)}</b> <span class="small dim">${esc(h.status)} · ${esc(h.created_at)}</span></a>`).join('')
+    ? hunts.slice(0, 20).map((h) => `<a href="#/hunt/${h.id}"><b>${esc(h.seed)}</b> <span class="small dim">${esc(h.status)} · ${when(h.created_at)}</span></a>`).join('')
     : 'None yet.';
 }
 
@@ -387,14 +494,18 @@ async function hunt(id, tab) {
       Ideas with a greater respondent share appear first. ${esc(problemCoverage.limit)}
       ${link(problemCoverage.source.url, problemCoverage.source.title)}. ${esc(problemCoverage.source.limit)}</p>` : ''}
     ${body}`, 'home');
-  const create = async () => {
-    try { await api(`/api/hunts/${id}/create`, {}); } catch (e) { return fail(e); }
+  const label = h.stack ? 'Create more apps' : 'Create ideas';
+  const create = once(async () => {
+    primary(label, null, { busy: true });
+    try { await api(`/api/hunts/${id}/create`, {}); } catch (e) { fail(e); return primary(label, create); }
     if (location.hash === `#/hunt/${id}/ideas`) hunt(id, 'ideas'); else go(`#/hunt/${id}/ideas`);
-  };
-  primary(busy ? (h.status === 'hunting' ? 'Hunting…' : 'Creating…') : h.stack ? 'Create more apps' : 'Create ideas', create,
-    { busy, disabled: !sources.length });
+  });
+  primary(busy ? (h.status === 'hunting' ? 'Hunting…' : 'Creating…') : label, create, { busy, disabled: !sources.length });
   const more = document.getElementById('more');
-  if (more) more.onclick = async () => { try { await api(`/api/hunts/${id}/hunt`, {}); hunt(id, 'parts'); } catch (e) { fail(e); } };
+  if (more) more.onclick = once(async () => {
+    more.disabled = true;
+    try { await api(`/api/hunts/${id}/hunt`, {}); hunt(id, 'parts'); } catch (e) { fail(e); more.disabled = false; }
+  });
   const name = (sid) => snowmobiles.find((s) => s.id === sid).name;
   const move = async (sid, status) => {
     const { proof_note } = snowmobiles.find((s) => s.id === sid);
@@ -413,10 +524,11 @@ async function hunt(id, tab) {
     swipeable(card, b.dataset.move === 'graveyard' ? 'left' : 'right', () => move(sid, b.dataset.move));
   });
   document.querySelectorAll('[data-part]').forEach((b) => (b.onclick = async () => {
-    const pid = Number(b.dataset.part), out = !!b.dataset.out;
-    const flip = async (o) => { try { await api(`/api/components/${pid}`, { out: o }); } catch (e) { fail(e); } hunt(id, 'parts'); };
+    const pid = Number(b.dataset.part), out = !!b.dataset.out, reason = comps[pid].bad_reason;
+    // An undo of "Bring back" puts back the reason that the part had, also the reason of a kill.
+    const flip = async (o, why) => { try { await api(`/api/components/${pid}`, { out: o, reason: why }); } catch (e) { fail(e); } hunt(id, 'parts'); };
     await flip(out);
-    toast(`${out ? 'Left out' : 'Brought back'} ${comps[pid].name}.`, () => flip(!out));
+    toast(`${out ? 'Left out' : 'Brought back'} ${comps[pid].name}.`, () => flip(!out, reason));
   }));
   if (busy) poll(() => hunt(id, tab), 2000);
 }
@@ -519,7 +631,7 @@ async function grill(id, data) {
     try { grill(id, await api(`/api/grills/${id}/answer`, { answers: Object.fromEntries(open.map((d) => [d.id, pick(d.id)])) })); }
     catch (e) { fail(e); grill(id); }
   };
-  if (open.length) primary(`Answer ${open.length} decision${open.length > 1 ? 's' : ''}`, answer);
+  if (open.length) primary(`Answer ${plural(open.length, 'decision', 'decisions')}`, answer);
   else if (g.status === 'done') primary('Copy brief', async () => {
     try { await navigator.clipboard.writeText(g.brief); toast('Copied the build brief.'); }
     catch { getSelection().selectAllChildren(document.getElementById('brief')); toast('Select all is on. Copy it with the menu.'); }
@@ -555,6 +667,17 @@ function pcLabel(s, i) {
   return `${i ? 'Up' : 'Across'} (PC${i + 1}, ${Math.round(100 * s.map.explained[i])}% of the spread): ${top.map(([a, w]) => `${esc(a.name)} ${w >= 0 ? '+' : '−'}${Math.abs(w).toFixed(2)}`).join(', ')}`;
 }
 
+// Asks Claude which paradigm would live at a point of the map, from a tap or from the form.
+async function ask(x, y, s, byId) {
+  const v = view;
+  tapped = { x, y, busy: true };
+  drawMap(s, byId);
+  const mine = tapped;
+  try { Object.assign(mine, await api('/api/stack/point', { x, y }), { busy: false }); }
+  catch (err) { Object.assign(mine, { busy: false, error: err.message }); }
+  if (v === view && tapped === mine) showPoint(byId);
+}
+
 function choose(p) {
   if (stackPick[p.layer] === p.id) delete stackPick[p.layer]; else stackPick[p.layer] = p.id;
   stack();
@@ -574,10 +697,14 @@ async function stack() {
     <div class="status">${busy ? `<span class="spin"></span> ${JOB[s.job.step]}` : ''}${s.job?.error ? `<div class="err">${esc(s.job.error)}</div>` : ''}</div>
     <div class="legend">${Object.entries(s.layers).map(([k, v]) => `<span><svg width="14" height="14">${mark(k, 7, 7, 5)}</svg>${esc(v)}</span>`).join('')}</div>
     ${s.map ? `<div class="map" id="map"></div><p class="hint">Tap a mark to pick it for its layer. Tap an empty point to ask which paradigm would live there.</p>
+      <details><summary>Ask about a point by its position</summary><form class="row" id="ask-point">
+        ${[0, 1].map((i) => { const v = s.map.points.map((p) => p[i]), lo = Math.min(...v).toFixed(1), hi = Math.max(...v).toFixed(1);
+          return `<input type="number" step="any" name="${'xy'[i]}" required placeholder="${i ? 'up' : 'across'} ${lo} to ${hi}" aria-label="${i ? 'up' : 'across'}, from ${lo} to ${hi}">`; }).join('')}
+        <button>Ask</button></form></details>
       <div id="point"></div><p class="small dim">${pcLabel(s, 0)}<br>${pcLabel(s, 1)}</p>`
       : `<div class="card dim">The map needs axes and a score for each paradigm. <a href="#axes" data-jump>Propose the axes below.</a></div>`}
     <h2>Practical problems</h2>
-    <p class="small dim">${s.practicalProblems.items.length} sourced problems · ${s.practicalProblems.links.length} paradigm-problem links. Select a problem as your app seed.</p>
+    <p class="small dim">${plural(s.practicalProblems.items.length, 'sourced problem', 'sourced problems')} · ${plural(s.practicalProblems.links.length, 'paradigm-problem link', 'paradigm-problem links')}. Select a problem as your app seed.</p>
     <div class="card">
       <p><b>Whole database: problems without a documented reduction:</b> ${s.practicalProblems.coverage.withoutReduction.map((id) => esc(s.practicalProblems.items.find((p) => p.id === id).name)).join(', ') || 'None'}.</p>
       ${s.practicalProblems.items.map((p) => `<div>
@@ -586,7 +713,7 @@ async function stack() {
           <button type="button" class="chip ${ids.includes(l.paradigm_id) ? 'on' : ''}" data-pick="${l.paradigm_id}" aria-pressed="${ids.includes(l.paradigm_id)}">${esc(l.paradigm)}${ids.includes(l.paradigm_id) ? ' · in your stack' : ''}</button>
           <b>${esc(l.effect)}</b>: ${esc(l.reason)} ${link(l.source.url, l.source.title)}</p>`).join('')}
         </div>`).join('')}
-      <p class="small dim">${s.practicalProblems.coverage.unassessedParadigms} paradigms have no problem assessment. ${esc(s.practicalProblems.coverage.limit)}</p>
+      <p class="small dim">${plural(s.practicalProblems.coverage.unassessedParadigms, 'paradigm has', 'paradigms have')} no problem assessment. ${esc(s.practicalProblems.coverage.limit)}</p>
       <p class="small">${link(s.practicalProblems.source.url, s.practicalProblems.source.title)} · ${s.practicalProblems.source.respondents.toLocaleString()} respondents</p>
       <p class="small dim">${esc(s.practicalProblems.source.scope)} ${esc(s.practicalProblems.source.measure)}</p>
       <p class="small dim">${esc(s.practicalProblems.source.limit)}</p>
@@ -600,7 +727,7 @@ async function stack() {
     }).join('')}</div>
     ${s.selectedProblemCoverage ? `<div class="card" id="selected-problem-coverage">
       <p><b>Your stack: problems without a documented reduction:</b> ${s.selectedProblemCoverage.withoutReduction.map((id) => esc(s.practicalProblems.items.find((p) => p.id === id).name)).join(', ') || 'None'}.</p>
-      <p class="small dim">${s.selectedProblemCoverage.unassessedParadigms} selected paradigms have no problem assessment. Empty layers remain open for Claude to choose.</p>
+      <p class="small dim">${plural(s.selectedProblemCoverage.unassessedParadigms, 'selected paradigm has', 'selected paradigms have')} no problem assessment. Empty layers remain open for Claude to choose.</p>
       <p class="small dim">${esc(s.selectedProblemCoverage.limit)}</p>
     </div>` : ''}
     <form class="row" id="f"><input type="text" id="pain" placeholder="a practical problem (optional with a stack)" autocomplete="off" aria-label="practical problem" value="${esc(pain)}">
@@ -619,8 +746,8 @@ async function stack() {
     <h2><span class="grow">Paradigms</span><button id="more" class="ghost" ${busy ? 'disabled' : ''}>＋ Hunt more paradigms</button></h2>
     ${Object.entries(s.layers).map(([k, v]) => `<div style="margin-bottom:10px"><div class="tag dim">${esc(v)}</div>
       ${s.paradigms.filter((p) => p.layer === k).map((p) => `<button type="button" class="chip ${stackPick[k] === p.id ? 'on' : ''}" aria-pressed="${stackPick[k] === p.id}" data-pick="${p.id}">${stackPick[k] === p.id ? '✓ ' : ''}${esc(p.name)}</button>`).join('')}</div>`).join('')}
-    <h2 id="axes"><span class="grow">Axes</span>${!s.axes.length || unscored ? `<button id="prep" ${busy ? 'disabled' : ''}>${s.axes.length ? `Score ${unscored} paradigm${unscored > 1 ? 's' : ''}` : 'Propose axes and score'}</button>` : ''}</h2>
-    ${s.axes.length ? `<details><summary>Edit the ${s.axes.length} axes</summary>${s.axes.map((a) => `<form class="axis" data-axis="${a.id}">
+    <h2 id="axes"><span class="grow">Axes</span>${!s.axes.length || unscored ? `<button id="prep" ${busy ? 'disabled' : ''}>${s.axes.length ? `Score ${plural(unscored, 'paradigm', 'paradigms')}` : 'Propose axes and score'}</button>` : ''}</h2>
+    ${s.axes.length ? `<details><summary>Edit the ${plural(s.axes.length, 'axis', 'axes')}</summary>${s.axes.map((a) => `<form class="axis" data-axis="${a.id}">
       <input type="text" name="name" value="${esc(a.name)}" aria-label="name"><input type="text" name="low" value="${esc(a.low)}" aria-label="0 means">
       <input type="text" name="high" value="${esc(a.high)}" aria-label="10 means"><button class="ghost">Save</button></form>`).join('')}</details>`
       : '<p class="small dim">Claude proposes 8 to 12 design axes that run through all 4 layers, then scores each paradigm on each axis.</p>'}`, 'stack');
@@ -637,22 +764,34 @@ async function stack() {
     delete stackPick[layer]; stack();
     toast(`Cleared ${s.layers[layer]}.`, () => { stackPick[layer] = was; stack(); });
   }));
-  document.querySelector('[data-jump]')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('axes').scrollIntoView(); });
+  const jump = document.querySelector('[data-jump]');
+  if (jump) jump.onclick = (e) => { e.preventDefault(); document.getElementById('axes').scrollIntoView(); };
   const job = (step) => async () => { try { await api(`/api/stack/${step}`, {}); stack(); } catch (e) { fail(e); } };
   if (document.getElementById('prep')) document.getElementById('prep').onclick = job('axes');
   document.getElementById('more').onclick = job('hunting');
+  // An edit of a score or an axis offers "Undo", which sends the earlier values.
+  const undoing = (path, body) => async () => { try { await api(path, body); } catch (e) { fail(e); } stack(); };
   document.querySelectorAll('.gaps input').forEach((i) => (i.onchange = async () => {
-    if (i.value !== '') try { await api('/api/scores', { paradigm_id: Number(i.dataset.p), axis_id: Number(i.dataset.a), score: Number(i.value) }); } catch (e) { fail(e); }
+    const p = Number(i.dataset.p), a = Number(i.dataset.a), was = s.scores[p]?.[a];
+    if (i.value !== '') try {
+      await api('/api/scores', { paradigm_id: p, axis_id: a, score: Number(i.value) });
+      toast(`Scored ${byId[p].name} ${i.value}.`, was && undoing('/api/scores', { paradigm_id: p, axis_id: a, score: was.score, reason: was.reason }));
+    } catch (e) { fail(e); }
     stack();
   }));
   document.querySelectorAll('[data-axis]').forEach((f) => (f.onsubmit = async (e) => {
     e.preventDefault();
-    try { await api(`/api/axes/${f.dataset.axis}`, Object.fromEntries(new FormData(f))); toast('Saved the axis.'); stack(); } catch (err) { fail(err); }
-  }));
-  const create = async () => {
-    try { const { id } = await api('/api/hunts', { seed: document.getElementById('pain').value, stack: Object.values(stackPick) }); go(`#/hunt/${id}`); }
+    const { name, low, high } = s.axes.find((a) => a.id === Number(f.dataset.axis));
+    try { await api(`/api/axes/${f.dataset.axis}`, Object.fromEntries(new FormData(f))); toast('Saved the axis.', undoing(`/api/axes/${f.dataset.axis}`, { name, low, high })); stack(); }
     catch (err) { fail(err); }
-  };
+  }));
+  const askForm = document.getElementById('ask-point');
+  if (askForm) askForm.onsubmit = (e) => { e.preventDefault(); ask(Number(askForm.x.value), Number(askForm.y.value), s, byId); };
+  const create = once(async () => {
+    primary('Create apps', null, { busy: true });
+    try { const { id } = await api('/api/hunts', { seed: document.getElementById('pain').value, stack: Object.values(stackPick) }); go(`#/hunt/${id}`); }
+    catch (err) { fail(err); primary('Create apps', create); }
+  });
   document.getElementById('f').onsubmit = (e) => { e.preventDefault(); create(); };
   primary('Create apps', create);
   lastMap = s.map ? { s, byId } : null;
@@ -680,7 +819,7 @@ function drawMap(s, byId) {
     d.label = !boxes.some((o) => b[0] < o[2] && o[0] < b[2] && b[1] < o[3] && o[1] < b[3]);
     if (d.label) boxes.push(b);
   }
-  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Map of the paradigms on the first two principal components">
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">
     <line class="zero" x1="${px(0)}" y1="0" x2="${px(0)}" y2="${H}"/><line class="zero" x1="0" y1="${py(0)}" x2="${W}" y2="${py(0)}"/>
     ${dots.map((d) => `${mark(d.p.layer, d.x, d.y, on.has(d.p.id) ? r0 + 2 : r0)}${on.has(d.p.id) ? `<circle class="ring" cx="${d.x}" cy="${d.y}" r="13"/>` : ''}
       ${d.label ? `<text class="${on.has(d.p.id) ? 'on' : ''}" ${d.x > W / 2 ? `text-anchor="end" x="${d.x - 10}"` : `x="${d.x + 10}"`} y="${d.y + 4}">${on.has(d.p.id) ? '✓ ' : ''}${esc(d.p.name)}</text>` : ''}`).join('')}
@@ -693,13 +832,7 @@ function drawMap(s, byId) {
     // A finger is wide: the nearest mark within 22px (a 44px target) is the one that the owner meant.
     const hit = dots.map((d) => ({ d, dist: Math.hypot(d.x - mx, d.y - my) })).sort((a, b) => a.dist - b.dist)[0];
     if (hit && hit.dist <= 22) return choose(hit.d.p);
-    const v = view;
-    tapped = { x: x0 + (mx - pad) / sx, y: y0 + (H - pad - my) / sy, busy: true };
-    drawMap(s, byId);
-    const mine = tapped;
-    try { Object.assign(mine, await api('/api/stack/point', { x: mine.x, y: mine.y }), { busy: false }); }
-    catch (err) { Object.assign(mine, { busy: false, error: err.message }); }
-    if (v === view && tapped === mine) showPoint(byId);
+    ask(x0 + (mx - pad) / sx, y0 + (H - pad - my) / sy, s, byId);
   };
 }
 
