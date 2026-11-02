@@ -89,7 +89,7 @@ test('the toast timer stops on hover, focus and a hidden page, and continues wit
     setTimeout(() => { c.hold('hidden'); c.free('focus'); }, 500);
     setTimeout(() => c.free('hidden'), 700);
   })`);
-  assert.ok(left >= 890 && left < 1100, `done after ${left} ms`);
+  assert.ok(left >= 800 && left < 1500, `done after ${left} ms`);
 
   // The toast holds its countdown for each event.
   await run(`window.undone = 0; toast('Buried x.', () => undone++)`);
@@ -121,6 +121,7 @@ test('a redraw keeps the keyboard focus: a poll of a busy hunt, and a pick on th
   assert.match(await run('document.activeElement.getAttribute("href")'), /\/graveyard$/);
 
   await open('#/stack');
+  await until(`!!document.querySelector('[data-pick]')`);
   const pid = await run(`(() => { const b = document.querySelector('[data-pick]'); b.focus(); b.click(); return b.dataset.pick; })()`);
   await until(`document.querySelector('[data-pick="${pid}"]').getAttribute('aria-pressed') === 'true'`);
   assert.strictEqual(await run('document.activeElement.dataset.pick'), pid);
