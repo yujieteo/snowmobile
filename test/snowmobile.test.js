@@ -3,11 +3,11 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { start } = require('../snowmobile.js');
+const { start, checkFindings } = require('../snowmobile.js');
 
-async function lab() {
+async function lab(opts = {}) {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-'));
-  const { server, cfg, port } = await start({ home, port: 0, claude: path.join(__dirname, 'fake-claude.js') });
+  const { server, cfg, port } = await start({ home, port: 0, claude: path.join(__dirname, 'fake-claude.js'), smAxi: null, ...opts });
   const call = async (p, body, tok = cfg.token) => {
     const res = await fetch(`http://127.0.0.1:${port}${p}`, { method: body ? 'POST' : 'GET',
       headers: { 'x-token': tok }, body: body && JSON.stringify(body) });
@@ -245,3 +245,100 @@ test('an undo puts back the exact earlier part mark, idea status and note', asyn
   assert.deepStrictEqual([h.snowmobiles[2].status, h.snowmobiles[2].proof_note], ['graveyard', 'Same thing.']);
   server.close();
 });
+
+const SKILL = path.join(__dirname, 'fake-skill', 'bin', 'sm-axi');
+
+// A grill with one answered round, in a plan with this name.
+function answered(cfg, name) {
+  const { ids: [sm] } = plant(cfg.db, [name]);
+  const tree = { round: 1, decisions: [{ id: 'scope', question: 'Scope?', depends_on: [], recommended: 0, round: 1,
+    options: [{ label: 'Small', why: 'w', kills_component_id: 0 }], answer: { choice: 0, note: '' } }] };
+  cfg.db.prepare(`INSERT INTO grills (snowmobile_id, tree, status) VALUES (?, ?, 'open')`).run(sm, JSON.stringify(tree));
+  return sm;
+}
+
+test('a design with no fault gets its machine checked and the brief carries the machine', async () => {
+  const { server, cfg, until } = await lab({ smAxi: SKILL });
+  const sm = answered(cfg, 'Clean');
+  const g = await until(`/api/grills/${sm}`, (b) => b.status === 'done');
+  assert.match(g.brief, /# Build[^]*## State machine\n\nThe check of the settled design found no fault\.[^]*## Machine job/);
+  assert.strictEqual(g.tree.machine.findings.length, 0);
+  // The model got the format from the skill folder, not from a copy in snowmobile.
+  assert.match(fs.readFileSync(path.join(cfg.home, 'machine-prompt'), 'utf8'), /FORMAT-MARK/);
+  server.close();
+});
+
+test('machine faults come back as one more round, and the brief names them', async () => {
+  const { server, cfg, call, until } = await lab({ smAxi: SKILL });
+  const sm = answered(cfg, 'Hidden');
+  let g = await until(`/api/grills/${sm}`, (b) => !b.pending);
+  assert.strictEqual(g.status, 'open');
+  const [d] = g.tree.decisions.filter((x) => !x.answer);
+  assert.strictEqual(d.id, 'closed-input');
+  assert.strictEqual(d.round, 2);
+  assert.deepStrictEqual(g.tree.machine.findings.map((f) => f.kind), ['unhandled', 'row-no-req']);
+  await call(`/api/grills/${sm}/answer`, { answers: { 'closed-input': { choice: 0 } } });
+  g = await until(`/api/grills/${sm}`, (b) => b.status === 'done');
+  assert.match(g.brief, /found 2 faults[^]*- unhandled job closed_running: events: ask\n- row-no-req job idle\/ask/);
+  // Only one machine file was written: the answers to the round do not start another.
+  assert.strictEqual(fs.readFileSync(path.join(cfg.home, 'machine-prompt'), 'utf8').split('Write the state machine file').length, 2);
+  server.close();
+});
+
+test('an undo of the round that the machine stands on drops the machine, an undo of the fault round keeps it', async () => {
+  const { server, cfg, call, until } = await lab({ smAxi: SKILL });
+  const sm = answered(cfg, 'Hidden');
+  await until(`/api/grills/${sm}`, (b) => !b.pending);
+  await call(`/api/grills/${sm}/answer`, { answers: { 'closed-input': { choice: 0 } } });
+  await until(`/api/grills/${sm}`, (b) => b.status === 'done');
+  let g = (await call(`/api/grills/${sm}/undo`, {})).body;
+  assert.ok(g.tree.machine);
+  assert.strictEqual(g.tree.decisions.filter((d) => !d.answer).length, 1);
+  g = (await call(`/api/grills/${sm}/undo`, {})).body;
+  assert.strictEqual(g.tree.machine, undefined);
+  server.close();
+});
+
+test('without the skill, or with a machine file that sm-axi cannot read, the grill goes on to the brief', async () => {
+  const none = await lab({ smAxi: path.join(os.tmpdir(), 'no-such-sm-axi') });
+  assert.strictEqual(none.cfg.smAxi, null);
+  const first = answered(none.cfg, 'Hidden');
+  const a = await none.until(`/api/grills/${first}`, (b) => b.status === 'done');
+  assert.doesNotMatch(a.brief, /State machine/);
+  assert.strictEqual(a.tree.machine, undefined);
+  none.server.close();
+  const { server, cfg, until } = await lab({ smAxi: SKILL });
+  const sm = answered(cfg, 'Garbled');
+  const g = await until(`/api/grills/${sm}`, (b) => b.status === 'done');
+  assert.match(g.tree.machine.skipped, /^sm-axi: /);
+  assert.doesNotMatch(g.brief, /State machine/);
+  server.close();
+});
+
+test('the check findings come from the checks section of the sm-axi output, with quoted details', () => {
+  // The lines are from the output of the real sm-axi check on the faults example of the skill.
+  const toon = ['file: faults.sm.md', 'simplify[1]{kind,machine,at,line,detail}:', '  function,pipe,pipe,-,"no branch and no loop: is a plain function better?"',
+    'checks[3]{kind,machine,at,line,detail}:', '  unhandled,bugs,c,-,"events: stop"', '  guard-gap,bugs,b/go,L20,"only \\"ok\\": add an else row"',
+    '  req-no-row,-,R9,L9,no row cites it', 'proposals[0]{machine,rows,current_rows,status,reason}:'].join('\n');
+  assert.deepStrictEqual(checkFindings(toon), [
+    { kind: 'unhandled', machine: 'bugs', at: 'c', detail: 'events: stop' },
+    { kind: 'guard-gap', machine: 'bugs', at: 'b/go', detail: 'only "ok": add an else row' },
+    { kind: 'req-no-row', machine: '-', at: 'R9', detail: 'no row cites it' }]);
+  assert.deepStrictEqual(checkFindings('checks[0]{kind,machine,at,line,detail}:\nproposals[0]{}:'), []);
+  assert.throws(() => checkFindings('file: x'), /no checks section/);
+});
+
+test('the real sm-axi of the installed skill reads a machine file and finds a fault', { skip: !findReal() }, async () => {
+  const { server, cfg } = await lab({ smAxi: findReal() });
+  const file = path.join(findReal(), '..', '..', 'test', 'faults.sm.md');
+  const r = require('node:child_process').spawnSync(process.execPath, [findReal(), 'check', file], { encoding: 'utf8' });
+  assert.strictEqual(r.status, 1);
+  assert.ok(checkFindings(r.stdout).some((f) => f.kind === 'row-no-req'));
+  assert.ok(cfg.smAxi);
+  server.close();
+});
+
+function findReal() {
+  return [process.env.SNOWMOBILE_SM_AXI, path.join(os.homedir(), '.claude', 'skills', 'state-machine', 'bin', 'sm-axi')]
+    .find((f) => f && fs.existsSync(f)) || null;
+}

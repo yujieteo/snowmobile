@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+// A stand-in for the sm-axi of the state-machine skill: it prints the TOON of `sm-axi check`.
+// A file with the word HIDDEN has one hidden state and one row with no requirement.
+const text = require('node:fs').readFileSync(process.argv[3], 'utf8');
+if (process.argv[2] !== 'check' || text.includes('BROKEN')) { console.error('L1: no "## Machine <name>" section'); process.exit(2); }
+const bad = text.includes('HIDDEN') ? ['  unhandled,job,closed_running,-,"events: ask"', '  row-no-req,job,idle/ask,L9,no requirement'] : [];
+console.log(`file: ${process.argv[3]}\nchecks[${bad.length}]{kind,machine,at,line,detail}:\n${bad.join('\n')}\nproposals[0]{machine,rows,current_rows,status,reason}:`);
+process.exit(bad.length ? 1 : 0);

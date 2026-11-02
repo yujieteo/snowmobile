@@ -37,14 +37,14 @@ Each concept has one purpose, its own state and actions, and an operational prin
 ### Grill
 
 - **Purpose:** settle each design decision of an idea, one round at a time, until a build brief or a kill.
-- **State:** a tree of decisions in rounds, each with options, a recommended option and an answer; a status (open, done, killed); a brief.
+- **State:** a tree of decisions in rounds, each with options, a recommended option and an answer; a status (open, done, killed); the state machine of the settled decisions and its check findings; a brief.
 - **Actions:** pick an option, write a note, answer a round, undo the last round, retry a failed round.
-- **Operational principle:** if you answer each round, then you get a build brief. If an answer kills the idea, then the bad part is left out and you go back to the hunt. If you undo the last round, then the tree is as it was before that answer.
+- **Operational principle:** if you answer each round, then you get a build brief. If an answer kills the idea, then the bad part is left out and you go back to the hunt. If no decision is open, then the settled design gets its state machine before it gets a brief. Each fault that the check finds (a hidden state, a row with no requirement, a requirement with no row) comes back as a decision of one more round. If you undo the last round, then the tree is as it was before that answer.
 
 ### Brief
 
 - **Purpose:** give a builder (a person or an agent) all the settled decisions of an idea.
-- **State:** the text of the brief.
+- **State:** the text of the brief, with the state machine and the faults that its check found.
 - **Actions:** read, copy.
 - **Operational principle:** if you copy the brief, then you can paste all of it into a coding agent.
 
@@ -73,10 +73,10 @@ Sophia Prater's ORCA: objects, relationships, calls-to-action and attributes.
 | Part | belongs to a source; used by many ideas | open the link, leave out, bring back | name, mechanism, link, bad reason |
 | Idea | belongs to a hunt; uses many parts; has 1 grill | grill, bury | name, pitch, problem, evidence, today, gain, status |
 | Graveyard entry | an idea with status graveyard | restore, open the proof link | reason, proof link |
-| Grill | belongs to 1 idea; has many rounds | answer the round, undo the last round, retry | status, round |
+| Grill | belongs to 1 idea; has many rounds; has at most 1 state machine | answer the round, undo the last round, retry | status, round, machine, findings |
 | Round | belongs to a grill; has many decisions | answer, undo | number |
 | Decision | belongs to a round; depends on other decisions; has options | pick an option, write a note | question, options, recommended, answer |
-| Brief | belongs to 1 grill | copy | text |
+| Brief | belongs to 1 grill | copy | text, machine, findings |
 | Paradigm | belongs to a layer; has a score on each axis; is a point on the map | pick, open the link | layer, name, summary, link |
 | Axis | has a score for each paradigm | edit | name, 0 means, 10 means |
 | Score | joins a paradigm and an axis | edit | value 0 to 10, reason |
@@ -149,4 +149,5 @@ These rules map the model onto the screen.
 - **Actions on the object.** You swipe an idea card left to bury it, and swipe a graveyard card right to restore it. A part has its own "leave out" button. Each action is reversible at once with "Undo", so no action asks for a confirmation.
 - **Signifiers.** Each swipe also has a visible button, and the card shows a hint. A state shows a word or a mark as well as a colour.
 - **Motion.** A swiped card follows the finger. You can catch it again before it settles. With `prefers-reduced-motion`, nothing animates.
+- **No new screen for the machine.** A fault of the state machine is a decision in a round, with options and a recommended option. The machine and the faults that remain are in the brief.
 - **Posture.** Snowmobile is a sovereign application. The content uses the full screen and the chrome stays small.

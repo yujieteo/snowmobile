@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { spawn } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
 const { DatabaseSync } = require('node:sqlite');
 
 // ---------- database ----------
@@ -912,7 +912,7 @@ const GRILL_SCHEMA = {
   },
 };
 
-function grillPrompt(sm, comps, decisions) {
+function grillPrompt(sm, comps, decisions, machine) {
   const settled = decisions.map((d) => {
     const a = d.answer;
     const choice = a.choice >= 0 ? d.options[a.choice].label : '(no option)';
@@ -927,13 +927,116 @@ ${comps.map((c) => `${c.id} | ${c.name} | ${c.mechanism}`).join('\n')}
 Settled decisions:
 ${settled || '(none yet)'}
 
-Return the next round: every open decision whose prerequisites are all settled, not only one. At most 6. Ask only decisions that change what gets built.
+${machinePrompt(machine, decisions)}Return the next round: every open decision whose prerequisites are all settled, not only one. At most 6. Ask only decisions that change what gets built.
 ${settled ? '' : 'This is the first round. It must include a decision that tests why the plan beats the conventional solution on its claimed gain: an option under which the gain fails makes the plan pointless.\n'}
 For each decision: a new short id (lowercase-with-dashes, not used above), the question, depends_on (ids of the settled decisions it builds on), 2 to 4 options with a short label and a one-sentence why, and the index of the option you recommend.
 For an option that makes the whole plan pointless because one part fails, set kills_component_id to that part's id. Otherwise set it to 0. Never recommend such an option.
 If a settled answer or note already makes the plan pointless, set verdict "killed", decisions [], killed_component_id to the part to blame and reason to one sentence.
 If no decision is open, set verdict "done", decisions [] and brief to a build brief in Markdown: what to build, the settled decisions, the first three steps and the main risk.
 Otherwise set verdict "open". Set unused fields to "" or 0. Aim for done in 3 to 5 rounds.`;
+}
+
+// The state machine step. The skill state-machine (yujieteo/skills.md) owns the format and the checks:
+// snowmobile reads its format.md and runs its `sm-axi check`. It keeps no copy of either.
+const MACHINE_SCHEMA = { type: 'object', required: ['file'], properties: { file: str } };
+
+// Where sm-axi is: the option (null turns the step off), else SNOWMOBILE_SM_AXI, else the installed skill.
+// A file that does not exist turns the step off.
+function findSmAxi(given) {
+  const home = path.join(os.homedir(), '.claude', 'skills', 'state-machine', 'bin', 'sm-axi');
+  return [given === undefined ? process.env.SNOWMOBILE_SM_AXI || home : given].find((f) => f && fs.existsSync(f)) || null;
+}
+
+function machineFilePrompt(sm, comps, decisions, format) {
+  const settled = decisions.map((d) => {
+    const a = d.answer;
+    return `- ${d.id}: ${d.question}\n  answer: ${a.choice >= 0 ? d.options[a.choice].label : '(no option)'}${a.note ? `\n  note from the owner: ${a.note}` : ''}`;
+  }).join('\n');
+  return `Write the state machine file (a .sm.md file) of this design, from the settled decisions only.
+
+Plan: ${sm.name}. ${sm.pitch}
+Parts (mechanism):
+${comps.map((c) => `- ${c.name}: ${c.mechanism}`).join('\n')}
+
+Settled decisions:
+${settled}
+
+Each requirement is one settled decision. Its source is the decision id. Write a requirement only for a decision that changes what is built.
+Write one row for each transition that the decisions imply, and every state that the design can be in, also a state that only the combination of two decisions makes (for example: closed input while a job runs). Write each machine flat. Set "file" to the whole file and nothing else.
+
+The format of the file:
+
+${format}`;
+}
+
+// The check findings in the TOON of `sm-axi check`: the lines under "checks[N]{...}:".
+function checkFindings(toon) {
+  const lines = toon.split('\n');
+  const at = lines.findIndex((l) => /^checks\[\d+\]/.test(l));
+  if (at < 0) throw new Error('sm-axi check printed no checks section');
+  const out = [];
+  for (const l of lines.slice(at + 1)) {
+    if (!/^\s/.test(l)) break;
+    const c = []; let cur = '', q = false;
+    const t = l.trim();
+    for (let i = 0; i < t.length; i++) {
+      if (t[i] === '\\' && q) cur += t[++i];
+      else if (t[i] === '"') q = !q;
+      else if (t[i] === ',' && !q) { c.push(cur); cur = ''; } else cur += t[i];
+    }
+    c.push(cur);
+    out.push({ kind: c[0], machine: c[1], at: c[2], detail: c[4] });
+  }
+  return out;
+}
+
+// Runs sm-axi check on the file. Exit 1 means check findings, exit 2 a parse error.
+function runCheck(smAxi, text) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-sm-'));
+  try {
+    const file = path.join(dir, 'design.sm.md');
+    fs.writeFileSync(file, text);
+    const r = spawnSync(process.execPath, [smAxi, 'check', file], { encoding: 'utf8' });
+    if (r.status === 2 || r.status === null) throw new Error(`sm-axi: ${(r.stderr || r.stdout || 'failed').trim().slice(0, 300)}`);
+    return checkFindings(r.stdout);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+}
+
+// Writes the machine file of the settled design and checks it. A skill that cannot run skips the step.
+async function buildMachine(cfg, sm, settled, round) {
+  const formatFile = path.join(path.dirname(cfg.smAxi), '..', 'references', 'format.md');
+  if (!fs.existsSync(formatFile)) return { skipped: 'the skill has no references/format.md' };
+  const comps = partsOf(cfg.db, JSON.parse(sm.component_ids));
+  const { file } = await ask(cfg, machineFilePrompt(sm, comps, settled, fs.readFileSync(formatFile, 'utf8')), MACHINE_SCHEMA, { model: cfg.grillModel });
+  try { return { file, findings: runCheck(cfg.smAxi, file), round }; } catch (e) { return { skipped: e.message }; }
+}
+
+// The prompt part for a machine whose check found faults. Findings that were asked once are not asked again.
+function machinePrompt(machine, decisions) {
+  if (!machine || !machine.findings || !machine.findings.length) return '';
+  const asked = decisions.some((d) => d.round > machine.round);
+  return `State machine of the settled decisions (checked with sm-axi):
+${machine.file}
+
+Check findings:
+${machine.findings.map((f) => `- ${f.kind} ${f.machine} ${f.at}: ${f.detail}`).join('\n')}
+
+${asked ? 'The owner already answered decisions on these findings. Ask no decision about them again.'
+  : `A finding is an architecture problem that is open while the design is open. Ask one decision for each finding that no settled decision answers, in this round, with 2 to 4 options:
+a hidden state or an unhandled event (what must happen), a row with no requirement (keep it with a reason, or delete it), a requirement with no row (still necessary?), two transitions or a guard gap (which rule wins).
+Ask no decision about a finding that comes from a gap in the file and not from the design.
+If the settled decisions answer every finding, set verdict "done".`}
+
+`;
+}
+
+// What the build brief gets from the machine: the file, and the faults that the check found before the build.
+function machineNotes(machine) {
+  if (!machine || !machine.findings) return '';
+  const faults = machine.findings.length
+    ? `The check of the settled design found ${machine.findings.length} fault${machine.findings.length > 1 ? 's' : ''}. The decisions above answer them. Build nothing that one of them contradicts.\n${machine.findings.map((f) => `- ${f.kind} ${f.machine} ${f.at}: ${f.detail}`).join('\n')}`
+    : 'The check of the settled design found no fault.';
+  return `\n\n## State machine\n\n${faults}\n\n\`\`\`\n${machine.file.trim()}\n\`\`\``;
 }
 
 // ---------- jobs ----------
@@ -1084,12 +1187,12 @@ function frontierKey(smId, settled) {
   return `${smId}:${JSON.stringify(settled.map((d) => [d.id, d.answer]))}`;
 }
 
-function frontier(cfg, sm, settled) {
+function frontier(cfg, sm, settled, machine) {
   const { frontiers } = cfg;
-  const key = frontierKey(sm.id, settled);
+  const key = frontierKey(sm.id, settled) + (machine && machine.findings ? `:m${machine.findings.length}` : '');
   if (!frontiers.has(key)) {
     const comps = partsOf(cfg.db, JSON.parse(sm.component_ids));
-    const p = ask(cfg, grillPrompt(sm, comps, settled), GRILL_SCHEMA, { model: cfg.grillModel });
+    const p = ask(cfg, grillPrompt(sm, comps, settled, machine), GRILL_SCHEMA, { model: cfg.grillModel });
     p.catch(() => frontiers.delete(key));
     frontiers.set(key, p);
   }
@@ -1108,16 +1211,33 @@ async function advance(cfg, smId) {
   const tree = JSON.parse(grill.tree);
   const settled = settledOf(tree);
   grillErrors.delete(smId);
+  const reread = () => JSON.parse(db.prepare(`SELECT tree FROM grills WHERE snowmobile_id = ?`).get(smId).tree);
+  // The owner may have answered differently while a call ran.
+  const stale = (t) => frontierKey(smId, settledOf(t)) !== frontierKey(smId, settled) || t.decisions.some((d) => !d.answer);
   let out;
-  try { out = await frontier(cfg, sm, settled); } catch (e) { grillErrors.set(smId, e.message); return; }
-  // The owner may have answered differently while this call ran.
-  const now = JSON.parse(db.prepare(`SELECT tree FROM grills WHERE snowmobile_id = ?`).get(smId).tree);
-  if (frontierKey(smId, settledOf(now)) !== frontierKey(smId, settled) || now.decisions.some((d) => !d.answer)) return;
+  try { out = await frontier(cfg, sm, settled, tree.machine); } catch (e) { grillErrors.set(smId, e.message); return; }
+  let now = reread();
+  if (stale(now)) return;
+  const finished = (o) => o.verdict === 'done' || !o.decisions.length;
+  // A design with no open decision gets its state machine before its brief. Its faults come back as one more round.
+  if (out.verdict !== 'killed' && finished(out) && cfg.smAxi && !now.machine) {
+    let machine;
+    try { machine = await buildMachine(cfg, sm, settled, now.round); } catch (e) { grillErrors.set(smId, e.message); return; }
+    now = reread();
+    if (stale(now)) return;
+    now.machine = machine;
+    db.prepare(`UPDATE grills SET tree = ? WHERE snowmobile_id = ?`).run(JSON.stringify(now), smId);
+    if (machine.findings && machine.findings.length) {
+      try { out = await frontier(cfg, sm, settled, machine); } catch (e) { grillErrors.set(smId, e.message); return; }
+      now = reread();
+      if (stale(now)) return;
+    }
+  }
   if (out.verdict === 'killed') return kill(cfg, sm, out.killed_component_id, out.reason, now);
-  if (out.verdict === 'done' || !out.decisions.length) {
+  if (finished(out)) {
     now.round += 1;
     db.prepare(`UPDATE grills SET tree = ?, status = 'done', brief = ?, updated_at = CURRENT_TIMESTAMP WHERE snowmobile_id = ?`)
-      .run(JSON.stringify(now), briefHead(sm) + out.brief, smId);
+      .run(JSON.stringify(now), briefHead(sm) + out.brief + machineNotes(now.machine), smId);
     db.prepare(`UPDATE snowmobiles SET status = 'grilled' WHERE id = ?`).run(smId);
     return;
   }
@@ -1136,7 +1256,7 @@ async function advance(cfg, smId) {
   db.prepare(`UPDATE grills SET tree = ?, updated_at = CURRENT_TIMESTAMP WHERE snowmobile_id = ?`).run(JSON.stringify(now), smId);
   // Speculate: the next round after the recommended answers.
   const guess = now.decisions.map((d) => (d.answer ? d : { ...d, answer: { choice: d.recommended, note: '' } }));
-  frontier(cfg, sm, guess).catch(() => {});
+  frontier(cfg, sm, guess, now.machine).catch(() => {});
 }
 
 // The saved kill of a grill that still stands on the part with this mark.
@@ -1176,6 +1296,8 @@ function undoRound(cfg, smId) {
   tree.decisions = tree.decisions.filter((d) => d.round <= last);
   for (const d of tree.decisions) if (d.round === last) d.answer = null;
   tree.round = last;
+  // A machine that stands on a removed answer goes too. One that only the later round answered stays.
+  if (tree.machine && last <= tree.machine.round) delete tree.machine;
   let note = sm.proof_note;
   if (tree.killed) {
     const { component_id: cid, reason } = tree.killed;
@@ -1413,9 +1535,9 @@ function handler(cfg) {
 }
 
 function start({ home = path.join(os.homedir(), '.snowmobile'), port = 4747, claude = 'claude',
-  grillModel = 'sonnet' } = {}) {
+  grillModel = 'sonnet', smAxi } = {}) {
   const db = openDb(path.join(home, 'snowmobile.db'));
-  const cfg = { db, home, claude, grillModel, token: token(db), frontiers: new Map(), grillErrors: new Map(),
+  const cfg = { db, home, claude, grillModel, smAxi: findSmAxi(smAxi), token: token(db), frontiers: new Map(), grillErrors: new Map(),
     stackJob: null };
   const server = http.createServer(handler(cfg));
   return new Promise((resolve, reject) => {
@@ -1435,4 +1557,4 @@ if (require.main === module) {
   }, (e) => { console.error(`snowmobile: ${e.message}`); process.exit(1); });
 }
 
-module.exports = { start, eigen, pca, gaps, practicalProblems, ideaProblems };
+module.exports = { start, checkFindings, eigen, pca, gaps, practicalProblems, ideaProblems };
