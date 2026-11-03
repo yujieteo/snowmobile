@@ -1,16 +1,17 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
+import fs from 'node:fs';
 // A stand-in for `claude -p`: answers each snowmobile prompt with fixed structured output.
 let prompt = '';
-process.stdin.on('data', (d) => (prompt += d));
+process.stdin.on('data', (d: Buffer) => (prompt += d));
 // FAKE_CLAUDE_DELAY_MS keeps a job busy for that time, so that a browser test can see a page that polls.
 process.stdin.on('end', () => setTimeout(answer, Number(process.env.FAKE_CLAUDE_DELAY_MS) || 0));
 function answer() {
   if (prompt.includes('Plan: Broken.')) {
     // Runs in the snowmobile home, so the test can count the calls.
-    require('node:fs').appendFileSync('broken-calls', 'x');
+    fs.appendFileSync('broken-calls', 'x');
     return process.stdout.write(JSON.stringify({ type: 'result', is_error: true, result: 'Not logged in' }));
   }
-  let out;
+  let out: { candidates?: unknown[] } & Record<string, unknown>;
   if (prompt.includes('You hunt for parts')) {
     out = { sources: [
       { name: 'git', kind: 'tool', url: 'https://git-scm.com', summary: 'Version control.',
@@ -23,13 +24,13 @@ function answer() {
     // A stack: the first paradigm of each layer.
     if (prompt.includes('candidate consumer apps')) {
       const seen = new Set();
-      ids = [...prompt.split('Paradigms (')[1].matchAll(/^(\d+) \| (\w+) \|/gm)].filter((m) => !seen.has(m[2]) && seen.add(m[2])).map((m) => Number(m[1]));
+      ids = [...(prompt.split('Paradigms (')[1] ?? '').matchAll(/^(\d+) \| (\w+) \|/gm)].filter((m) => !seen.has(m[2]) && seen.add(m[2])).map((m) => Number(m[1]));
     }
     const mismatch = prompt.includes('candidate consumer apps') ? 'Hardware and software disagree on where state lives.' : '';
     const why = { problem: 'Testers lose a day to flaky tests.', evidence_url: 'https://example.com/thread', conventional: 'Retry plugins',
       gain_axis: 'effort', gain: 'Restarts only changed tests; saves 50% of reruns.', mismatch };
     if (prompt.includes('candidate consumer apps')) {
-      require('node:fs').writeFileSync('stack-prompt', prompt);
+      fs.writeFileSync('stack-prompt', prompt);
       if (!prompt.includes('technical-debt | Technical debt | 62.4%') ||
           !prompt.includes('https://survey.stackoverflow.co/2024/professional-developers/') ||
           !prompt.includes('problem_ids') || !prompt.includes('developer tools')) throw new Error('No practical problem context.');
@@ -41,28 +42,28 @@ function answer() {
       { name: 'Nosource', pitch: 'A pain without a source.', component_ids: ids, ...why, evidence_url: '', verdict: 'survives', proof_url: '', proof_note: 'Sounds good.' },
       { name: 'Nobetter', pitch: 'No better than today.', component_ids: ids, ...why, verdict: 'no clear gain', proof_url: 'https://example.com', proof_note: 'Retry plugins do the same.' },
     ] };
-    if (prompt.includes('candidate consumer apps')) [out.candidates[0], out.candidates[1]] = [out.candidates[1], out.candidates[0]];
+    if (prompt.includes('candidate consumer apps')) { const c = out.candidates ?? []; [c[0], c[1]] = [c[1], c[0]]; }
   } else if (prompt.includes('design axes')) {
     out = { axes: ['state', 'binding', 'scheduling', 'parallelism'].map((n) => ({ name: n, low: `${n} low`, high: `${n} high` })) };
   } else if (prompt.includes('Score each paradigm')) {
-    const ps = [...prompt.split('Paradigms (')[1].matchAll(/^(\d+) \|/gm)].map((m) => Number(m[1]));
-    const as = [...prompt.split('Paradigms (')[0].matchAll(/^(\d+) \|/gm)].map((m) => Number(m[1]));
+    const ps = [...(prompt.split('Paradigms (')[1] ?? '').matchAll(/^(\d+) \|/gm)].map((m) => Number(m[1]));
+    const as = [...(prompt.split('Paradigms (')[0] ?? '').matchAll(/^(\d+) \|/gm)].map((m) => Number(m[1]));
     out = { scores: ps.flatMap((p) => as.map((a) => ({ paradigm_id: p, axis_id: a, score: (p * 7 + a * a * 3) % 11, reason: 'fake' }))) };
   } else if (prompt.includes('You hunt for paradigms')) {
-    require('node:fs').writeFileSync('paradigm-prompt', prompt);
+    fs.writeFileSync('paradigm-prompt', prompt);
     out = { paradigms: [
       { layer: 'os', name: 'Microkernel', summary: 'A copy of one that exists.', url: 'https://example.com/a' },
       { layer: 'hardware', name: 'Processing in memory', summary: 'Compute next to the DRAM.', url: 'https://example.com/pim' },
     ] };
   } else if (prompt.includes('Which paradigm would live')) {
-    require('node:fs').writeFileSync('point-prompt', prompt);
+    fs.writeFileSync('point-prompt', prompt);
     out = { layer: 'os', name: 'No verified match', exists: false, url: '', why: 'No verified match. The practical effect is unknown.' };
   } else {
-    const id = Number((prompt.match(/^(\d+) \|/m) || [0, 0])[1]);
+    const id = Number((prompt.match(/^(\d+) \|/m) ?? [0, 0])[1]);
     // A part that is not in the plan: the plan's parts are inserted first in the tests.
     const foreign = id + 1;
     if (prompt.includes('Write the state machine file')) {
-      require('node:fs').appendFileSync('machine-prompt', prompt);
+      fs.appendFileSync('machine-prompt', prompt);
       return process.stdout.write(JSON.stringify({ type: 'result', is_error: false, structured_output: { file: [
         '# Design', '', '## Requirements', '', '- R1: Small scope. — scope', '', '## Machine job', 'initial: idle', 'final: done', '',
         ...(prompt.includes('Plan: Hidden.') ? ['HIDDEN'] : []), ...(prompt.includes('Plan: Garbled.') ? ['BROKEN'] : [])].join('\n') } }));

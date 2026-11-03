@@ -1,10 +1,25 @@
-const test = require('node:test');
-const assert = require('node:assert');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const { DatabaseSync } = require('node:sqlite');
-const { start, eigen, pca, gaps, practicalProblems, ideaProblems } = require('../snowmobile.js');
+import test from 'node:test';
+import assert from 'node:assert';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
+import { start } from '../src/server.ts';
+import { eigen, pca, gaps, practicalProblems as assess, ideaProblems, type Eigen, type Axis, type ScoreTable } from '../src/stack.ts';
+import type { Cfg } from '../src/cfg.ts';
+import type { Layer } from '../src/data.ts';
+import repoScores from '../data/repo-scores.json' with { type: 'json' };
+
+// The JSON bodies of the API and the rows of the database are checked by the assertions, so the tests type them as any.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type Json = any;
+const one = (db: DatabaseSync, sql: string, ...params: SQLInputValue[]): Json => db.prepare(sql).get(...params);
+const many = (db: DatabaseSync, sql: string, ...params: SQLInputValue[]): Json[] => db.prepare(sql).all(...params);
+// A seed paradigm of the tests has no summary, and a changed paradigm can have any layer name.
+interface Seed { id: number; layer: string; name: string; url: string }
+const practicalProblems = (ps: readonly Seed[]) => assess(ps.map((p) => ({ summary: '', ...p, layer: p.layer as Layer })));
+
+type App = { server: Awaited<ReturnType<typeof start>>['server']; cfg: Cfg; port: number };
 
 // Reason: a stale link can assign a source assessment to a different user paradigm.
 test('problem coverage excludes changed paradigms and preserves costs beside benefits', () => {
@@ -18,8 +33,8 @@ test('problem coverage excludes changed paradigms and preserves costs beside ben
     ['technical-debt', 'reduces'], ['unreliable-tools', 'reduces'], ['deployment-complexity', 'worsens'],
   ]);
   assert.deepStrictEqual(service.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
-  assert.match(service.links[0].reason, /suitable service boundaries.*does not address all technical debt/);
-  assert.match(service.links[1].reason, /requires fault controls.*does not prove whole-system reliability/);
+  assert.match(service.links[0]!.reason, /suitable service boundaries.*does not address all technical debt/);
+  assert.match(service.links[1]!.reason, /requires fault controls.*does not prove whole-system reliability/);
   const both = practicalProblems([microservices, nix]);
   assert.deepStrictEqual(both.coverage.withoutReduction, []);
   assert.strictEqual(both.coverage.unassessedParadigms, 0);
@@ -28,10 +43,10 @@ test('problem coverage excludes changed paradigms and preserves costs beside ben
   assert.deepStrictEqual(packages.coverage.withoutReduction, ['technical-debt']);
   const reliability = packages.links.filter((l) => l.problem_id === 'unreliable-tools');
   assert.strictEqual(reliability.length, 1);
-  assert.strictEqual(reliability[0].effect, 'reduces');
-  assert.strictEqual(reliability[0].paradigm_id, nix.id);
-  assert.strictEqual(reliability[0].source.url, 'https://nix.dev/manual/nix/2.35/introduction.html#atomic-upgrades-and-rollbacks');
-  assert.match(reliability[0].reason, /partial package updates.*requires retained versions.*does not prove application correctness or whole-system reliability/);
+  assert.strictEqual(reliability[0]!.effect, 'reduces');
+  assert.strictEqual(reliability[0]!.paradigm_id, nix.id);
+  assert.strictEqual(reliability[0]!.source.url, 'https://nix.dev/manual/nix/2.35/introduction.html#atomic-upgrades-and-rollbacks');
+  assert.match(reliability[0]!.reason, /partial package updates.*requires retained versions.*does not prove application correctness or whole-system reliability/);
   for (const change of [{ name: 'My paradigm' }, { layer: 'os' }, { url: 'https://example.com/my-definition' }]) {
     const changed = practicalProblems([microservices, { ...nix, ...change }]);
     assert.deepStrictEqual(changed.links, service.links);
@@ -102,173 +117,173 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.strictEqual(assessed.coverage.unassessedParadigms, 0);
   assert.deepStrictEqual(assessed.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[93, 'technical-debt', 'reduces'], [94, 'unreliable-tools', 'reduces']]);
-  assert.match(assessed.links[0].reason, /Assessment:.*does not address all technical debt/);
-  assert.match(assessed.links[1].reason, /In Erlang\/OTP.*Actors alone provide no supervisor/);
+  assert.match(assessed.links[0]!.reason, /Assessment:.*does not address all technical debt/);
+  assert.match(assessed.links[1]!.reason, /In Erlang\/OTP.*Actors alone provide no supervisor/);
   const memory = practicalProblems([ownership]);
   assert.deepStrictEqual(memory.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[95, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(memory.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(memory.coverage.unassessedParadigms, 0);
-  assert.match(memory.links[0].reason, /In Rust.*double-free.*does not prove whole-system reliability/);
+  assert.match(memory.links[0]!.reason, /In Rust.*double-free.*does not prove whole-system reliability/);
   // Reason: a documented cost must not count as a reduction in technical debt.
   const cost = practicalProblems([cqrs]);
   assert.deepStrictEqual(cost.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[96, 'technical-debt', 'worsens']]);
   assert.deepStrictEqual(cost.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
   assert.strictEqual(cost.coverage.unassessedParadigms, 0);
-  assert.match(cost.links[0].reason, /when CQRS does not fit the domain.*Assessment:.*does not apply to every CQRS use/);
+  assert.match(cost.links[0]!.reason, /when CQRS does not fit the domain.*Assessment:.*does not apply to every CQRS use/);
   // Reason: the deployment benefit must not hide the loss of a fault boundary.
   const local = practicalProblems([embedded]);
   assert.deepStrictEqual(local.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[97, 'deployment-complexity', 'reduces'], [97, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(local.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'unreliable-tools']);
   assert.strictEqual(local.coverage.unassessedParadigms, 0);
-  assert.match(local.links[0].reason, /no separate database server.*Other application deployment costs remain/);
-  assert.match(local.links[1].reason, /stray pointers.*does not prove more faults in every application/);
+  assert.match(local.links[0]!.reason, /no separate database server.*Other application deployment costs remain/);
+  assert.match(local.links[1]!.reason, /stray pointers.*does not prove more faults in every application/);
   // Reason: driver isolation must reach coverage without a claim about every microkernel.
   const isolated = practicalProblems([microkernel]);
   assert.deepStrictEqual(isolated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[98, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(isolated.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(isolated.coverage.unassessedParadigms, 0);
-  assert.match(isolated.links[0].reason, /MINIX 3.*contain driver memory faults.*does not prove whole-system reliability or apply to every microkernel/);
+  assert.match(isolated.links[0]!.reason, /MINIX 3.*contain driver memory faults.*does not prove whole-system reliability or apply to every microkernel/);
   // Reason: a recovery benefit must not hide faults from repeat external updates.
   const replay = practicalProblems([events]);
   assert.deepStrictEqual(replay.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[99, 'unreliable-tools', 'reduces'], [99, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(replay.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(replay.coverage.unassessedParadigms, 0);
-  assert.match(replay.links[0].reason, /retained event log.*does not prevent every fault/);
-  assert.match(replay.links[1].reason, /unless gateways suppress repeat updates.*depends on external effects and replay controls/);
+  assert.match(replay.links[0]!.reason, /retained event log.*does not prevent every fault/);
+  assert.match(replay.links[1]!.reason, /unless gateways suppress repeat updates.*depends on external effects and replay controls/);
   // Reason: offline access must not hide resource costs from retained history.
   const offline = practicalProblems([localFirst]);
   assert.deepStrictEqual(offline.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[100, 'unreliable-tools', 'reduces'], [100, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(offline.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(offline.coverage.unassessedParadigms, 0);
-  assert.match(offline.links[0].reason, /network outage.*does not protect against device loss or local faults/);
-  assert.match(offline.links[1].reason, /CRDT change history.*depends on the implementation and workload/);
+  assert.match(offline.links[0]!.reason, /network outage.*does not protect against device loss or local faults/);
+  assert.match(offline.links[1]!.reason, /CRDT change history.*depends on the implementation and workload/);
   // Reason: server management removal must not hide request failures at concurrency limits.
   const managed = practicalProblems([serverless]);
   assert.deepStrictEqual(managed.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[101, 'deployment-complexity', 'reduces'], [101, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(managed.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'unreliable-tools']);
   assert.strictEqual(managed.coverage.unassessedParadigms, 0);
-  assert.match(managed.links[0].reason, /removes server setup.*configuration and service integration costs remain/);
-  assert.match(managed.links[1].reason, /reject requests.*depends on demand, quotas and concurrency controls/);
+  assert.match(managed.links[0]!.reason, /removes server setup.*configuration and service integration costs remain/);
+  assert.match(managed.links[1]!.reason, /reject requests.*depends on demand, quotas and concurrency controls/);
   // Reason: filter reuse must not hide faults from repeat state updates.
   const pipeline = practicalProblems([filters]);
   assert.deepStrictEqual(pipeline.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[102, 'technical-debt', 'reduces'], [102, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(pipeline.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
   assert.strictEqual(pipeline.coverage.unassessedParadigms, 0);
-  assert.match(pipeline.links[0].reason, /duplicate pipeline logic.*compatible data schemas.*does not address all technical debt/);
-  assert.match(pipeline.links[1].reason, /retries after filter faults.*depends on retry controls/);
+  assert.match(pipeline.links[0]!.reason, /duplicate pipeline logic.*compatible data schemas.*does not address all technical debt/);
+  assert.match(pipeline.links[1]!.reason, /retries after filter faults.*depends on retry controls/);
   // Reason: fewer dependencies must not hide event loss after a component crash.
   const decoupled = practicalProblems([eventDriven]);
   assert.deepStrictEqual(decoupled.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[103, 'technical-debt', 'reduces'], [103, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(decoupled.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
   assert.strictEqual(decoupled.coverage.unassessedParadigms, 0);
-  assert.match(decoupled.links[0].reason, /without changes to producers.*Event contracts still need maintenance.*does not address all technical debt/);
-  assert.match(decoupled.links[1].reason, /crash before event transfer.*depends on durable event storage and receipt controls/);
+  assert.match(decoupled.links[0]!.reason, /without changes to producers.*Event contracts still need maintenance.*does not address all technical debt/);
+  assert.match(decoupled.links[1]!.reason, /crash before event transfer.*depends on durable event storage and receipt controls/);
   // Reason: remote copies must not hide data loss from temporary peer caches.
   const replicated = practicalProblems([peers]);
   assert.deepStrictEqual(replicated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[104, 'unreliable-tools', 'reduces'], [104, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(replicated.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(replicated.coverage.unassessedParadigms, 0);
-  assert.match(replicated.links[0].reason, /reachable peers.*requires explicit data retention.*does not prove whole-system reliability/);
-  assert.match(replicated.links[1].reason, /temporary peer caches.*depends on retained copies/);
+  assert.match(replicated.links[0]!.reason, /reachable peers.*requires explicit data retention.*does not prove whole-system reliability/);
+  assert.match(replicated.links[1]!.reason, /temporary peer caches.*depends on retained copies/);
   // Reason: convergence must not imply complete application correctness or device-loss protection.
   const merged = practicalProblems([crdt]);
   assert.deepStrictEqual(merged.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[105, 'technical-debt', 'reduces'], [105, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(merged.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.strictEqual(merged.coverage.unassessedParadigms, 0);
-  assert.match(merged.links[0].reason, /application-specific merge code.*requires suitable data types.*does not address all technical debt/);
-  assert.match(merged.links[1].reason, /network outages.*does not prove application correctness or protect against device loss/);
+  assert.match(merged.links[0]!.reason, /application-specific merge code.*requires suitable data types.*does not address all technical debt/);
+  assert.match(merged.links[1]!.reason, /network outages.*does not prove application correctness or protect against device loss/);
   // Reason: pure functions must not imply fault-free effects or complete debt removal.
   const pure = practicalProblems([functional]);
   assert.deepStrictEqual(pure.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[106, 'technical-debt', 'reduces'], [106, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(pure.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.ok(pure.links.every((l) => l.source.url === 'https://clojure.org/about/state#_functional_programming'));
-  assert.match(pure.links[0].reason, /local function behavior.*does not address all technical debt/);
-  assert.match(pure.links[1].reason, /no mutable state.*Effects and shared state still need controls.*does not prove whole-system reliability/);
+  assert.match(pure.links[0]!.reason, /local function behavior.*does not address all technical debt/);
+  assert.match(pure.links[1]!.reason, /no mutable state.*Effects and shared state still need controls.*does not prove whole-system reliability/);
   // Reason: recovery evidence must not hide data loss between snapshots.
   const persisted = practicalProblems([structures]);
   assert.deepStrictEqual(persisted.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[107, 'unreliable-tools', 'reduces'], [107, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(persisted.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.ok(persisted.links.every((l) => l.source.url === 'https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/'));
-  assert.match(persisted.links[0].reason, /replay.*requires intact persistence files.*does not prove whole-system reliability/);
-  assert.match(persisted.links[1].reason, /lose recent writes.*depends on the persistence policy/);
+  assert.match(persisted.links[0]!.reason, /replay.*requires intact persistence files.*does not prove whole-system reliability/);
+  assert.match(persisted.links[1]!.reason, /lose recent writes.*depends on the persistence policy/);
   // Reason: component isolation must not imply complete system reliability.
   const partitioned = practicalProblems([separation]);
   assert.deepStrictEqual(partitioned.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[108, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(partitioned.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
-  assert.match(partitioned.links[0].reason, /Muen.*correct isolation policy.*does not prove whole-system reliability or apply to every separation kernel/);
+  assert.match(partitioned.links[0]!.reason, /Muen.*correct isolation policy.*does not prove whole-system reliability or apply to every separation kernel/);
   // Reason: typed handlers must not imply correct handler behavior or complete debt removal.
   const handled = practicalProblems([effects]);
   assert.deepStrictEqual(handled.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[109, 'technical-debt', 'reduces'], [109, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(handled.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
-  assert.match(handled.links[0].reason, /suitable handler interfaces.*does not address all technical debt/);
-  assert.match(handled.links[1].reason, /absent effect handlers before execution.*Correct handler behavior still needs checks.*does not prove whole-system reliability/);
+  assert.match(handled.links[0]!.reason, /suitable handler interfaces.*does not address all technical debt/);
+  assert.match(handled.links[1]!.reason, /absent effect handlers before execution.*Correct handler behavior still needs checks.*does not prove whole-system reliability/);
   // Reason: consistent durable state must not imply correct application transactions or complete debt removal.
   const durable = practicalProblems([store]);
   assert.deepStrictEqual(durable.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[110, 'technical-debt', 'reduces'], [110, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(durable.coverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
   assert.ok(durable.links.every((l) => l.source.url === store.url));
-  assert.match(durable.links[0].reason, /custom code at the storage boundary.*does not address all technical debt/);
-  assert.match(durable.links[1].reason, /inconsistent stored state after a crash.*Correct application transactions remain necessary.*does not prove whole-system reliability/);
+  assert.match(durable.links[0]!.reason, /custom code at the storage boundary.*does not address all technical debt/);
+  assert.match(durable.links[1]!.reason, /inconsistent stored state after a crash.*Correct application transactions remain necessary.*does not prove whole-system reliability/);
   // Reason: model reuse must not imply correct constraints or complete debt removal.
   const reusable = practicalProblems([constraint]);
   assert.deepStrictEqual(reusable.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[111, 'technical-debt', 'reduces']]);
   assert.deepStrictEqual(reusable.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
-  assert.match(reusable.links[0].reason, /duplicate constraint code.*requires a reusable model.*does not address all technical debt or prove that the constraints match the real problem/);
+  assert.match(reusable.links[0]!.reason, /duplicate constraint code.*requires a reusable model.*does not address all technical debt or prove that the constraints match the real problem/);
   // Reason: less configuration work must not hide the cost of static configuration changes.
   const appliance = practicalProblems([unikernel]);
   assert.deepStrictEqual(appliance.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[112, 'deployment-complexity', 'reduces'], [112, 'deployment-complexity', 'worsens']]);
   assert.deepStrictEqual(appliance.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'unreliable-tools']);
   assert.ok(appliance.links.every((l) => l.source.url === 'https://dave.recoil.org/papers/final/asplos2013.pdf'));
-  assert.match(appliance.links[0].reason, /requires libraries that fit the application.*does not remove all deployment costs or apply to every unikernel/);
-  assert.match(appliance.links[1].reason, /new compilation.*depends on which parameters are static/);
+  assert.match(appliance.links[0]!.reason, /requires libraries that fit the application.*does not remove all deployment costs or apply to every unikernel/);
+  assert.match(appliance.links[1]!.reason, /new compilation.*depends on which parameters are static/);
   // Reason: resource access controls must not imply correct authorized code or complete system reliability.
   const restricted = practicalProblems([capabilities]);
   assert.deepStrictEqual(restricted.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[113, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(restricted.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
-  assert.strictEqual(restricted.links[0].source.url, 'https://docs.sel4.systems/Tutorials/capabilities.html');
-  assert.match(restricted.links[0].reason, /correct capability allocation.*Authorized code can still cause faults.*does not prove whole-system reliability or apply to every capability-based OS/);
+  assert.strictEqual(restricted.links[0]!.source.url, 'https://docs.sel4.systems/Tutorials/capabilities.html');
+  assert.match(restricted.links[0]!.reason, /correct capability allocation.*Authorized code can still cause faults.*does not prove whole-system reliability or apply to every capability-based OS/);
   // Reason: driver isolation must not imply complete system reliability for every hypervisor.
   const virtual = practicalProblems([hypervisor]);
   assert.deepStrictEqual(virtual.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[114, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(virtual.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
-  assert.strictEqual(virtual.links[0].source.url, 'https://xenproject.org/projects/hypervisor/');
-  assert.match(virtual.links[0].reason, /requires driver isolation.*does not prove whole-system reliability or apply to every hypervisor/);
+  assert.strictEqual(virtual.links[0]!.source.url, 'https://xenproject.org/projects/hypervisor/');
+  assert.match(virtual.links[0]!.reason, /requires driver isolation.*does not prove whole-system reliability or apply to every hypervisor/);
   // Reason: circuit reuse must not imply complete debt removal or correct generated circuits.
   const generated = practicalProblems([generators]);
   assert.deepStrictEqual(generated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[115, 'technical-debt', 'reduces']]);
   assert.deepStrictEqual(generated.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
   assert.strictEqual(generated.coverage.unassessedParadigms, 0);
-  assert.strictEqual(generated.links[0].source.url, generators.url);
-  assert.match(generated.links[0].reason, /duplicate circuit description code.*requires compatible generator interfaces.*still need validation.*does not address all technical debt or apply to every hardware generator/);
+  assert.strictEqual(generated.links[0]!.source.url, generators.url);
+  assert.match(generated.links[0]!.reason, /duplicate circuit description code.*requires compatible generator interfaces.*still need validation.*does not address all technical debt or apply to every hardware generator/);
   // Reason: uniform resource access must not imply complete debt removal for every distributed OS.
   const uniform = practicalProblems([distributed]);
   assert.deepStrictEqual(uniform.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[116, 'technical-debt', 'reduces']]);
   assert.deepStrictEqual(uniform.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
   assert.strictEqual(uniform.coverage.unassessedParadigms, 0);
-  assert.strictEqual(uniform.links[0].source.url, distributed.url);
-  assert.match(uniform.links[0].reason, /custom resource access code.*requires services that expose compatible file interfaces.*does not address all technical debt or apply to every distributed OS/);
+  assert.strictEqual(uniform.links[0]!.source.url, distributed.url);
+  assert.match(uniform.links[0]!.reason, /custom resource access code.*requires services that expose compatible file interfaces.*does not address all technical debt or apply to every distributed OS/);
   // Reason: database isolation must not hide deployment costs or imply whole-system reliability.
   const databaseServer = practicalProblems([clientServer]);
   assert.deepStrictEqual(databaseServer.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
@@ -276,8 +291,8 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(databaseServer.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(databaseServer.coverage.unassessedParadigms, 0);
   assert.ok(databaseServer.links.every((l) => l.source.url === 'https://www.sqlite.org/serverless.html'));
-  assert.match(databaseServer.links[0].reason, /requires a separate server process.*Authorized requests can still cause faults.*does not prove whole-system reliability or apply to every client-server system/);
-  assert.match(databaseServer.links[1].reason, /self-managed database server.*managed service can transfer server administration.*does not apply to every client-server system/);
+  assert.match(databaseServer.links[0]!.reason, /requires a separate server process.*Authorized requests can still cause faults.*does not prove whole-system reliability or apply to every client-server system/);
+  assert.match(databaseServer.links[1]!.reason, /self-managed database server.*managed service can transfer server administration.*does not apply to every client-server system/);
   // Reason: reusable transforms must not hide retry risks or imply complete debt removal.
   const graph = practicalProblems([dataflow]);
   assert.deepStrictEqual(graph.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
@@ -287,15 +302,15 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(graph.links.map((l) => l.source.url), [
     'https://beam.apache.org/documentation/programming-guide/#composite-transforms',
     'https://beam.apache.org/documentation/programming-guide/#idempotence']);
-  assert.match(graph.links[0].reason, /duplicate pipeline code.*requires compatible transform interfaces.*does not address all technical debt or apply to every dataflow system/);
-  assert.match(graph.links[1].reason, /repeat external updates.*without idempotent operations.*depends on the runner and external effect controls.*does not apply to every dataflow system/);
+  assert.match(graph.links[0]!.reason, /duplicate pipeline code.*requires compatible transform interfaces.*does not address all technical debt or apply to every dataflow system/);
+  assert.match(graph.links[1]!.reason, /repeat external updates.*without idempotent operations.*depends on the runner and external effect controls.*does not apply to every dataflow system/);
   // Reason: encapsulation must not imply complete debt removal for every object-oriented design.
   const encapsulated = practicalProblems([objects]);
   assert.deepStrictEqual(encapsulated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[119, 'technical-debt', 'reduces']]);
   assert.deepStrictEqual(encapsulated.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
-  assert.strictEqual(encapsulated.links[0].source.url, 'https://docs.oracle.com/javase/tutorial/java/concepts/object.html');
-  assert.match(encapsulated.links[0].reason, /dependencies on internal implementation details.*requires stable method contracts and encapsulated state.*does not address all technical debt or apply to every object-oriented design/);
+  assert.strictEqual(encapsulated.links[0]!.source.url, 'https://docs.oracle.com/javase/tutorial/java/concepts/object.html');
+  assert.match(encapsulated.links[0]!.reason, /dependencies on internal implementation details.*requires stable method contracts and encapsulated state.*does not address all technical debt or apply to every object-oriented design/);
   // Reason: query termination benefits must not hide stale answers or imply whole-system reliability.
   const queries = practicalProblems([logic]);
   assert.deepStrictEqual(queries.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
@@ -304,23 +319,23 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(queries.links.map((l) => l.source.url), [
     'https://www.swi-prolog.org/pldoc/man?section=tabling-non-termination',
     'https://www.swi-prolog.org/pldoc/man?section=tabling']);
-  assert.match(queries.links[0].reason, /finite graph query.*requires suitable tabled predicates.*does not guarantee termination for every query or whole-system reliability/);
-  assert.match(queries.links[1].reason, /stale answers.*after facts change.*explicit table invalidation or suitable incremental tables.*does not apply to every logic program/);
+  assert.match(queries.links[0]!.reason, /finite graph query.*requires suitable tabled predicates.*does not guarantee termination for every query or whole-system reliability/);
+  assert.match(queries.links[1]!.reason, /stale answers.*after facts change.*explicit table invalidation or suitable incremental tables.*does not apply to every logic program/);
   // Reason: event combinators must not imply complete debt removal or safe external effects.
   const coordinated = practicalProblems([reactive]);
   assert.deepStrictEqual(coordinated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[121, 'technical-debt', 'reduces']]);
   assert.deepStrictEqual(coordinated.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
-  assert.strictEqual(coordinated.links[0].source.url, 'https://hackage-content.haskell.org/package/reactive-banana-1.3.2.0/docs/Reactive-Banana-Combinators.html');
-  assert.match(coordinated.links[0].reason, /custom event coordination code.*requires event and value models that fit the application.*External effects still need controls.*does not address all technical debt or apply to every functional reactive program/);
+  assert.strictEqual(coordinated.links[0]!.source.url, 'https://hackage-content.haskell.org/package/reactive-banana-1.3.2.0/docs/Reactive-Banana-Combinators.html');
+  assert.match(coordinated.links[0]!.reason, /custom event coordination code.*requires event and value models that fit the application.*External effects still need controls.*does not address all technical debt or apply to every functional reactive program/);
   // Reason: static stack checks must not imply safe dynamic code or whole-system reliability.
   const checkedStack = practicalProblems([concatenative]);
   assert.deepStrictEqual(checkedStack.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[122, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(checkedStack.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(checkedStack.coverage.unassessedParadigms, 0);
-  assert.strictEqual(checkedStack.links[0].source.url, 'https://docs.factorcode.org/content/article-inference.html');
-  assert.match(checkedStack.links[0].reason, /Factor.*invalid stack effects.*requires code that passes the static stack checker.*Dynamic code still needs controls.*does not prove whole-system reliability or apply to every concatenative language/);
+  assert.strictEqual(checkedStack.links[0]!.source.url, 'https://docs.factorcode.org/content/article-inference.html');
+  assert.match(checkedStack.links[0]!.reason, /Factor.*invalid stack effects.*requires code that passes the static stack checker.*Dynamic code still needs controls.*does not prove whole-system reliability or apply to every concatenative language/);
   // Reason: hardware abstraction benefits must not hide control flow costs.
   const multicore = practicalProblems([multikernel]);
   assert.deepStrictEqual(multicore.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
@@ -328,47 +343,47 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(multicore.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
   assert.strictEqual(multicore.coverage.unassessedParadigms, 0);
   assert.ok(multicore.links.every((l) => l.source.url === multikernel.url));
-  assert.match(multicore.links[0].reason, /code changes across components.*requires hardware details.*does not address all technical debt or apply to every multikernel/);
-  assert.match(multicore.links[1].reason, /obscure control flow.*cost depends on message handlers and control flow tools.*does not apply to every multikernel/);
+  assert.match(multicore.links[0]!.reason, /code changes across components.*requires hardware details.*does not address all technical debt or apply to every multikernel/);
+  assert.match(multicore.links[1]!.reason, /obscure control flow.*cost depends on message handlers and control flow tools.*does not apply to every multikernel/);
   // Reason: best-effort memory recovery must not imply protection for all application data or processor faults.
   const restored = practicalProblems([splitkernel]);
   assert.deepStrictEqual(restored.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[124, 'unreliable-tools', 'reduces']]);
   assert.deepStrictEqual(restored.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
-  assert.strictEqual(restored.links[0].source.url, 'https://www.usenix.org/system/files/osdi18-shan.pdf');
-  assert.match(restored.links[0].reason, /requires intact backup logs.*full backup log can stop replication.*protect persistent data and handle processor faults.*does not prove whole-system reliability or apply to every splitkernel/);
+  assert.strictEqual(restored.links[0]!.source.url, 'https://www.usenix.org/system/files/osdi18-shan.pdf');
+  assert.match(restored.links[0]!.reason, /requires intact backup logs.*full backup log can stop replication.*protect persistent data and handle processor faults.*does not prove whole-system reliability or apply to every splitkernel/);
   // Reason: fault containment must not hide direct interface portability costs.
   const libraries = practicalProblems([exokernel]);
   assert.deepStrictEqual(libraries.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[125, 'unreliable-tools', 'reduces'], [125, 'technical-debt', 'worsens']]);
   assert.deepStrictEqual(libraries.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.ok(libraries.links.every((l) => l.source.url === exokernel.url));
-  assert.match(libraries.links[0].reason, /Wrong arguments.*affect only that application.*requires correct kernel resource protection.*does not prove whole-system reliability or apply to every exokernel/);
-  assert.match(libraries.links[1].reason, /hardware-dependent maintenance work.*applies to direct interface use.*standard interface can preserve portability.*does not apply to every exokernel application/);
+  assert.match(libraries.links[0]!.reason, /Wrong arguments.*affect only that application.*requires correct kernel resource protection.*does not prove whole-system reliability or apply to every exokernel/);
+  assert.match(libraries.links[1]!.reason, /hardware-dependent maintenance work.*applies to direct interface use.*standard interface can preserve portability.*does not apply to every exokernel application/);
   // Reason: GPU costs must reach the map without false problem reductions.
   const parallel = practicalProblems([gpu]);
   assert.deepStrictEqual(parallel.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[127, 'unreliable-tools', 'worsens'], [127, 'build-complexity', 'worsens']]);
   assert.deepStrictEqual(parallel.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
   assert.strictEqual(parallel.coverage.unassessedParadigms, 0);
-  assert.match(parallel.links[0].reason, /incorrect synchronization scopes.*depends on shared memory access and synchronization controls.*does not imply faults in every GPU program/);
-  assert.match(parallel.links[1].reason, /compatible host compiler.*explicit compiler flags and device linkage.*nvcc coordinates compiler steps automatically.*does not apply to every GPU toolchain/);
+  assert.match(parallel.links[0]!.reason, /incorrect synchronization scopes.*depends on shared memory access and synchronization controls.*does not imply faults in every GPU program/);
+  assert.match(parallel.links[1]!.reason, /compatible host compiler.*explicit compiler flags and device linkage.*nvcc coordinates compiler steps automatically.*does not apply to every GPU toolchain/);
   // Reason: a data race cost must not count as a reduction or imply faults in every shared-memory program.
   const shared = practicalProblems([sharedMemory]);
   assert.deepStrictEqual(shared.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[128, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(shared.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
   assert.strictEqual(shared.coverage.unassessedParadigms, 0);
-  assert.strictEqual(shared.links[0].source.url, 'https://www.openmp.org/spec-html/5.2/openmpsu9.html');
-  assert.match(shared.links[0].reason, /OpenMP.*data race.*unordered access to shared memory.*depends on shared data access and synchronization controls.*does not imply faults in every shared-memory program/);
+  assert.strictEqual(shared.links[0]!.source.url, 'https://www.openmp.org/spec-html/5.2/openmpsu9.html');
+  assert.match(shared.links[0]!.reason, /OpenMP.*data race.*unordered access to shared memory.*depends on shared data access and synchronization controls.*does not imply faults in every shared-memory program/);
   // Reason: a protocol cost must not imply faults in every cluster application or count as a reduction.
   const messages = practicalProblems([cluster]);
   assert.deepStrictEqual(messages.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[129, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(messages.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
   assert.strictEqual(messages.coverage.unassessedParadigms, 0);
-  assert.strictEqual(messages.links[0].source.url, 'https://www.mpi-forum.org/docs/mpi-5.0/mpi50-report/node73.htm');
-  assert.match(messages.links[0].reason, /MPI.*deadlock.*incorrect message order.*depends on the communication pattern and protocol controls.*asynchronous operations can avoid this order constraint.*does not imply faults in every cluster application/);
+  assert.strictEqual(messages.links[0]!.source.url, 'https://www.mpi-forum.org/docs/mpi-5.0/mpi50-report/node73.htm');
+  assert.match(messages.links[0]!.reason, /MPI.*deadlock.*incorrect message order.*depends on the communication pattern and protocol controls.*asynchronous operations can avoid this order constraint.*does not imply faults in every cluster application/);
   // Reason: driver costs must not count as reductions or imply unstable application interfaces.
   const kernelDrivers = practicalProblems([monolithic]);
   assert.deepStrictEqual(kernelDrivers.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
@@ -376,16 +391,16 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(kernelDrivers.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
   assert.strictEqual(kernelDrivers.coverage.unassessedParadigms, 0);
   assert.ok(kernelDrivers.links.every((l) => l.source.url === 'https://docs.kernel.org/process/stable-api-nonsense.html'));
-  assert.match(kernelDrivers.links[0].reason, /drivers outside that tree.*extra maintenance.*userspace interface stays stable.*does not apply to every monolithic kernel or ordinary application/);
-  assert.match(kernelDrivers.links[1].reason, /separate module builds.*supported variants.*does not apply to every monolithic kernel or ordinary application/);
+  assert.match(kernelDrivers.links[0]!.reason, /drivers outside that tree.*extra maintenance.*userspace interface stays stable.*does not apply to every monolithic kernel or ordinary application/);
+  assert.match(kernelDrivers.links[1]!.reason, /separate module builds.*supported variants.*does not apply to every monolithic kernel or ordinary application/);
   // Reason: a concurrency cost must retain its scope and must not count as a reduction.
   const mutableState = practicalProblems([imperative]);
   assert.deepStrictEqual(mutableState.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[135, 'unreliable-tools', 'worsens']]);
   assert.deepStrictEqual(mutableState.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
   assert.strictEqual(mutableState.coverage.unassessedParadigms, 0);
-  assert.strictEqual(mutableState.links[0].source.url, 'https://clojure.org/about/state#_imperative_programming');
-  assert.match(mutableState.links[0].reason, /concurrent tasks.*shared mutable state.*incorrect coordination can cause faults.*depends on synchronization controls.*does not imply faults in every imperative program/);
+  assert.strictEqual(mutableState.links[0]!.source.url, 'https://clojure.org/about/state#_imperative_programming');
+  assert.match(mutableState.links[0]!.reason, /concurrent tasks.*shared mutable state.*incorrect coordination can cause faults.*depends on synchronization controls.*does not imply faults in every imperative program/);
   const emptyProblemCount = practicalProblems([]).items.length;
   // Reason: assembly costs must retain input limits and must not count as reductions.
   const explicitInstructions = practicalProblems([vliw]);
@@ -394,16 +409,16 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(explicitInstructions.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
   assert.strictEqual(explicitInstructions.coverage.unassessedParadigms, 0);
   assert.ok(explicitInstructions.links.every((l) => l.source.url === 'https://downloads.ti.com/docs/esd/SPRUI04/what-you-need-to-know-to-write-linear-assembly-spru1874615.html'));
-  assert.match(explicitInstructions.links[0].reason, /target-specific assembly.*maintenance work.*optimizer handles instruction order and register allocation by default.*depends on performance needs and source choices.*does not apply to every VLIW program/);
-  assert.match(explicitInstructions.links[1].reason, /may accept illegal assembly.*unintended results.*requires invalid optimizer input.*does not imply faults in every VLIW program/);
+  assert.match(explicitInstructions.links[0]!.reason, /target-specific assembly.*maintenance work.*optimizer handles instruction order and register allocation by default.*depends on performance needs and source choices.*does not apply to every VLIW program/);
+  assert.match(explicitInstructions.links[1]!.reason, /may accept illegal assembly.*unintended results.*requires invalid optimizer input.*does not imply faults in every VLIW program/);
   // Reason: vector portability must retain its compatibility limits and exclude other problem reductions.
   const portableVectors = practicalProblems([vector]);
   assert.deepStrictEqual(portableVectors.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[133, 'technical-debt', 'reduces']]);
   assert.deepStrictEqual(portableVectors.coverage.withoutReduction, ['build-complexity', 'deployment-complexity', 'unreliable-tools']);
   assert.strictEqual(portableVectors.coverage.unassessedParadigms, 0);
-  assert.strictEqual(portableVectors.links[0].source.url, 'https://raw.githubusercontent.com/riscv/riscv-v-spec/v1.0/v-spec.adoc');
-  assert.match(portableVectors.links[0].reason, /one binary.*different vector register lengths.*reduce duplicate implementations.*requires compatible element types, instructions and portable code.*does not address all technical debt or apply to every vector processor/);
+  assert.strictEqual(portableVectors.links[0]!.source.url, 'https://raw.githubusercontent.com/riscv/riscv-v-spec/v1.0/v-spec.adoc');
+  assert.match(portableVectors.links[0]!.reason, /one binary.*different vector register lengths.*reduce duplicate implementations.*requires compatible element types, instructions and portable code.*does not address all technical debt or apply to every vector processor/);
   // Reason: secure boot benefits must not hide release costs or imply correct authorized code.
   const verifiedBoot = practicalProblems([rootOfTrust]);
   assert.deepStrictEqual(verifiedBoot.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
@@ -411,32 +426,32 @@ test('debt and reliability assessments follow only the documented seed definitio
   assert.deepStrictEqual(verifiedBoot.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.strictEqual(verifiedBoot.coverage.unassessedParadigms, 0);
   assert.ok(verifiedBoot.links.every((l) => l.source.url === 'https://opentitan.org/book/doc/security/specs/secure_boot/'));
-  assert.match(verifiedBoot.links[0].reason, /Earl Grey.*unauthorized boot code.*requires trusted keys and correct verification controls.*Authorized code can still contain faults.*Pre-RFC.*does not prove whole-system reliability or apply to every hardware root of trust/);
-  assert.match(verifiedBoot.links[1].reason, /fails to boot after verification errors.*extra key and signature controls.*depends on key configuration and release procedures.*Pre-RFC.*does not apply to every hardware root of trust/);
+  assert.match(verifiedBoot.links[0]!.reason, /Earl Grey.*unauthorized boot code.*requires trusted keys and correct verification controls.*Authorized code can still contain faults.*Pre-RFC.*does not prove whole-system reliability or apply to every hardware root of trust/);
+  assert.match(verifiedBoot.links[1]!.reason, /fails to boot after verification errors.*extra key and signature controls.*depends on key configuration and release procedures.*Pre-RFC.*does not apply to every hardware root of trust/);
   // Reason: FPGA build costs must not imply manual stages or count as problem reductions.
   const circuits = practicalProblems([fpga]);
   assert.deepStrictEqual(circuits.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[131, 'build-complexity', 'worsens']]);
   assert.deepStrictEqual(circuits.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
   assert.strictEqual(circuits.coverage.unassessedParadigms, 0);
-  assert.strictEqual(circuits.links[0].source.url, 'https://docs.amd.com/r/2024.1-English/ug888-vivado-design-flows-overview-tutorial/Step-7-Synthesizing-and-Implementing-the-Design');
-  assert.match(circuits.links[0].reason, /synthesis and implementation run options.*build configuration work.*prerequisite stages automatically.*depends on the design and run options.*does not apply to every FPGA toolchain or imply manual execution/);
+  assert.strictEqual(circuits.links[0]!.source.url, 'https://docs.amd.com/r/2024.1-English/ug888-vivado-design-flows-overview-tutorial/Step-7-Synthesizing-and-Implementing-the-Design');
+  assert.match(circuits.links[0]!.reason, /synthesis and implementation run options.*build configuration work.*prerequisite stages automatically.*depends on the design and run options.*does not apply to every FPGA toolchain or imply manual execution/);
   // Reason: optional MPU protection must not imply universal reliability or hide maintenance costs.
   const protectedTasks = practicalProblems([realtime]);
   assert.deepStrictEqual(protectedTasks.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[126, 'unreliable-tools', 'reduces'], [126, 'technical-debt', 'worsens']]);
   assert.deepStrictEqual(protectedTasks.coverage.withoutReduction, ['technical-debt', 'build-complexity', 'deployment-complexity']);
   assert.ok(protectedTasks.links.every((l) => l.source.url === 'https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md'));
-  assert.match(protectedTasks.links[0].reason, /requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS/);
-  assert.match(protectedTasks.links[1].reason, /maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS/);
+  assert.match(protectedTasks.links[0]!.reason, /requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS/);
+  assert.match(protectedTasks.links[1]!.reason, /maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS/);
   // Reason: accelerator build costs must retain model limits and must not count as problem reductions.
   const accelerated = practicalProblems([accelerator]);
   assert.deepStrictEqual(accelerated.links.map((l) => [l.paradigm_id, l.problem_id, l.effect]),
     [[136, 'build-complexity', 'worsens']]);
   assert.deepStrictEqual(accelerated.coverage.withoutReduction, practicalProblems([]).coverage.withoutReduction);
   assert.strictEqual(accelerated.coverage.unassessedParadigms, 0);
-  assert.strictEqual(accelerated.links[0].source.url, 'https://coral.ai/docs/edgetpu/models-intro/');
-  assert.match(accelerated.links[0].reason, /custom models.*add build work.*depends on model compatibility and toolchain choices.*does not apply to every accelerator or imply manual execution/);
+  assert.strictEqual(accelerated.links[0]!.source.url, 'https://coral.ai/docs/edgetpu/models-intro/');
+  assert.match(accelerated.links[0]!.reason, /custom models.*add build work.*depends on model compatibility and toolchain choices.*does not apply to every accelerator or imply manual execution/);
   for (const original of [accelerator, imperative, injection, actor, ownership, cqrs, embedded, microkernel, events, localFirst, serverless, filters, eventDriven, peers, crdt, functional, structures, separation, effects, store, constraint, unikernel, capabilities, hypervisor, generators, distributed, clientServer, dataflow, objects, logic, reactive, concatenative, multikernel, splitkernel, exokernel, realtime, gpu, sharedMemory, cluster, monolithic, fpga, rootOfTrust, vector, vliw]) {
     for (const change of [{ name: 'User definition' }, { layer: original.layer === 'hardware' ? 'software' : 'hardware' }, { url: 'https://example.com/user' }]) {
       const result = practicalProblems([{ ...original, ...change }]);
@@ -447,31 +462,31 @@ test('debt and reliability assessments follow only the documented seed definitio
   }
 });
 
-const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} is not ${b}`);
+const near = (a: number, b: number): void => assert.ok(Math.abs(a - b) < 1e-9, `${a} is not ${b}`);
 
 test('eigen finds the eigenpairs of a known symmetric matrix, largest first', () => {
-  const [e1, e2] = eigen([[2, 1], [1, 2]]);
+  const [e1, e2] = eigen([[2, 1], [1, 2]]) as [Eigen, Eigen];
   near(e1.value, 3); near(e2.value, 1);
-  near(e1.vector[0], Math.SQRT1_2); near(e1.vector[1], Math.SQRT1_2);
-  near(Math.abs(e2.vector[0]), Math.SQRT1_2); near(e2.vector[0], -e2.vector[1]);
-  const [d1, d2, d3] = eigen([[1, 0, 0], [0, 5, 0], [0, 0, 3]]);
+  near(e1.vector[0]!, Math.SQRT1_2); near(e1.vector[1]!, Math.SQRT1_2);
+  near(Math.abs(e2.vector[0]!), Math.SQRT1_2); near(e2.vector[0]!, -e2.vector[1]!);
+  const [d1, d2, d3] = eigen([[1, 0, 0], [0, 5, 0], [0, 0, 3]]) as [Eigen, Eigen, Eigen];
   assert.deepStrictEqual([d1.value, d2.value, d3.value], [5, 3, 1]);
   assert.deepStrictEqual(d1.vector, [0, 1, 0]);
 });
 
 test('pca of points on a line puts all the variance on the first component', () => {
-  const map = pca([[1, 2], [2, 4], [3, 6]]);
+  const map = pca([[1, 2], [2, 4], [3, 6]])!;
   assert.deepStrictEqual(map.mean, [2, 4]);
-  near(map.components[0][0], 1 / Math.sqrt(5)); near(map.components[0][1], 2 / Math.sqrt(5));
-  near(map.explained[0], 1); near(map.explained[1], 0);
-  near(map.points[0][0], -Math.sqrt(5)); near(map.points[1][0], 0); near(map.points[2][0], Math.sqrt(5));
-  for (const p of map.points) near(p[1], 0);
+  near(map.components[0]![0]!, 1 / Math.sqrt(5)); near(map.components[0]![1]!, 2 / Math.sqrt(5));
+  near(map.explained[0]!, 1); near(map.explained[1]!, 0);
+  near(map.points[0]![0]!, -Math.sqrt(5)); near(map.points[1]![0]!, 0); near(map.points[2]![0]!, Math.sqrt(5));
+  for (const p of map.points) near(p[1]!, 0);
   assert.strictEqual(pca([[1, 2], [3, 4]]), null);
 });
 
 test('gaps are the spread of the chosen paradigms on each axis, and a large gap is a mismatch', () => {
-  const axes = [{ id: 1, name: 'state' }, { id: 2, name: 'binding' }];
-  const scores = { 10: { 1: { score: 0 }, 2: { score: 4 } }, 11: { 1: { score: 9 }, 2: { score: 6 } }, 12: { 1: { score: 5 }, 2: { score: 5 } } };
+  const axes = [{ id: 1, name: 'state' }, { id: 2, name: 'binding' }] as Axis[];
+  const scores = { 10: { 1: { score: 0 }, 2: { score: 4 } }, 11: { 1: { score: 9 }, 2: { score: 6 } }, 12: { 1: { score: 5 }, 2: { score: 5 } } } as unknown as ScoreTable;
   assert.deepStrictEqual(gaps(axes, scores, [10, 11, 12]), [
     { axis_id: 1, name: 'state', gap: 9, mismatch: true },
     { axis_id: 2, name: 'binding', gap: 2, mismatch: false }]);
@@ -493,34 +508,34 @@ test('an old database keeps its data and gains the stack tables, columns and sta
   old.close();
   const { server, cfg } = await start({ home, port: 0, claude: 'false' });
   assert.strictEqual(cfg.token, 'old-token');
-  assert.strictEqual(cfg.db.prepare(`SELECT seed FROM hunts`).get().seed, 'old seed');
-  const sm = cfg.db.prepare(`SELECT * FROM snowmobiles`).get();
+  assert.strictEqual(one(cfg.db, `SELECT seed FROM hunts`).seed, 'old seed');
+  const sm = one(cfg.db, `SELECT * FROM snowmobiles`);
   assert.strictEqual(sm.name, 'Old idea');
   assert.strictEqual(sm.problem_ids, null);
   assert.ok('mismatch' in sm && 'problem' in sm && 'gain' in sm);
-  const layers = cfg.db.prepare(`SELECT layer, COUNT(*) AS n FROM paradigms GROUP BY layer ORDER BY layer`).all();
+  const layers = many(cfg.db, `SELECT layer, COUNT(*) AS n FROM paradigms GROUP BY layer ORDER BY layer`);
   assert.deepStrictEqual(layers.map((l) => l.layer), ['hardware', 'language', 'os', 'software']);
   server.close();
   // A second start adds nothing twice.
   const again = await start({ home, port: 0, claude: 'false' });
-  assert.strictEqual(again.cfg.db.prepare(`SELECT COUNT(*) AS n FROM paradigms`).get().n, layers.reduce((s, l) => s + l.n, 0));
+  assert.strictEqual(one(again.cfg.db, `SELECT COUNT(*) AS n FROM paradigms`).n, layers.reduce((s, l) => s + l.n, 0));
   again.server.close();
 });
 
 test('a seed update adds absent seeds and preserves user data on each start', async (t) => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-'));
-  let app;
+  let app: App | null = null;
   t.after(async () => {
     if (app) {
-      await new Promise((resolve) => app.server.close(resolve));
-      app.cfg.db.close();
+      await new Promise((resolve) => app!.server.close(resolve));
+      app!.cfg.db.close();
     }
     fs.rmSync(home, { recursive: true, force: true });
   });
   app = await start({ home, port: 0, claude: 'false' });
-  const db = app.cfg.db;
-  const before = db.prepare(`SELECT * FROM paradigms ORDER BY id`).all();
-  for (const profile of require('../data/repo-scores.json').paradigms
+  const db = app!.cfg.db;
+  const before = many(db, `SELECT * FROM paradigms ORDER BY id`);
+  for (const profile of repoScores.paradigms
     .filter((p) => ['Hardware generators', 'Actor model', 'Functional package management', 'Data structure server', 'Single-level store', 'Conflict-free replicated data types'].includes(p.name))) {
     const seeds = before.filter((p) => p.name === profile.name);
     assert.strictEqual(seeds.length, 1);
@@ -537,28 +552,28 @@ test('a seed update adds absent seeds and preserves user data on each start', as
     .run(edited.name.toUpperCase(), 'My definition.', 'https://example.com/my-source', edited.id);
   db.prepare(`INSERT INTO axes (name, low, high) VALUES ('My axis', 'low', 'high')`).run();
   db.prepare(`INSERT INTO scores VALUES (?, 1, 7, 'My score.')`).run(edited.id);
-  const kept = db.prepare(`SELECT * FROM paradigms ORDER BY id`).all();
-  const axes = db.prepare(`SELECT * FROM axes`).all();
-  const scores = db.prepare(`SELECT * FROM scores`).all();
-  const token = app.cfg.token;
-  await new Promise((resolve) => app.server.close(resolve));
+  const kept = many(db, `SELECT * FROM paradigms ORDER BY id`);
+  const axes = many(db, `SELECT * FROM axes`);
+  const scores = many(db, `SELECT * FROM scores`);
+  const token = app!.cfg.token;
+  await new Promise((resolve) => app!.server.close(resolve));
   db.close();
   app = null;
 
   for (let pass = 0; pass < 2; pass++) {
     app = await start({ home, port: 0, claude: 'false' });
-    const current = app.cfg.db;
-    assert.strictEqual(current.prepare(`SELECT COUNT(*) AS n FROM paradigms`).get().n, before.length);
+    const current = app!.cfg.db;
+    assert.strictEqual(one(current, `SELECT COUNT(*) AS n FROM paradigms`).n, before.length);
     const restored = absent.map((p) => {
-      const row = current.prepare(`SELECT * FROM paradigms WHERE name = ?`).get(p.name);
+      const row = one(current, `SELECT * FROM paradigms WHERE name = ?`, p.name);
       assert.deepStrictEqual([row.layer, row.summary, row.url], [p.layer, p.summary, p.url]);
       return row.id;
     });
-    assert.deepStrictEqual(current.prepare(`SELECT * FROM paradigms ORDER BY id`).all().filter((p) => !restored.includes(p.id)), kept);
-    assert.deepStrictEqual(current.prepare(`SELECT * FROM axes`).all(), axes);
-    assert.deepStrictEqual(current.prepare(`SELECT * FROM scores`).all(), scores);
-    assert.strictEqual(app.cfg.token, token);
-    await new Promise((resolve) => app.server.close(resolve));
+    assert.deepStrictEqual(many(current, `SELECT * FROM paradigms ORDER BY id`).filter((p) => !restored.includes(p.id)), kept);
+    assert.deepStrictEqual(many(current, `SELECT * FROM axes`), axes);
+    assert.deepStrictEqual(many(current, `SELECT * FROM scores`), scores);
+    assert.strictEqual(app!.cfg.token, token);
+    await new Promise((resolve) => app!.server.close(resolve));
     current.close();
     app = null;
   }
@@ -566,14 +581,14 @@ test('a seed update adds absent seeds and preserves user data on each start', as
 
 test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief with the mismatch line', async (t) => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-'));
-  const { server, cfg, port } = await start({ home, port: 0, claude: path.join(__dirname, 'fake-claude.js') });
+  const { server, cfg, port } = await start({ home, port: 0, claude: path.join(import.meta.dirname, 'fake-claude.ts') });
   t.after(() => server.close());
-  const call = async (p, body) => {
+  const call = async (p: string, body?: object): Promise<{ status: number; body: Json }> => {
     const res = await fetch(`http://127.0.0.1:${port}${p}`, { method: body ? 'POST' : 'GET',
       headers: { 'x-token': cfg.token }, body: body && JSON.stringify(body) });
     return { status: res.status, body: await res.json() };
   };
-  const until = async (p, ok) => {
+  const until = async (p: string, ok: (b: Json) => unknown): Promise<Json> => {
     for (let i = 0; i < 100; i++) {
       const r = (await call(p)).body;
       if (ok(r)) return r;
@@ -586,7 +601,7 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.strictEqual(s.map, null);
   // Reason: a problem share without its source or sample scope can imply a false priority.
   const problems = s.practicalProblems;
-  assert.deepStrictEqual(problems.items.map((p) => [p.id, p.percent]), [
+  assert.deepStrictEqual(problems.items.map((p: Json) => [p.id, p.percent]), [
     ['technical-debt', 62.4], ['build-complexity', 32.9],
     ['deployment-complexity', 32.3], ['unreliable-tools', 31.5],
   ]);
@@ -597,19 +612,19 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.match(problems.source.measure, /more than one/);
   assert.match(problems.source.limit, /do not measure severity/);
   assert.deepStrictEqual(problems.coverage.withoutReduction, []);
-  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - new Set(problems.links.map((l) => l.paradigm_id)).size);
+  assert.strictEqual(problems.coverage.unassessedParadigms, s.paradigms.length - new Set(problems.links.map((l: Json) => l.paradigm_id)).size);
   for (const l of problems.links) {
-    assert.ok(s.paradigms.some((p) => p.id === l.paradigm_id && p.name === l.paradigm));
-    assert.ok(problems.items.some((p) => p.id === l.problem_id));
+    assert.ok(s.paradigms.some((p: Json) => p.id === l.paradigm_id && p.name === l.paradigm));
+    assert.ok(problems.items.some((p: Json) => p.id === l.problem_id));
     assert.ok(l.reason && l.source.title && l.source.url.startsWith('https://'));
   }
   const n = s.paradigms.length;
 
   // Reason: database coverage hid problems that the selected stack had no assessment to reduce.
   assert.strictEqual(s.selectedProblemCoverage, null);
-  const microservices = s.paradigms.find((p) => p.name === 'Microservices');
-  const nix = s.paradigms.find((p) => p.name === 'Functional package management');
-  const unassessed = s.paradigms.find((p) => !problems.links.some((l) => l.paradigm_id === p.id));
+  const microservices = s.paradigms.find((p: Json) => p.name === 'Microservices');
+  const nix = s.paradigms.find((p: Json) => p.name === 'Functional package management');
+  const unassessed = s.paradigms.find((p: Json) => !problems.links.some((l: Json) => l.paradigm_id === p.id));
   const selectedServices = (await call(`/api/stack?pick=${microservices.id}`)).body;
   assert.deepStrictEqual(selectedServices.practicalProblems.coverage.withoutReduction, []);
   assert.deepStrictEqual(selectedServices.selectedProblemCoverage.withoutReduction, ['build-complexity', 'deployment-complexity']);
@@ -639,7 +654,7 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
 
   // Reason: the paradigm hunt had no practical problems or source assessments.
   const huntPrompt = fs.readFileSync(path.join(home, 'paradigm-prompt'), 'utf8');
-  const huntProblems = JSON.parse(huntPrompt.split('Practical problems and source assessments (JSON):\n')[1].split('\n')[0]);
+  const huntProblems = JSON.parse(huntPrompt.split('Practical problems and source assessments (JSON):\n')[1]!.split('\n')[0]!);
   assert.deepStrictEqual(huntProblems, problems);
   assert.match(huntPrompt, /Order candidates by the greatest respondent share of a problem they can reduce/);
   assert.match(huntPrompt, /Do not add shares or equate prevalence with severity/);
@@ -648,7 +663,7 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
 
   // The owner edits an axis and a score; a later scoring run keeps the edit.
   const [a1] = s.axes;
-  const first = s.paradigms.find((p) => p.layer === 'hardware');
+  const first = s.paradigms.find((p: Json) => p.layer === 'hardware');
   assert.strictEqual((await call(`/api/axes/${a1.id}`, { name: 'where state lives', low: 'device', high: 'cloud' })).status, 200);
   assert.strictEqual((await call('/api/scores', { paradigm_id: first.id, axis_id: a1.id, score: 11 })).status, 400);
   await call('/api/scores', { paradigm_id: first.id, axis_id: a1.id, score: 10, reason: 'mine' });
@@ -665,7 +680,7 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.strictEqual(pt.answer.url, '');
   // Reason: the map-point trial supplied no practical problems and requested an invented paradigm.
   const pointPrompt = fs.readFileSync(path.join(home, 'point-prompt'), 'utf8');
-  const pointProblems = JSON.parse(pointPrompt.split('Practical problems and source assessments (JSON):\n')[1].split('\n')[0]);
+  const pointProblems = JSON.parse(pointPrompt.split('Practical problems and source assessments (JSON):\n')[1]!.split('\n')[0]!);
   assert.deepStrictEqual(pointProblems, s.practicalProblems);
   assert.match(pointPrompt, /prefer evidence of practical benefit over map distance/);
   assert.match(pointPrompt, /When evidence and benefit are comparable, use the greatest respondent share/);
@@ -676,18 +691,18 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.match(pointPrompt, /If no real paradigm fits, set exists false, name "No verified match", and url ""/);
 
   // One paradigm per layer is a stack, and the gaps show on each axis.
-  const pick = Object.keys(s.layers).map((l) => s.paradigms.find((p) => p.layer === l).id);
+  const pick = Object.keys(s.layers).map((l: Json) => s.paradigms.find((p: Json) => p.layer === l).id);
   s = (await call(`/api/stack?pick=${pick.join(',')}`)).body;
   assert.strictEqual(s.gaps.length, 4);
-  assert.ok(s.gaps.every((g) => g.mismatch === g.gap >= s.mismatch));
-  assert.strictEqual((await call('/api/hunts', { stack: [pick[0], s.paradigms.filter((p) => p.layer === 'language')[1].id] })).status, 400);
+  assert.ok(s.gaps.every((g: Json) => g.mismatch === g.gap >= s.mismatch));
+  assert.strictEqual((await call('/api/hunts', { stack: [pick[0], s.paradigms.filter((p: Json) => p.layer === 'language')[1].id] })).status, 400);
   assert.strictEqual((await call('/api/hunts', { stack: [] })).status, 400);
 
   // Reason: the brainstorm omitted all source assessments, which include a harmful effect.
   const broad = (await call('/api/hunts', { seed: 'reliable tools', stack: [] })).body;
   await until(`/api/hunts/${broad.id}`, (b) => b.hunt.status === 'created');
   const prompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
-  const assessments = JSON.parse(prompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);
+  const assessments = JSON.parse(prompt.split('Source assessments for available paradigms (JSON):\n')[1]!.split('\n')[0]!);
   assert.deepStrictEqual(assessments, s.practicalProblems.links);
   assert.match(prompt, /explain that cost in gain and compare it with the benefit/);
   assert.match(prompt, /No assessment means an unknown effect/);
@@ -696,12 +711,12 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   const h = await until(`/api/hunts/${id}`, (b) => b.hunt.status === 'created');
   // Reason: an unavailable paradigm must not supply a candidate with a claimed benefit.
   const fixedPrompt = fs.readFileSync(path.join(home, 'stack-prompt'), 'utf8');
-  const fixedAssessments = JSON.parse(fixedPrompt.split('Source assessments for available paradigms (JSON):\n')[1].split('\n')[0]);
-  assert.deepStrictEqual(fixedAssessments, s.practicalProblems.links.filter((l) => pick.includes(l.paradigm_id)));
-  assert.deepStrictEqual(h.sources.map((x) => x.kind), Object.keys(s.layers));
-  assert.deepStrictEqual(h.snowmobiles.map((x) => x.status), ['survivor', 'survivor', 'graveyard', 'graveyard', 'graveyard']);
+  const fixedAssessments = JSON.parse(fixedPrompt.split('Source assessments for available paradigms (JSON):\n')[1]!.split('\n')[0]!);
+  assert.deepStrictEqual(fixedAssessments, s.practicalProblems.links.filter((l: Json) => pick.includes(l.paradigm_id)));
+  assert.deepStrictEqual(h.sources.map((x: Json) => x.kind), Object.keys(s.layers));
+  assert.deepStrictEqual(h.snowmobiles.map((x: Json) => x.status), ['survivor', 'survivor', 'graveyard', 'graveyard', 'graveyard']);
   // Reason: model order must not outrank a sourced problem, and all candidates must count.
-  assert.deepStrictEqual(h.snowmobiles.slice(0, 2).map((s) => s.name), ['Hashvisor', 'Killme']);
+  assert.deepStrictEqual(h.snowmobiles.slice(0, 2).map((s: Json) => s.name), ['Hashvisor', 'Killme']);
   assert.ok(h.snowmobiles[0].id > h.snowmobiles[1].id);
   assert.deepStrictEqual(h.snowmobiles[0].problem_ids, ['technical-debt']);
   assert.strictEqual(h.snowmobiles[0].problem_priority, 62.4);
@@ -710,8 +725,8 @@ test('stack: axes, scores, map, point, owner edits, then a stack seed to a brief
   assert.strictEqual(h.problemCoverage.total, 5);
   assert.strictEqual(h.problemCoverage.share, 0.4);
   assert.strictEqual(h.problemCoverage.source.url, problems.source.url);
-  assert.deepStrictEqual(JSON.parse(cfg.db.prepare('SELECT problem_ids FROM snowmobiles WHERE id = ?')
-    .get(h.snowmobiles[0].id).problem_ids), ['technical-debt']);
+  assert.deepStrictEqual(JSON.parse(one(cfg.db, 'SELECT problem_ids FROM snowmobiles WHERE id = ?',
+    h.snowmobiles[0].id).problem_ids), ['technical-debt']);
   const app = h.snowmobiles[0];
   assert.strictEqual(app.component_ids.length, 4);
   assert.match(app.mismatch, /Hardware and software/);
