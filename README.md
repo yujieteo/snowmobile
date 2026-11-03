@@ -4,11 +4,7 @@ Snowmobile hunts real software tools and programming paradigms for their parts, 
 
 ![A grill tree: settled decisions on top, the open round below with the recommended cards already selected](docs/screens/grill-1280.jpg)
 
-```
-seed ──► hunt parts ──► recombine ──► prior-art check ──► grill tree ──► state machine ──► build brief
-         (web search)                  (dead ones go to                (a decision that kills the
-                                        the graveyard)                  idea marks the bad part)
-```
+<img src="docs/figures/pipeline.svg" width="340" alt="The pipeline: seed, hunt parts with web search, recombine, prior-art check, grill tree, optional sm-axi state machine check, build brief. The prior-art check sends a dead candidate to the graveyard, and restore brings it back to the grill. A kill in the grill goes back to the hunt with the bad part marked. A state machine fault goes back to the grill as a new decision.">
 
 ## Start
 
