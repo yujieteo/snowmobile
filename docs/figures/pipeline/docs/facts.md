@@ -2,7 +2,7 @@
 
 - "Seed": README "From your seed (a pain, a domain, a tool or a paradigm)".
 - "Hunt parts", "web search": README "Claude searches the web for 6 real tools and paradigms"; src/prompts.ts hunt prompt.
-- "Recombine": README ASCII diagram "recombine"; README "Claude combines parts from distant sources into candidates".
+- "Recombine": README "Claude combines parts from distant sources into candidates".
 - "Prior-art check": README "Claude then searches for prior art".
 - "Graveyard", "dead": README "goes to the graveyard with the reason"; src/recombine.ts status 'graveyard'.
 - "Grill tree", "one tap per round": README "One tap answers the round"; shared/flow.ts grill machine.
