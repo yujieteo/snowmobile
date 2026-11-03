@@ -22,9 +22,13 @@ const root = path.join(import.meta.dirname, '..');
 const arg = (name: string): string | undefined => { const i = process.argv.indexOf(name); return i < 0 ? undefined : process.argv[i + 1]; };
 
 async function main(): Promise<number> {
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-replay-'));
+  try { return await run(work); } finally { fs.rmSync(work, { recursive: true, force: true }); }
+}
+
+async function run(work: string): Promise<number> {
   const base = arg('--base') ?? (spawnSync('git', ['-C', root, 'merge-base', 'HEAD', 'main'], { encoding: 'utf8' }).stdout.trim() || 'HEAD');
   const accept = process.argv.includes('--accept');
-  const work = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-replay-'));
   let inputs = arg('--inputs');
   if (!inputs) {
     inputs = path.join(work, 'inputs');
@@ -53,11 +57,13 @@ async function main(): Promise<number> {
   const early = Math.ceil(jobs.length * 0.2);
   for (const [k, job] of jobs.entries()) {
     const was = old(job.name), now = registry.get(job.name);
-    if (!now) { diffs.push({ name: job.name, i: job.i, args: job.args, base: 'no function', branch: 'not registered' }); continue; }
-    if (!was) { skipped++; continue; }
-    total++;
-    const d = compare(job.name, job.i, job.args, was, now);
-    if (d) diffs.push(d);
+    if (!now) diffs.push({ name: job.name, i: job.i, args: job.args, base: 'no function', branch: 'not registered' });
+    else if (!was) skipped++;
+    else {
+      total++;
+      const d = compare(job.name, job.i, job.args, was, now);
+      if (d) diffs.push(d);
+    }
     if (k + 1 === early && diffs.length) { console.error(`Early stop: a difference in the first 20% of the inputs (${early} of ${jobs.length}).`); break; }
   }
   console.log(`replay: base ${base}, ${total} inputs of ${names.length} transforms, ${skipped} without a base function, ${diffs.length} differences`);

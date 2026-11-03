@@ -7,6 +7,6 @@ export function clientBundle(root: string): Promise<string> {
     const out = r.outputs[0];
     if (!r.success || !out) throw new Error(`cannot build the page script: ${r.logs.map(String).join('; ')}`);
     return out.text();
-  });
+  }).catch((e: unknown) => { built = null; throw e; });
   return built;
 }

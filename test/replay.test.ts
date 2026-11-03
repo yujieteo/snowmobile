@@ -47,6 +47,7 @@ test('the replay runs against a TypeScript base, finds no difference in the same
   git('commit', '-q', '-m', 'base');
   const inputs = path.join(repo, 'inputs');
   fs.mkdirSync(inputs);
+  try {
   fs.writeFileSync(path.join(inputs, 'page.esc.jsonl'), '["<a href=\\"x\\">&</a>"]\n["plain"]\n');
   fs.writeFileSync(path.join(inputs, 'page.md.jsonl'), '["# T\\n**b** `c`"]\n');
   const replay = (): { status: number | null; out: string } => {
@@ -61,5 +62,5 @@ test('the replay runs against a TypeScript base, finds no difference in the same
   const changed = replay();
   assert.strictEqual(changed.status, 1, changed.out);
   assert.match(changed.out, /DIFF page\.esc#0/);
-  fs.rmSync(repo, { recursive: true, force: true });
+  } finally { fs.rmSync(repo, { recursive: true, force: true }); }
 });

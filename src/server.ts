@@ -57,19 +57,19 @@ function handler(cfg: Cfg): (req: http.IncomingMessage, res: http.ServerResponse
   return async (req, res) => {
     const url = new URL(req.url ?? '/', 'http://127.0.0.1');
     const p = url.pathname;
-    if (req.method === 'GET' && p === '/client.js') {
-      return send(res, 200, await clientBundle(ROOT), 'text/javascript; charset=utf-8');
-    }
-    const asset = req.method === 'GET' ? STATIC[p] : undefined;
-    if (asset) return send(res, 200, fs.readFileSync(path.join(ROOT, asset[0])), asset[1], p.endsWith('.woff2') ? 'public, max-age=86400' : 'no-cache');
-    const t = Buffer.from(String(url.searchParams.get('token') || req.headers['x-token'] || ''));
-    const want = Buffer.from(cfg.token);
-    if (t.length !== want.length || !crypto.timingSafeEqual(t, want)) {
-      return send(res, 403, 'Open the URL that snowmobile printed at start, with its token.\n', 'text/plain');
-    }
     const m = (re: RegExp): RegExpMatchArray | null => p.match(re);
     let r: RegExpMatchArray | null;
     try {
+      if (req.method === 'GET' && p === '/client.js') {
+        return send(res, 200, await clientBundle(ROOT), 'text/javascript; charset=utf-8');
+      }
+      const asset = req.method === 'GET' ? STATIC[p] : undefined;
+      if (asset) return send(res, 200, fs.readFileSync(path.join(ROOT, asset[0])), asset[1], p.endsWith('.woff2') ? 'public, max-age=86400' : 'no-cache');
+      const t = Buffer.from(String(url.searchParams.get('token') || req.headers['x-token'] || ''));
+      const want = Buffer.from(cfg.token);
+      if (t.length !== want.length || !crypto.timingSafeEqual(t, want)) {
+        return send(res, 403, 'Open the URL that snowmobile printed at start, with its token.\n', 'text/plain');
+      }
       if (req.method === 'GET' && p === '/') {
         return send(res, 200, page, 'text/html; charset=utf-8');
       }
