@@ -12,10 +12,10 @@ seed ──► hunt parts ──► recombine ──► prior-art check ──�
 
 ## Start
 
-You need Node.js 22.13 or later and [Claude Code](https://claude.com/claude-code), signed in. Snowmobile runs your local `claude` CLI, so it uses your own login and needs no API key.
+You need [Bun](https://bun.sh) 1.2 or later and [Claude Code](https://claude.com/claude-code), signed in. Snowmobile runs your local `claude` CLI, so it uses your own login and needs no API key. Bun runs the TypeScript directly. There is no build step.
 
 ```sh
-npx github:yujieteo/snowmobile
+bunx github:yujieteo/snowmobile
 ```
 
 Open the URL that it prints. The URL holds a token. Without the token, the server refuses each request.
@@ -242,7 +242,7 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
 Select distant repositories and inspect their joint PCA map with the scored paradigms:
 
 ```sh
-node scripts/select-repos.js data/repo-scores.json 4
+bun scripts/select-repos.ts data/repo-scores.json 4
 ```
 
 Reason: the source-backed corpus supplies distinct repository examples for the paradigm search.
@@ -293,9 +293,16 @@ The interface comes from a conceptual model: the objects, their relationships, t
 ## Development
 
 ```sh
-npm test
+bun install
+bun run test
 ```
 
-The tests run the server against a fake `claude`. Snowmobile has no dependencies.
+`bun run test` runs `tsc --noEmit` on the server and on the page (strict, with `noUncheckedIndexedAccess`), then `bun test`. The tests run the server against a fake `claude`, and the page in headless Chrome when Chrome is present. Start the server from a checkout with `bun start`.
 
-MIT licence.
+### State machines
+
+The flow and the page use explicit typed machines: `shared/flow.ts` (hunt, idea, grill, stack job) and `shared/ui.ts` (swipe, toast, point sheet, once). An event that has no row in a table is refused. The server answers it with HTTP 409. The page ignores it. [docs/machines](docs/machines) holds the same tables as `.sm.md` files for `sm-axi check`, and `test/machines.test.ts` fails when a file and a table differ. The `unhandled` findings of `sm-axi` list the refused events on purpose.
+
+### Process replay
+
+`bun run replay` checks a refactor against the base commit. The tests run with capture on, and each traced transform (scoring, recombination, tree building, prompts, brief rendering, page text) writes its inputs. The script runs each input on the merge base with `main` and on this branch. Any difference in an output fails the run. `--accept` accepts the differences you read on that run. The first 20% of the inputs run first, and a difference there stops the run. The replay runs only on your machine.
