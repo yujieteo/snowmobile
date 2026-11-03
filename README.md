@@ -18,7 +18,7 @@ You need [Bun](https://bun.sh) 1.2 or later and [Claude Code](https://claude.com
 bunx github:yujieteo/snowmobile
 ```
 
-Open the URL that it prints. The URL holds a token. Without the token, the server refuses each request.
+Open the URL that it prints. The URL holds a token. The token protects the page and the API. The static assets (the page script, the style sheet and the fonts) need no token.
 
 Snowmobile is a server because a browser cannot run Claude Code, and because you can then use it from your phone.
 
@@ -305,4 +305,4 @@ The flow and the page use explicit typed machines: `shared/flow.ts` (hunt, idea,
 
 ### Process replay
 
-`bun run replay` checks a refactor against the base commit. The tests run with capture on, and each traced transform (scoring, recombination, tree building, prompts, brief rendering, page text) writes its inputs. The script runs each input on the merge base with `main` and on this branch. Any difference in an output fails the run. `--accept` accepts the differences you read on that run. The first 20% of the inputs run first, and a difference there stops the run. The replay runs only on your machine.
+`bun run replay` checks a refactor against the base commit. The tests run with capture on, and each traced transform (scoring, recombination, tree building, prompts, brief rendering, page text) writes its inputs. The script runs each input on the merge base with `main` (or on `--base <rev>`) and on this branch. The replay works for both base layouts. For a TypeScript base, it exports the base tree to a temporary directory and imports the registry of that tree (`scripts/transforms.ts`). For a JavaScript base (`snowmobile.js`), it uses the adapter in `scripts/legacy.ts`. Any difference in an output fails the run. `--accept` accepts the differences you read on that run. The first 20% of the inputs run first, and a difference there stops the run. The replay runs only on your machine.

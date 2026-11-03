@@ -225,7 +225,8 @@ export function start({ home = path.join(os.homedir(), '.snowmobile'), port = 47
   const db = openDb(path.join(home, 'snowmobile.db'));
   const cfg: Cfg = { db, home, claude, grillModel, smAxi: findSmAxi(smAxi), token: token(db), frontiers: new Map(), grillErrors: new Map(),
     stackJob: null };
-  const server = http.createServer((req, res) => { void handler(cfg)(req, res); });
+  const handle = handler(cfg);
+  const server = http.createServer((req, res) => { void handle(req, res); });
   return new Promise((resolve, reject) => {
     server.on('error', reject);
     server.listen(port, '127.0.0.1', () => resolve({ server, cfg, port: (server.address() as { port: number }).port }));

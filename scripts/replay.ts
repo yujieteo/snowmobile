@@ -2,7 +2,8 @@
 //   bun scripts/replay.ts [--base <rev>]  (the default base is the merge base with main)
 //   [--inputs <dir>] [--accept]
 // 1. Run the tests with capture on: each traced transform writes its inputs to <dir>/<name>.jsonl.
-// 2. Run each input on the base commit (legacy adapter) and on this branch.
+// 2. Run each input on the base commit and on this branch. A TypeScript base runs the registry of its own tree (scripts/transforms.ts).
+//    A JavaScript base (snowmobile.js) runs through the legacy adapter.
 // 3. Any output difference fails, unless --accept says that you read each difference by hand on this run.
 // The first 20% of the inputs run first. A difference there stops the run.
 import fs from 'node:fs';
@@ -10,23 +11,18 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
-import { registry } from '../shared/trace.ts';
+import { pathToFileURL } from 'node:url';
+import { registry } from './transforms.ts';
+import type { Replayable } from '../shared/trace.ts';
 import { CAPTURE_ENV } from '../src/capture.ts';
 import { legacySource, LEGACY_NAMES } from './legacy.ts';
 import { compare, type Diff } from './compare.ts';
-import '../src/stack.ts';
-import '../src/prompts.ts';
-import '../src/brief.ts';
-import '../src/recombine.ts';
-import '../src/grilltree.ts';
-import '../src/machine.ts';
-import '../shared/markdown.ts';
 
 const root = path.join(import.meta.dirname, '..');
 const arg = (name: string): string | undefined => { const i = process.argv.indexOf(name); return i < 0 ? undefined : process.argv[i + 1]; };
 
-function main(): number {
-  const base = arg('--base') ?? spawnSync('git', ['-C', root, 'merge-base', 'HEAD', 'main'], { encoding: 'utf8' }).stdout.trim() ?? 'HEAD';
+async function main(): Promise<number> {
+  const base = arg('--base') ?? (spawnSync('git', ['-C', root, 'merge-base', 'HEAD', 'main'], { encoding: 'utf8' }).stdout.trim() || 'HEAD');
   const accept = process.argv.includes('--accept');
   const work = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-replay-'));
   let inputs = arg('--inputs');
@@ -38,20 +34,16 @@ function main(): number {
   }
   const baseDir = path.join(work, 'base');
   fs.mkdirSync(baseDir, { recursive: true });
-  const tar = spawnSync('sh', ['-c', `git -C '${root}' archive '${base}' snowmobile.js page.html data | tar -x -C '${baseDir}'`], { encoding: 'utf8' });
-  if (tar.status !== 0) { console.error(`The base ${base} has no snowmobile.js. ${tar.stderr}`); return 2; }
-  const baseSource = fs.readFileSync(path.join(baseDir, 'snowmobile.js'), 'utf8');
-  const html = fs.readFileSync(path.join(baseDir, 'page.html'), 'utf8');
-  fs.writeFileSync(path.join(baseDir, 'legacy.cjs'), legacySource(baseSource));
-  const legacy = createRequire(path.join(baseDir, 'x.cjs'))('./legacy.cjs') as Record<string, (...a: unknown[]) => unknown>;
-  const page = legacyPage(html);
-  const old = (name: string): ((args: unknown[]) => unknown) | undefined => {
-    const n = LEGACY_NAMES[name];
-    if (name === 'page.esc') return (a) => page.esc(a[0]);
-    if (name === 'page.md') return (a) => page.md(a[0] as string);
-    const f = n && legacy[n];
-    return f ? (a) => f(...a) : undefined;
-  };
+  const tar = spawnSync('sh', ['-c', `git -C '${root}' archive '${base}' | tar -x -C '${baseDir}'`], { encoding: 'utf8' });
+  if (tar.status !== 0) { console.error(`git archive of the base ${base} failed. ${tar.stderr}`); return 2; }
+  let old: (name: string) => Replayable | undefined;
+  if (fs.existsSync(path.join(baseDir, 'shared', 'trace.ts'))) {
+    const file = path.join(baseDir, 'scripts', 'transforms.ts');
+    const baseRegistry = (await import(pathToFileURL(file).href) as { registry: Map<string, Replayable> }).registry;
+    old = (name) => baseRegistry.get(name);
+  } else if (fs.existsSync(path.join(baseDir, 'snowmobile.js'))) {
+    old = legacyBase(baseDir);
+  } else { console.error(`The base ${base} has no shared/trace.ts and no snowmobile.js.`); return 2; }
 
   const diffs: Diff[] = [];
   let total = 0, skipped = 0;
@@ -76,6 +68,21 @@ function main(): number {
   return 1;
 }
 
+function legacyBase(baseDir: string): (name: string) => Replayable | undefined {
+  const baseSource = fs.readFileSync(path.join(baseDir, 'snowmobile.js'), 'utf8');
+  const html = fs.readFileSync(path.join(baseDir, 'page.html'), 'utf8');
+  fs.writeFileSync(path.join(baseDir, 'legacy.cjs'), legacySource(baseSource));
+  const legacy = createRequire(path.join(baseDir, 'x.cjs'))('./legacy.cjs') as Record<string, (...a: unknown[]) => unknown>;
+  const page = legacyPage(html);
+  return (name) => {
+    if (name === 'page.esc') return (a) => page.esc(a[0]);
+    if (name === 'page.md') return (a) => page.md(a[0] as string);
+    const n = LEGACY_NAMES[name];
+    const f = n && legacy[n];
+    return f ? (a) => f(...a) : undefined;
+  };
+}
+
 function legacyPage(html: string): { esc: (s: unknown) => string; md: (s: string) => string } {
   const esc = /const esc = [^\n]*;\n/.exec(html)?.[0];
   const md = /function md\(s\) \{[^]*?\n\}\n/.exec(html)?.[0];
@@ -83,4 +90,4 @@ function legacyPage(html: string): { esc: (s: unknown) => string; md: (s: string
   return new Function(`${esc}${md}return { esc, md };`)() as { esc: (s: unknown) => string; md: (s: string) => string };
 }
 
-process.exit(main());
+process.exit(await main());
