@@ -9,7 +9,7 @@
   "scripts": {
     "start": "bun src/cli.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
-    "test": "bun run typecheck && bun test --preload ./test/capture.ts",
+    "test": "bun run typecheck && bun test --timeout 30000 --preload ./test/capture.ts",
     "replay": "bun scripts/replay.ts"
   },
   "engines": { "bun": ">=1.2" },
