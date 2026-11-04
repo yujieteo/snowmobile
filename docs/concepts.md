@@ -195,7 +195,7 @@ These rules map the model onto the screen.
 - Actions on the object. You swipe an idea card left to bury it, and swipe a graveyard card right to restore it. A part has its own "leave out" button. Each action is reversible at once with "Undo", so no action asks for a confirmation.
 - Signifiers. Each swipe also has a visible button, and the card shows a hint. A state shows a word or a mark as well as a colour.
 - Colours. The content uses more than 3 colours. They are ink, dim and accent, a good and a bad status colour, and 1 colour for each of the 4 layers. Each status colour and each layer colour has a word, a mark or a shape too, so no meaning depends on colour only.
-- Undo. The undo toast stays while the pointer or the focus is on it, and while the page is in the background. It is first in the tab order, and Ctrl+Z or Cmd+Z also undoes.
+- Undo. The undo toast stays while the pointer or the focus is on it, and while the page is hidden. It is first in the tab order, and Ctrl+Z or Cmd+Z also undoes.
 - Keyboard. A redraw keeps the focus on the same control. A new view moves the focus to its heading and puts the heading in the page title.
 - Motion. A swiped card follows the finger. You can catch it again before it settles. A new view does not animate. With `prefers-reduced-motion`, only the spinner pulses slowly.
 - No new screen for the machine. A fault of the state machine is a decision in a round, with options and a recommended option. The machine and the faults that remain are in the brief.
