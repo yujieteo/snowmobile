@@ -8,7 +8,7 @@
 - "Grill tree", "one tap per round": README "One tap answers the round". Source: shared/flow.ts grill machine.
 - "kill", "bad part marked": README "A decision that kills the idea sends you back to the hunt with the bad part marked". Source: src/grill.ts kill(), src/prompts.ts "These components killed earlier ideas".
 - "State machine", "sm-axi check": README "runs `sm-axi check`". Source: src/grill.ts buildMachine.
-- "fault", "new decision": README "Each fault that the check finds ... comes back as a decision in one more round".
+- "fault", "new decision": README "Each fault comes back as a decision in one more round".
 - "Build brief": README "until you have a build brief". Source: src/brief.ts renderBrief.
 - "survivor": src/recombine.ts status 'survivor'.
 - "settled": README "When no decision is open".

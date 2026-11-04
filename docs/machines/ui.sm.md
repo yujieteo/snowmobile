@@ -4,10 +4,10 @@ Source: shared/ui.ts. The page refuses a bad event without a message: send() ret
 
 ## Requirements
 
-- R1: A card moves only after a horizontal drag of more than 8 px. A vertical move scrolls the page. Evidence: test/page.test.ts
-- R2: A toast stays while the pointer or the focus is on it or the page is in the background. Evidence: test/page.test.ts "the toast timer stops on hover"
-- R3: A tap on the map shows one answer at a time. Evidence: client/page.ts askAt
-- R4: A button that starts a request runs it once. Evidence: test/page.test.ts "a double tap on Hunt makes 1 hunt"
+- R1: A card moves only after a horizontal drag of more than 8 px. A vertical move scrolls the page. -- test/page.test.ts
+- R2: A toast stays while the pointer or the focus is on it or the page is in the background. -- test/page.test.ts "the toast timer stops on hover"
+- R3: A tap on the map shows one answer at a time. -- client/page.ts askAt
+- R4: A button that starts a request runs it once. -- test/page.test.ts "a double tap on Hunt makes 1 hunt"
 
 ## Machine swipe
 

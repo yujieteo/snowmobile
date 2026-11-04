@@ -1,18 +1,18 @@
 # snowmobile flow: hunt, idea, grill and stack job
 
-Source: shared/flow.ts. The test test/machines.test.ts compares each row to the table in the code. The page refuses an event that has no row (HTTP 409). Each `-` row is an ignored event.
+Source: shared/flow.ts. The test test/machines.test.ts compares each row to the table in the code. The server refuses an event that has no row (HTTP 409). Each `-` row is an ignored event.
 
 ## Requirements
 
-- R1: A hunt runs one step at a time. A second hunt or create request while a step runs changes nothing. Evidence: test/page.test.ts "a double tap on Hunt makes 1 hunt"
-- R2: A failed or finished hunt can hunt or create again. Evidence: README.md
-- R3: Only an owner action or a prior-art result moves an idea to the graveyard. A grill result moves only a survivor. Evidence: B1
-- R4: A grill answers one round at a time. The owner can undo the last round. Evidence: README.md
-- R5: A stack job runs one at a time. A failed job can start again. Evidence: test/stack.test.ts
+- R1: A hunt runs one step at a time. A second hunt or create request while a step runs changes nothing. -- test/page.test.ts "a double tap on Hunt makes 1 hunt"
+- R2: A failed or finished hunt can hunt or create again. -- README.md
+- R3: Only an owner action or a prior-art result moves an idea to the graveyard. A grill result moves only a survivor. -- B1
+- R4: A grill answers one round at a time. The owner can undo the last round. -- README.md
+- R5: A stack job runs one at a time. A failed job can start again. -- test/stack.test.ts
 
 ## Bugs
 
-- B1: A late grill result moves a buried idea to grilled or killed. Evidence: test/machines.test.ts "a late grill result does not revive a buried idea" fails on fc12b04
+- B1: A late grill result moves a buried idea to grilled or killed. -- test/machines.test.ts "a late grill result does not revive a buried idea" fails on fc12b04
 
 ## Machine hunt
 
