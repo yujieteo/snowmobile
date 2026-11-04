@@ -1,6 +1,8 @@
 # snowmobile
 
-Snowmobile hunts real software tools and programming paradigms for their parts, and recombines distant parts into new developer tools, or into consumer apps in Stack mode. It kills each idea that already exists, then grills you on a survivor as a visual design tree: one tap per decision, until you have a build brief.
+Snowmobile hunts real software tools and programming paradigms for their parts. Then it recombines distant parts into new developer tools, or into consumer apps in Stack mode.
+
+It kills each idea that already exists. Then it grills you on a survivor as a visual design tree, with one tap per decision, until you have a build brief.
 
 ![A grill tree: settled decisions on top, the open round below with the recommended cards already selected](docs/screens/grill-1280.jpg)
 
@@ -34,11 +36,11 @@ Everything stays in one SQLite file on your machine: `~/.snowmobile/snowmobile.d
 
 ## How it works
 
-- **Hunt.** From your seed (a pain, a domain, a tool or a paradigm), Claude searches the web for 6 real tools and paradigms. It breaks each one into its principal components: the mechanisms that make it work, each with a link to its source. "Hunt more parts" adds more.
-- **Create.** Claude combines parts from distant sources into candidates. Each candidate must name the problem and who has it, a link that shows the problem is real, the solution that people use today, and the gain over it on one axis, with a claim that a test can prove false. Claude then searches for prior art. A candidate that exists, that has no real source for its problem, or that has no clear gain goes to the graveyard with the reason. The idea card shows these 4 lines first.
-- **Grill.** Each round shows every open decision whose prerequisites are settled, with the recommended card already selected. One tap answers the round. Tap another card or type a note to override. While you read a round, snowmobile already computes the next round for the recommended answers, so the next round usually appears at once. The first round always tests why the idea is better than the solution that people use today. A decision that kills the idea sends you back to the hunt with the bad part marked, and the next creation leaves that part out. The build brief starts with the problem, the evidence, today's solution and the gain.
-- **State machine.** When no decision is open, snowmobile asks Claude to write the state machine of the settled design, and runs `sm-axi check` of the [state-machine skill](https://github.com/yujieteo/skills.md/tree/main/state-machine) on it. Each fault that the check finds, such as a hidden state, a row with no requirement or a requirement with no row, comes back as a decision in one more round, while the design is still open. The build brief ends with the machine and the faults. Snowmobile does not copy the checks or the file format of the skill. It runs `sm-axi` and gives Claude `references/format.md` from the skill folder, so a new version of the skill needs no change here. Snowmobile looks for `sm-axi` in `$SNOWMOBILE_SM_AXI`, then in `~/.claude/skills/state-machine/bin/sm-axi`. Without it, the step is off and the brief has no machine. If `sm-axi` cannot read the file that Claude wrote, the step is skipped for that grill.
-- **Change your mind.** Swipe an idea left to bury it, or swipe a graveyard entry right to restore it. Each card also has a button for this. Leave out a part, or bring it back, on the parts tab. Undo the last round of a grill, also a kill or a finished brief. Each change shows "Undo" at once, so snowmobile never asks you to confirm.
+- Hunt. From your seed (a pain, a domain, a tool or a paradigm), Claude searches the web for 6 real tools and paradigms. It breaks each one into its principal components: the mechanisms that make it work, each with a link to its source. "Hunt more parts" adds more.
+- Create. Claude combines parts from distant sources into candidates. Each candidate must name the problem and who has it. It must give a link that shows the problem is real. It must name the solution that people use today. It must name the gain over it on one axis, with a claim that a test can prove false. Claude then searches for prior art. A candidate that exists, that has no real source for its problem, or that has no clear gain goes to the graveyard with the reason. The idea card shows these 4 lines first.
+- Grill. Each round shows every open decision whose prerequisites have an answer, with the recommended card already selected. One tap answers the round. Tap another card or type a note to override. While you read a round, snowmobile already computes the next round for the recommended answers, so the next round usually appears at once. The first round always tests why the idea is better than the solution that people use today. A decision that kills the idea sends you back to the hunt with the bad part marked, and the next creation leaves that part out. The build brief starts with the problem, the evidence, today's solution and the gain.
+- State machine. When no decision is open, snowmobile asks Claude to write the state machine of the settled design. Then it runs `sm-axi check` of the [state-machine skill](https://github.com/yujieteo/skills.md/tree/main/state-machine) on it. The check can find a fault, such as a hidden state, a row with no requirement or a requirement with no row. Each fault comes back as a decision in one more round, while the design is still open. The build brief ends with the machine and the faults. Snowmobile does not copy the checks or the file format of the skill. It runs `sm-axi` and gives Claude `references/format.md` from the skill folder, so a new version of the skill needs no change here. Snowmobile looks for `sm-axi` in `$SNOWMOBILE_SM_AXI`, then in `~/.claude/skills/state-machine/bin/sm-axi`. Without it, the step is off and the brief has no machine. If `sm-axi` cannot read the file that Claude wrote, snowmobile skips the step for that grill.
+- Change your mind. Swipe an idea left to bury it, or swipe a graveyard entry right to restore it. Each card also has a button for this. Leave out a part, or bring it back, on the parts tab. Undo the last round of a grill, also a kill or a finished brief. Each change shows "Undo" at once, so snowmobile never asks you to confirm.
 
 ## Stack mode
 
@@ -46,21 +48,21 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
 
 ![The stack map: paradigms of 4 layers on the first two principal components, with a stack of 4 picked paradigms](docs/screens/stack-1280.jpg)
 
-- **Paradigms.** The seed list covers all 4 layers, with a definition and source link for each entry. Sources include taxonomies, papers, project documentation and architecture styles. "Hunt more paradigms" finds more on the web, each with a source link. Each start adds absent seeds to an existing database and keeps user edits.
+- Paradigms. The seed list covers all 4 layers, with a definition and source link for each entry. Sources include taxonomies, papers, project documentation and architecture styles. "Hunt more paradigms" finds more on the web, each with a source link. Each start adds absent seeds to an existing database and keeps user edits.
   The hunt receives the practical problems, survey scope and current source assessments.
   It asks for practical benefit before map distance and candidate order by respondent share when evidence and benefit are comparable.
   Each summary must name the problem, source links, benefits, harms and limits, or state that the effect is unknown.
   This prompt does not prove actual candidate quality or store structured problem links for new paradigms.
   Reason: a hunt trial showed no practical problems or source assessments in the prompt.
-- **Axes.** Claude proposes 8 to 12 design axes once, for example where state lives or when binding happens. Each axis runs through all 4 layers. Then Claude scores each paradigm on each axis from 0 to 10, with a one-line reason. You can edit each axis and each score. A new score never replaces your edit.
-- **Map.** Principal component analysis puts all paradigms on a 2D map, with a colour and a shape for each layer. Tap a mark to pick it for its layer. Tap an empty area, and Claude tells you which paradigm would live at that point.
+- Axes. Claude proposes 8 to 12 design axes once, for example where state lives or when binding happens. Each axis runs through all 4 layers. Then Claude scores each paradigm on each axis from 0 to 10, with a one-line reason. You can edit each axis and each score. A new score never replaces your edit.
+- Map. Principal component analysis puts all paradigms on a 2D map, with a colour and a shape for each layer. Tap a mark to pick it for its layer. Tap an empty area, and Claude tells you which paradigm would live at that point.
   The map-point prompt receives the sourced practical problems and current assessments.
   Among comparable fits, it gives practical benefit priority over map distance and uses respondent share when evidence and benefit are comparable.
   Each answer must name a practical problem and source links for benefits, harms and limits, or state that the effect is unknown.
   A real paradigm needs a source URL that Claude opened. Without a verified match, the answer must say "No verified match".
   Prompt tests verify evidence delivery. They do not prove actual answer quality or source accuracy.
   Reason: a map-point trial supplied zero practical problems and requested an invented paradigm when no real paradigm fit.
-- **Practical problems.** The map page lists leading frustrations from the [2024 Stack Overflow survey](https://survey.stackoverflow.co/2024/professional-developers/#2-most-common-frustrations). Each problem shows its respondent share. Tap a problem to use it as the app seed. These shares describe the survey sample. Source links explain which mechanisms can reduce a problem or make it worse. Tap a linked paradigm to pick it for your stack. The page counts links and names problems without a documented reduction. These assessments describe specific mechanisms, not effects on survey shares. A paradigm without a link has no assessment. This does not prove that it has no benefit. A change to a paradigm name, layer or source removes its seed assessment.
+- Practical problems. The map page lists leading frustrations from the [2024 Stack Overflow survey](https://survey.stackoverflow.co/2024/professional-developers/#2-most-common-frustrations). Each problem shows its respondent share. Tap a problem to use it as the app seed. These shares describe the survey sample. Source links explain which mechanisms can reduce a problem or make it worse. Tap a linked paradigm to pick it for your stack. The page counts links and names problems without a documented reduction. These assessments describe specific mechanisms, not effects on survey shares. A paradigm without a link has no assessment. This does not prove that it has no benefit. A change to a paradigm name, layer or source removes its seed assessment.
   Reason: an API trial found no paradigm-problem links or measure of problems without a documented reduction.
   The debt assessment uses [Fowler's separation of configuration from use](https://martinfowler.com/articles/injection.html#SeparatingConfigurationFromUse).
   It infers a reduction in dependency-related debt, with no claim about all debt.
@@ -219,8 +221,8 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   This measure uses only selected paradigms. Empty layers remain open for Claude to choose.
   The whole database measure stays separate. No assessment means an unknown effect.
   Reason: a Microservices trial showed no uncovered problems because the page measured only the whole database.
-- **Gaps.** With 2 or more picked paradigms, the page shows the gap between them on each axis. A gap of 5 or more is a mismatch: a chance for a new idea.
-- **Create.** Write a practical problem, pick a stack, or do both. If you do not pick a paradigm for a layer, Claude chooses one. Claude then proposes consumer apps or developer tools that the stack makes possible, cheap or fast.
+- Gaps. With 2 or more picked paradigms, the page shows the gap between them on each axis. A gap of 5 or more is a mismatch: a chance for a new idea.
+- Create. Write a practical problem, pick a stack, or do both. If you do not pick a paradigm for a layer, Claude chooses one. Claude then proposes consumer apps or developer tools that the stack makes possible, cheap or fast.
   The prompt gives practical developer problems priority over novelty.
   The prompt includes source assessments only for available paradigms, with their mechanisms and limits.
   Each candidate must explain any documented harm to a named problem and compare that cost with its benefit.
@@ -229,9 +231,9 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Ideas appear in order of their greatest linked respondent share. Shares do not measure severity and never add together.
   The page shows the fraction of all candidates with a problem link, also those in the graveyard.
   Links are model claims. The problem evidence and gain still need review.
-  Old ideas retain their data and have no inferred problem links.
+  Old ideas keep their data and have no inferred problem links.
   Reason: the Stack trial had no problem links, priority or coverage measure for generated ideas.
-  The same checks as above send weak apps to the graveyard. The grill and the build brief are the same as in the other mode, and the brief also names the layer mismatch that the app uses.
+  The same checks as above send weak apps to the graveyard. The grill and the build brief work as in the other mode. The brief also names the layer mismatch that the app uses.
 
 ## Repository subset
 
@@ -248,20 +250,20 @@ Some reasons mark uncertain evidence. Review those scores before a conclusion.
 These study axes do not replace your Stack axes or change your database.
 
 The script tries each initial pair, then adds the repository farthest from its nearest selected repository.
-It retains the subset with the greatest minimum pair distance across equally weighted axes.
+It keeps the subset with the greatest minimum pair distance across equally weighted axes.
 Reason: a corpus trial found a better subset than the farthest initial pair alone.
-The method is greedy and does not guarantee the best subset. Ties retain the earlier result.
+The method is greedy and does not guarantee the best subset. Ties keep the earlier result.
 Two repositories or the full input count need only one trial. Other counts use one trial per initial pair.
 
 The JSON output contains the selected `repos`, their `minimumDistance`, a joint `map`, and repository search regions in `gaps`.
 PCA subtracts axis means without variance normalization and uses every input profile, regardless of the selected subset count.
 Reason: all points need the same coordinate frame for a valid comparison.
 `map.records` preserves each input record at the same index as its point. `map.explained` reports the retained variance shares.
-Each gap retains repository evidence and the nearest scored paradigm on the map and across all axes.
+Each gap keeps repository evidence and the nearest scored paradigm on the map and across all axes.
 An exact full-axis match supplies no gap. PCA can hide separation, so map coincidence does not remove a gap.
 Reason: a synthetic trial lost four distinct regions under the former map-distance filter.
 Search regions suggest source research. Unscored seeds can already describe them, so check seeds and sources before a new entry.
-The corpus retains verified discoveries as scored profiles, with `suggestedBy` links where repositories supplied the candidates.
+The corpus keeps verified discoveries as scored profiles, with `suggestedBy` links where repositories supplied the candidates.
 
 `map.coverage` estimates the largest empty-circle radius on a 41 by 41 grid within the rectangle around all input points.
 It measures distance to scored paradigms. The true maximum lies between `radius` and `radius + errorBound`.
@@ -283,8 +285,8 @@ The interface comes from a conceptual model: the objects, their relationships, t
 
 ## Credits
 
-- The name and the method come from John Boyd's essay [*Destruction and Creation*](https://www.coljohnboyd.com/static/documents/1976-09-03__Boyd_John_R__Destruction_and_Creation.pdf) (1976). Boyd takes skis, an outboard motor, tank treads and bicycle handlebars out of their unrelated wholes and recombines them into a snowmobile.
-- The grill comes from Matt Pocock's [grill-me](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md) prompt, in which an LLM interviews you about a plan, one branch of the design tree at a time, with a recommended answer for each question.
+- The name and the method come from John Boyd's essay [*Destruction and Creation*](https://www.coljohnboyd.com/static/documents/1976-09-03__Boyd_John_R__Destruction_and_Creation.pdf) (1976). Boyd takes skis, an outboard motor, tank treads and bicycle handlebars out of their unrelated wholes. He recombines them into a snowmobile.
+- The grill comes from Matt Pocock's [grill-me](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md) prompt. In it, an LLM interviews you about a plan, one branch of the design tree at a time. Each question has a recommended answer.
 
 ## Development
 
@@ -297,7 +299,7 @@ bun run test
 
 ### State machines
 
-The flow and the page use explicit typed machines: `shared/flow.ts` (hunt, idea, grill, stack job) and `shared/ui.ts` (swipe, toast, point sheet, once). An event that has no row in a table is refused. The server answers it with HTTP 409. The page ignores it. [docs/machines](docs/machines) holds the same tables as `.sm.md` files for `sm-axi check`, and `test/machines.test.ts` fails when a file and a table differ. The `unhandled` findings of `sm-axi` list the refused events on purpose.
+The flow and the page use explicit typed machines: `shared/flow.ts` (hunt, idea, grill, stack job) and `shared/ui.ts` (swipe, toast, point sheet, once). The flow refuses an event that has no row in a table. The server answers it with HTTP 409. The page ignores it. [docs/machines](docs/machines) holds the same tables as `.sm.md` files for `sm-axi check`, and `test/machines.test.ts` fails when a file and a table differ. The `unhandled` findings of `sm-axi` list the refused events on purpose.
 
 ### Process replay
 
