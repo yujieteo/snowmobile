@@ -1,6 +1,6 @@
 # snowmobile
 
-Snowmobile hunts real software tools and programming paradigms for their parts. Then it recombines distant parts into new developer tools, or into consumer apps in Stack mode.
+Snowmobile hunts real software tools and programming paradigms for their parts and recombines distant parts into new developer tools or, in Stack mode, consumer apps.
 
 It kills each idea that already exists. Then it grills you on a survivor as a visual design tree, with one tap per decision, until you have a build brief.
 
@@ -38,8 +38,8 @@ Everything stays in one SQLite file on your machine: `~/.snowmobile/snowmobile.d
 
 - Hunt. From your seed (a pain, a domain, a tool or a paradigm), Claude searches the web for 6 real tools and paradigms. It breaks each one into its principal components: the mechanisms that make it work, each with a link to its source. "Hunt more parts" adds more.
 - Create. Claude combines parts from distant sources into candidates. Each candidate must name the problem and who has it. It must give a link that shows the problem is real. It must name the solution that people use today. It must name the gain over it on one axis, with a claim that a test can prove false. Claude then searches for prior art. A candidate that exists, that has no real source for its problem, or that has no clear gain goes to the graveyard with the reason. The idea card shows these 4 lines first.
-- Grill. Each round shows every open decision whose prerequisites have an answer, with the recommended card already selected. One tap answers the round. Tap another card or type a note to override. While you read a round, snowmobile already computes the next round for the recommended answers, so the next round usually appears at once. The first round always tests why the idea is better than the solution that people use today. A decision that kills the idea sends you back to the hunt with the bad part marked, and the next creation leaves that part out. The build brief starts with the problem, the evidence, today's solution and the gain.
-- State machine. When no decision is open, snowmobile asks Claude to write the state machine of the settled design. Then it runs `sm-axi check` of the [state-machine skill](https://github.com/yujieteo/skills.md/tree/main/state-machine) on it. The check can find a fault, such as a hidden state, a row with no requirement or a requirement with no row. Each fault comes back as a decision in one more round, while the design is still open. The build brief ends with the machine and the faults. Snowmobile does not copy the checks or the file format of the skill. It runs `sm-axi` and gives Claude `references/format.md` from the skill folder, so a new version of the skill needs no change here. Snowmobile looks for `sm-axi` in `$SNOWMOBILE_SM_AXI`, then in `~/.claude/skills/state-machine/bin/sm-axi`. Without it, the step is off and the brief has no machine. If `sm-axi` cannot read the file that Claude wrote, snowmobile skips the step for that grill.
+- Grill. Each round shows every open decision whose prerequisites are settled, with the recommended card already selected. One tap answers the round. Tap another card or type a note to override. While you read a round, snowmobile already computes the next round for the recommended answers, so the next round usually appears at once. The first round always tests why the idea is better than the solution that people use today. A decision that kills the idea sends you back to the hunt with the bad part marked, and the next creation leaves that part out. The build brief starts with the problem, the evidence, today's solution and the gain.
+- State machine. When no decision is open, snowmobile asks Claude to write the state machine of the settled design. Then it runs `sm-axi check` of the [state-machine skill](https://github.com/yujieteo/skills.md/tree/main/state-machine) on it. Each fault that the check finds, such as a hidden state, a row with no requirement or a requirement with no row, comes back as a decision in one more round, while the design is still open. The build brief ends with the machine and the faults. Snowmobile does not copy the checks or the file format of the skill. It runs `sm-axi` and gives Claude `references/format.md` from the skill folder, so a new version of the skill needs no change here. Snowmobile looks for `sm-axi` in `$SNOWMOBILE_SM_AXI`, then in `~/.claude/skills/state-machine/bin/sm-axi`. Without it, the step is off and the brief has no machine. If `sm-axi` cannot read the file that Claude wrote, snowmobile skips the step for that grill.
 - Change your mind. Swipe an idea left to bury it, or swipe a graveyard entry right to restore it. Each card also has a button for this. Leave out a part, or bring it back, on the parts tab. Undo the last round of a grill, also a kill or a finished brief. Each change shows "Undo" at once, so snowmobile never asks you to confirm.
 
 ## Stack mode
@@ -198,7 +198,7 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Rollback requires retained versions. This does not prove application correctness or whole-system reliability.
   Reason: a Nix trial found no reliability assessment and two problem gaps.
   The [EROS assessment](https://www.usenix.org/legacy/event/usenix02/shapiro.html) links Single-level store to less storage boundary code and consistent durable state after a crash.
-  Correct application transactions remain necessary. These assessments do not prove whole-system reliability or address all technical debt.
+  Correct application transactions remain necessary. Like the Koka assessment, the EROS assessment does not prove whole-system reliability or address all technical debt.
   Reason: a Single-level store trial found no assessments and four problem gaps.
   The [MiniZinc assessment](https://docs.minizinc.dev/en/stable/modelling.html#datafiles-and-assertions) links Constraint programming to less duplicate constraint code through model reuse with separate data files.
   The benefit requires a reusable model. This does not address all technical debt or prove that the constraints match the real problem.
@@ -233,7 +233,7 @@ Stack mode makes consumer apps and developer tools from a stack of 4 paradigms. 
   Links are model claims. The problem evidence and gain still need review.
   Old ideas keep their data and have no inferred problem links.
   Reason: the Stack trial had no problem links, priority or coverage measure for generated ideas.
-  The same checks as above send weak apps to the graveyard. The grill and the build brief work as in the other mode. The brief also names the layer mismatch that the app uses.
+  The same checks as above send weak apps to the graveyard. The grill and the build brief are the same as in the other mode. The brief also names the layer mismatch that the app uses.
 
 ## Repository subset
 
