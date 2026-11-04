@@ -1,6 +1,6 @@
 # snowmobile
 
-Snowmobile hunts real software tools and programming paradigms for their parts, then recombines distant parts into new developer tools, or into consumer apps in Stack mode.
+Snowmobile hunts real software tools and programming paradigms for their parts. Then it recombines distant parts into new developer tools, or into consumer apps in Stack mode.
 
 It kills each idea that already exists. Then it grills you on a survivor as a visual design tree, with one tap per decision, until you have a build brief.
 
