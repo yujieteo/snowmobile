@@ -19,7 +19,7 @@
     "start": "bun src/cli.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "lint": "eslint . --max-warnings 0",
-    "power10": "uvx --from \"git+https://github.com/yujieteo/power10-check@502925100c8d3b586662d0d87caa6531dbe8676c\" power10-check --require-version 0.1.0",
+    "power10": "scripts/power10-check --require-version 0.2.0",
     "test": "bun run typecheck && bun run lint && bun run power10 && bun test --timeout 30000 --preload ./test/capture.ts",
     "test:unit": "bun test --timeout 30000 --preload ./test/capture.ts",
     "replay": "bun scripts/replay.ts"
