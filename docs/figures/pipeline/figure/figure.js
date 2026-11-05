@@ -6,21 +6,35 @@
 // and copy figure/out/pipeline.svg to docs/figures/pipeline.svg.
 import * as E from './emil.js';
 import * as D from '../engine/cs.js';
+// A figure that is drawn wrong should stop the render, so each helper checks what it is given.
+function assert(condition, message) {
+  if (message === undefined) throw new Error('assertion failed: an assertion needs a message');
+  if (!condition) throw new Error(`assertion failed: ${message}`);
+}
+
 export const figure = { width: 58, height: 93, name: 'pipeline', format: 'journal' };
 
 export default function draw(F, L) {
+  assert(F !== undefined && L !== undefined, 'the engine passes the figure and the layout');
+  assert(figure.width > 0 && figure.height > 0, 'the figure has a size');
   const { r, line, text } = E.useEmil(F, L, 'web');
   const p = F.root;
   const X0 = 32, W = 76, CX = X0 + W / 2;
   const main = E.gray[900], kill = E.hue.tomato[11], fault = E.hue.amber[11];
   const conn = L.group(p, { part: 'connectors' });
   const card = (name, y, h, title, sub, look = E.card(r.card)) => {
+    assert(typeof name === 'string' && name.length > 0, 'a card has a name');
+    assert(y >= 0 && y + h <= 260, 'a card sits inside the figure');
     D.box(p, look.x ?? X0, y, look.w ?? W, h, { fill: look.fill, stroke: look.stroke, width: line.thin, r: r.card, dash: look.dash, F, name });
     const cx = (look.x ?? X0) + (look.w ?? W) / 2;
     L.text(p, cx, sub ? y + h / 2 - 4 : y + h / 2, title, { size: text.label, weight: E.weight.name, anchor: 'middle', valign: 'middle', color: look.ink ?? E.gray[1200] });
     if (sub) L.text(p, cx, y + h / 2 + 5, sub, { size: text.small, anchor: 'middle', valign: 'middle', color: E.gray[1100] });
   };
-  const flow = (a, b, opts = {}) => D.route(conn, [a, b], { F, stroke: opts.stroke ?? main, width: line.thin, head: 'fill', headLength: 3, headWidth: 2.6, relate: true, kind: opts.kind ?? 'flow', ...opts });
+  const flow = (a, b, opts = {}) => {
+    assert(a.length === 2 && b.length === 2, 'an arrow joins two points');
+    assert(opts.relFrom !== undefined && opts.relTo !== undefined, 'an arrow names its cards');
+    return D.route(conn, [a, b], { F, stroke: opts.stroke ?? main, width: line.thin, head: 'fill', headLength: 3, headWidth: 2.6, relate: true, kind: opts.kind ?? 'flow', ...opts });
+  };
 
   card('seed', 6, 20, 'Seed');
   card('hunt', 40, 28, 'Hunt parts', 'web search');
@@ -54,5 +68,7 @@ export default function draw(F, L) {
   D.route(conn, [[140.5, 136], [140.5, 157], [X0 + W, 157]], { F, stroke: main, width: line.thin, dash: '2 1.5', head: 'fill', headLength: 3, headWidth: 2.6, radius: r.chip, relFrom: 'grave', relTo: 'grill', kind: 'restore', relate: true });
   L.text(p, 137.5, 146, 'restore', { size: text.small, anchor: 'end', valign: 'middle', color: E.gray[1100] });
 
+  assert(conn !== undefined, 'the connectors are drawn');
+  assert(g !== undefined, 'the kill label is drawn');
   E.emilTheme(F);
 }

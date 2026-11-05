@@ -295,7 +295,12 @@ bun install
 bun run test
 ```
 
-`bun run test` runs `tsc --noEmit` on the server and on the page (strict, with `noUncheckedIndexedAccess`), then `bun test`. The tests run the server against a fake `claude`, and the page in headless Chrome when Chrome is present. Start the server from a checkout with `bun start`.
+`bun run test` runs four checks in order and stops at the first that fails:
+
+1. `tsc --noEmit` on the server and on the page, with the strict flags in `tsconfig.base.json`.
+2. `eslint . --max-warnings 0` with the `strictTypeChecked` and `stylisticTypeChecked` presets of typescript-eslint. `eslint.config.js` lists the few style-only rules that stay off, each with its reason. There are no `eslint-disable` comments.
+3. `bun run power10`, the [Power of 10](https://spinroot.com/gerard/pdf/P10.pdf) checker [power10-check](https://github.com/yujieteo/power10-check) at a pinned commit. It needs [uv](https://docs.astral.sh/uv/). It checks no recursion, no loop without a condition, at most 60 lines per function, an average of 2 assertions per function in each production file (`shared/assert.ts`), no exported mutable globals and no `eval` or `new Function`. `power10.toml` excludes one copied upstream style file. Vendored code is not rewritten.
+4. `bun test`. The tests run the server against a fake `claude`, and the page in headless Chrome when Chrome is present. Start the server from a checkout with `bun start`.
 
 ### State machines
 

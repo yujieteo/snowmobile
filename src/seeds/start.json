@@ -1,0 +1,255 @@
+{
+ "language": [
+  [
+   "Imperative programming",
+   "A program is a sequence of commands that change named, mutable state.",
+   "https://en.wikipedia.org/wiki/Imperative_programming"
+  ],
+  [
+   "Functional programming",
+   "A program is the composition of pure functions over immutable values.",
+   "https://en.wikipedia.org/wiki/Functional_programming"
+  ],
+  [
+   "Object-oriented programming",
+   "Objects bundle state with the methods that change it and send messages to each other.",
+   "https://en.wikipedia.org/wiki/Object-oriented_programming"
+  ],
+  [
+   "Logic programming",
+   "A program is a set of facts and rules, and a search engine derives the answers.",
+   "https://en.wikipedia.org/wiki/Logic_programming"
+  ],
+  [
+   "Constraint programming",
+   "The programmer states relations between variables and a solver finds the values.",
+   "https://docs.minizinc.dev/en/stable/modelling.html"
+  ],
+  [
+   "Actor model",
+   "Independent actors own their state and talk only through asynchronous messages.",
+   "https://en.wikipedia.org/wiki/Actor_model"
+  ],
+  [
+   "Dataflow programming",
+   "Operations run when their inputs arrive, so the graph of data sets the order.",
+   "https://en.wikipedia.org/wiki/Dataflow_programming"
+  ],
+  [
+   "Functional reactive programming",
+   "Values that change over time are first-class and the runtime propagates each change.",
+   "https://en.wikipedia.org/wiki/Functional_reactive_programming"
+  ],
+  [
+   "Concatenative programming",
+   "Adjacent program fragments compose functions, usually over a shared data stack.",
+   "https://concatenative.org/wiki/view/Concatenative%20language"
+  ],
+  [
+   "Ownership types",
+   "The compiler checks one owner per value and releases the value when its owner leaves scope.",
+   "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+  ],
+  [
+   "Algebraic effects",
+   "Programs declare effect operations, and handlers define how those operations execute and resume.",
+   "https://koka-lang.github.io/koka/doc/book.html"
+  ]
+ ],
+ "hardware": [
+  [
+   "Pipelined RISC processor",
+   "Simple fixed-length instructions overlap in a five-stage pipeline.",
+   "https://en.wikipedia.org/wiki/Classic_RISC_pipeline"
+  ],
+  [
+   "Out-of-order superscalar",
+   "Hardware finds independent instructions at run time and issues several in each cycle.",
+   "https://en.wikipedia.org/wiki/Out-of-order_execution"
+  ],
+  [
+   "VLIW",
+   "The compiler packs independent operations into one long instruction at build time.",
+   "https://en.wikipedia.org/wiki/Very_long_instruction_word"
+  ],
+  [
+   "Vector processor",
+   "One instruction operates on a whole vector of data elements.",
+   "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+  ],
+  [
+   "GPU (SIMT)",
+   "Thousands of threads run in lockstep groups and hide memory latency by switching groups.",
+   "https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads"
+  ],
+  [
+   "Shared-memory multiprocessor",
+   "Several cores share one coherent address space through caches.",
+   "https://en.wikipedia.org/wiki/Symmetric_multiprocessing"
+  ],
+  [
+   "Cluster (warehouse-scale computer)",
+   "Many cheap servers connected by a network act as one computer.",
+   "https://en.wikipedia.org/wiki/Computer_cluster"
+  ],
+  [
+   "Domain-specific accelerator",
+   "Hardware built for one class of work, such as the systolic arrays of a TPU.",
+   "https://research.google/pubs/in-datacenter-performance-analysis-of-a-tensor-processing-unit/"
+  ],
+  [
+   "Reconfigurable logic (FPGA)",
+   "Configurable logic blocks and interconnect form circuits rather than execute a fixed instruction stream.",
+   "https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw"
+  ],
+  [
+   "Neuromorphic hardware",
+   "Artificial neurons exchange sparse events, with memory and computation close together.",
+   "https://www.intel.com/content/www/us/en/research/neuromorphic-computing.html"
+  ],
+  [
+   "Hardware root of trust",
+   "Dedicated secure silicon provides a trust anchor for boot verification and device attestation.",
+   "https://opentitan.org/book/doc/introduction.html"
+  ],
+  [
+   "Hardware generators",
+   "A parameterized program composes hardware components and emits a circuit description for a selected configuration.",
+   "https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html"
+  ]
+ ],
+ "os": [
+  [
+   "Monolithic kernel",
+   "All operating system services run in one privileged address space.",
+   "https://en.wikipedia.org/wiki/Monolithic_kernel"
+  ],
+  [
+   "Microkernel",
+   "The kernel keeps only address spaces, threads and IPC; services run as user processes.",
+   "https://en.wikipedia.org/wiki/Microkernel"
+  ],
+  [
+   "Exokernel",
+   "The kernel only multiplexes hardware safely and libraries implement the abstractions.",
+   "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf"
+  ],
+  [
+   "Unikernel",
+   "One application and the library OS that it needs compile into one single-address-space image.",
+   "https://en.wikipedia.org/wiki/Unikernel"
+  ],
+  [
+   "Hypervisor",
+   "A thin layer runs several complete operating systems on virtual hardware.",
+   "https://en.wikipedia.org/wiki/Hypervisor"
+  ],
+  [
+   "Capability-based OS",
+   "A process can use a resource only through an unforgeable capability that names it.",
+   "https://en.wikipedia.org/wiki/Capability-based_security"
+  ],
+  [
+   "Real-time OS",
+   "The scheduler guarantees that each task meets its deadline.",
+   "https://en.wikipedia.org/wiki/Real-time_operating_system"
+  ],
+  [
+   "Distributed OS",
+   "Networked machines provide system resources through common interfaces and a unified resource view.",
+   "https://9p.io/sys/doc/9.html"
+  ],
+  [
+   "Multikernel",
+   "Independent kernels on each core coordinate through explicit messages and replicate state rather than share it.",
+   "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+  ],
+  [
+   "Splitkernel",
+   "Separate monitors manage processor, memory and storage components across a network instead of one complete server.",
+   "https://www.usenix.org/conference/osdi18/presentation/shan"
+  ],
+  [
+   "Separation kernel",
+   "The kernel isolates applications through fixed resource partitions and explicit controls on information flow.",
+   "https://muen.sk/"
+  ],
+  [
+   "Single-level store",
+   "The OS extends memory addresses to persistent storage, so applications use memory objects instead of separate file operations.",
+   "https://www.usenix.org/legacy/event/usenix02/shapiro.html"
+  ]
+ ],
+ "software": [
+  [
+   "Client-server",
+   "Clients send requests to a central server that owns the data.",
+   "https://en.wikipedia.org/wiki/Client%E2%80%93server_model"
+  ],
+  [
+   "Peer-to-peer",
+   "Equal peers share resources directly without a central server.",
+   "https://docs.ipfs.tech/concepts/how-ipfs-works/"
+  ],
+  [
+   "Event-driven architecture",
+   "Components publish events and other components react to them.",
+   "https://en.wikipedia.org/wiki/Event-driven_architecture"
+  ],
+  [
+   "Pipes and filters",
+   "Each filter transforms a stream and passes it to the next filter.",
+   "https://en.wikipedia.org/wiki/Pipeline_(software)"
+  ],
+  [
+   "Microservices",
+   "Small services that each own their data talk over the network.",
+   "https://en.wikipedia.org/wiki/Microservices"
+  ],
+  [
+   "Serverless",
+   "The platform runs a function for each request and bills only that run.",
+   "https://en.wikipedia.org/wiki/Serverless_computing"
+  ],
+  [
+   "Local-first software",
+   "The primary copy of the data lives on the device and syncs to others when it can.",
+   "https://www.inkandswitch.com/local-first/"
+  ],
+  [
+   "Event sourcing",
+   "The state is the result of replaying an append-only log of events.",
+   "https://martinfowler.com/eaaDev/EventSourcing.html"
+  ],
+  [
+   "CQRS",
+   "Separate models handle commands that change data and queries that read data.",
+   "https://martinfowler.com/bliki/CQRS.html"
+  ],
+  [
+   "Embedded database",
+   "The database engine executes inside the application process and accesses files without a separate server.",
+   "https://www.sqlite.org/serverless.html"
+  ],
+  [
+   "Functional package management",
+   "Packages are immutable values with explicit dependencies, so new versions coexist without changes to old versions.",
+   "https://nix.dev/manual/nix/2.35/introduction.html"
+  ],
+  [
+   "Dependency injection",
+   "External configuration supplies component dependencies, so each component can use an interface without a fixed implementation.",
+   "https://martinfowler.com/articles/injection.html"
+  ],
+  [
+   "Data structure server",
+   "A server stores native data structures and exposes commands that operate on their contents directly.",
+   "https://redis.io/docs/latest/develop/data-types/"
+  ],
+  [
+   "Conflict-free replicated data types",
+   "Replicas accept independent updates and merge concurrent changes into the same state without a central coordinator.",
+   "https://crdt.tech/"
+  ]
+ ]
+}

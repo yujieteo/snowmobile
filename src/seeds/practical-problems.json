@@ -1,0 +1,33 @@
+{
+ "source": {
+  "title": "Stack Overflow Developer Survey 2024: most common frustrations",
+  "url": "https://survey.stackoverflow.co/2024/professional-developers/#2-most-common-frustrations",
+  "checked": "2026-10-28",
+  "respondents": 28251,
+  "scope": "Professional Developer section, all respondents to the frustrations question.",
+  "measure": "Share of respondents who select each frustration. Respondents can select more than one.",
+  "limit": "These shares describe this survey sample. They do not measure severity or rank all practical problems."
+ },
+ "items": [
+  {
+   "id": "technical-debt",
+   "name": "Technical debt",
+   "percent": 62.4
+  },
+  {
+   "id": "build-complexity",
+   "name": "Build stack complexity",
+   "percent": 32.9
+  },
+  {
+   "id": "deployment-complexity",
+   "name": "Deployment stack complexity",
+   "percent": 32.3
+  },
+  {
+   "id": "unreliable-tools",
+   "name": "Tool and system unreliability",
+   "percent": 31.5
+  }
+ ]
+}
