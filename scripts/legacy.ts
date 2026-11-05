@@ -12,9 +12,9 @@ export const LEGACY_NAMES: Record<string, string> = {
 
 function between(src: string, from: string, to: string): string {
   const a = src.indexOf(from);
-  if (a < 0) throw new Error(`The base source has no marker: ${from}`);
+  if (a < 0) {throw new Error(`The base source has no marker: ${from}`);}
   const b = src.indexOf(to, a);
-  if (b < 0) throw new Error(`The base source has no marker: ${to}`);
+  if (b < 0) {throw new Error(`The base source has no marker: ${to}`);}
   return src.slice(a, b);
 }
 

@@ -1,46 +1,14 @@
 import test from 'node:test';
+import type { TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { selectRepos as selectRaw } from '../scripts/select-repos.ts';
-import type { CoverageMap, Gap, SelectInput, Selection } from '../scripts/select-repos.ts';
+import { at, byName, corpusBeforeAutomerge, corpusBeforeGforth, corpusBeforeKubo, data, def, exhaustiveOptimum, gapFor, loadCorpus,
+  parseInput, parseOutput, profile, readSeedSource, selectRepos } from './helpers/select-repos-util.ts';
 
-interface Evidence { reason: string; source: string }
-interface CorpusRepo {
-  name: string; url: string; revision: string; layer: string; scope: string;
-  sources: string[]; scores: number[]; reasons: Evidence[];
-}
-interface CorpusParadigm {
-  name: string; layer: string; definition: string; scope: string;
-  sources: string[]; scores: number[]; reasons: Evidence[]; suggestedBy: string[];
-}
-interface Corpus {
-  axes: string[]; axisDefinitions: { zero: string; ten: string }[]; coverageBaseline: string[];
-  repos: CorpusRepo[]; paradigms: CorpusParadigm[];
-}
-interface Nearest { paradigm: CorpusParadigm; distance: number }
-interface FullGap extends Omit<Gap, 'repo' | 'nearestOnMap' | 'nearestOnAxes'> {
-  repo: CorpusRepo; nearestOnMap: Nearest; nearestOnAxes: Nearest;
-}
-type FullMap = Omit<CoverageMap, 'coverage'> & { coverage: Required<CoverageMap['coverage']> };
-type Full = Omit<Selection, 'repos' | 'map' | 'gaps'> & { repos: CorpusRepo[]; map: FullMap; gaps: FullGap[] };
-
-const loadCorpus = (): Corpus =>
-  JSON.parse(fs.readFileSync(path.join(import.meta.dirname, '../data/repo-scores.json'), 'utf8'));
-const readSeedSource = (): string => fs.readFileSync(path.join(import.meta.dirname, '../src/data.ts'), 'utf8');
-// The tests pass invalid inputs on purpose, and read map and gaps only where the input has paradigms.
-const selectRepos = (input: object, count: number): Full => selectRaw(input as SelectInput, count) as unknown as Full;
-
-// These score profiles are synthetic. They make no claims about these projects.
-const profile = (name: string, scores: unknown[]) => ({ url: `https://github.com/test/${name}`, scores });
-const data = {
-  axes: ['state', 'parallelism'],
-  repos: [profile('a', [0, 0]), profile('b', [1, 0]), profile('c', [10, 0]), profile('d', [0, 10])],
-};
-
-test('the real corpus has complete source evidence and yields a more distant subset', () => {
+function check01(): void {
   const corpus = loadCorpus();
   assert.equal(corpus.axisDefinitions.length, corpus.axes.length);
   for (const definition of corpus.axisDefinitions) {
@@ -66,25 +34,27 @@ test('the real corpus has complete source evidence and yields a more distant sub
   assert.ok(selected.minimumDistance > baseline.minimumDistance);
   assert.deepEqual(new Set(corpus.repos.map((repo) => repo.layer)),
     new Set(['language', 'hardware', 'os', 'software']));
-});
+}
 
-test('the real corpus maps source-backed paradigms from all Stack layers with repositories', () => {
+function check02(): void {
   const corpus = loadCorpus();
   const selected = selectRepos(corpus, 3);
   assert.ok(selected.map);
   assert.deepEqual(new Set(corpus.paradigms.map((record) => record.layer)),
     new Set(['language', 'hardware', 'os', 'software']));
-  for (const paradigm of corpus.paradigms) assert.ok(paradigm.definition.trim());
+  for (const paradigm of corpus.paradigms) {assert.ok(paradigm.definition.trim());}
   assert.equal(selected.map.points.length, corpus.repos.length + corpus.paradigms.length);
   assert.ok(selected.map.points.flat().every(Number.isFinite));
   assert.ok(selected.map.explained.every((share) => share > 0 && share <= 1));
   assert.deepEqual(selected.map.records.filter(({ kind }) => kind === 'paradigm').map(({ record }) => record),
     corpus.paradigms);
-  const { paradigms, coverageBaseline, ...reposOnly } = corpus;
+  const reposOnly: Record<string, unknown> = { ...corpus };
+  delete reposOnly['paradigms'];
+  delete reposOnly['coverageBaseline'];
   assert.deepEqual(selected.repos, selectRepos(reposOnly, 3).repos);
-});
+}
 
-test('max-min selection increases minimum distance from 1 to 10 on a known geometry', () => {
+function check03(): void {
   const before = selectRepos({ ...data, repos: data.repos.slice(0, 3) }, 3);
   const after = selectRepos(data, 3);
   assert.equal(before.minimumDistance, 1);
@@ -92,38 +62,29 @@ test('max-min selection increases minimum distance from 1 to 10 on a known geome
   assert.deepEqual(after.repos, [data.repos[2], data.repos[3], data.repos[0]]);
   assert.equal(selectRepos(data, 2).minimumDistance, Math.sqrt(200));
   assert.deepEqual(selectRepos(data, 4).repos.at(-1), data.repos[1]);
-  assert.deepEqual(data.repos[0]!.scores, [0, 0]);
-});
+  assert.deepEqual(at(data.repos, 0).scores, [0, 0]);
+}
 
-test('each initial pair improves real subsets to the exhaustive optimum for this corpus', () => {
+function check04(): void {
   const corpus = loadCorpus();
-  const separation = (subset: CorpusRepo[]) => Math.min(...subset.flatMap((repo, i) => subset.slice(i + 1)
-    .map((other) => Math.hypot(...repo.scores.map((value, axis) => value - other.scores[axis]!)))));
-  const optimum = (count: number, subset: CorpusRepo[] = [], start = 0): number => {
-    if (subset.length === count) return separation(subset);
-    let best = -Infinity;
-    for (let i = start; i <= corpus.repos.length - (count - subset.length); i++) {
-      best = Math.max(best, optimum(count, [...subset, corpus.repos[i]!], i + 1));
-    }
-    return best;
-  };
+  const optimum = (count: number): number => exhaustiveOptimum(corpus.repos, count);
   // These are the measured results from the former farthest-pair start.
   const former = [Math.sqrt(249), Math.sqrt(177), Math.sqrt(160)];
   for (let count = 2; count <= corpus.repos.length; count++) {
     const result = selectRepos(corpus, count);
     assert.ok(Math.abs(result.minimumDistance - optimum(count)) < 1e-9);
     assert.equal(new Set(result.repos).size, count);
-    if (count >= 3 && count <= 5) assert.ok(result.minimumDistance > former[count - 3]!);
+    if (count >= 3 && count <= 5) {assert.ok(result.minimumDistance > at(former, count - 3));}
   }
-});
+}
 
-test('ties follow input order and identical profiles remain distinct repositories', () => {
+function check05(): void {
   const same = { ...data, repos: ['a', 'b', 'c'].map((name) => profile(name, [5, 5])) };
   assert.deepEqual(selectRepos(same, 3).repos, same.repos);
   assert.equal(selectRepos(same, 3).minimumDistance, 0);
-});
+}
 
-test('joint PCA uses one frame for all records and preserves axis distances in two dimensions', () => {
+function check06(): void {
   // A synthetic rectangle has variances in a 25:1 ratio and a known centre.
   const input = {
     axes: ['state', 'parallelism'],
@@ -134,27 +95,29 @@ test('joint PCA uses one frame for all records and preserves axis distances in t
   const original = structuredClone(input);
   const result = selectRepos(input, 2);
   const { map } = result;
-  const near = (a: number, b: number) => assert.ok(Math.abs(a - b) < 1e-9, `${a} differs from ${b}`);
+  const near = (a: number, b: number) => { assert.ok(Math.abs(a - b) < 1e-9, `${String(a)} differs from ${String(b)}`); };
   assert.deepEqual(map.mean, [5, 1]);
-  near(map.explained[0]!, 25 / 26);
-  near(map.explained[1]!, 1 / 26);
+  near(at(map.explained, 0), 25 / 26);
+  near(at(map.explained, 1), 1 / 26);
   assert.deepEqual(map.components, [[1, 0], [0, 1]]);
   assert.deepEqual(map.points, [[-5, -1], [-5, 1], [5, -1], [5, 1]]);
   assert.deepEqual(map.records, [
     ...input.repos.map((record) => ({ kind: 'repo', record })),
     { kind: 'paradigm', record: input.paradigms[0] },
   ]);
-  const separation = (a: number[], b: number[]) => Math.hypot(...a.map((value, i) => value - b[i]!));
-  for (let i = 0; i < map.records.length; i++) for (let j = i + 1; j < map.records.length; j++) {
-    near(separation(map.points[i]!, map.points[j]!),
-      separation(map.records[i]!.record.scores, map.records[j]!.record.scores));
+  const separation = (a: number[], b: number[]) => Math.hypot(...a.map((value, i) => value - at(b, i)));
+  for (let i = 0; i < map.records.length; i++) {
+    for (let j = i + 1; j < map.records.length; j++) {
+      near(separation(at(map.points, i), at(map.points, j)),
+        separation(def(at(map.records, i).record).scores.map(Number), def(at(map.records, j).record).scores.map(Number)));
+    }
   }
   assert.deepEqual(selectRepos(input, 3).map, map);
   assert.deepEqual(result.repos, selectRepos({ axes: input.axes, repos: input.repos }, 2).repos);
   assert.deepEqual(input, original);
-});
+}
 
-test('joint PCA rejects incomplete, duplicate and invalid paradigm profiles', () => {
+function check07(): void {
   const paradigm = { name: 'Synthetic paradigm', layer: 'software', scores: [0, 0] };
   for (const paradigms of [[], {}, [null], [{ ...paradigm, name: ' ' }], [{ ...paradigm, layer: 'unknown' }],
     [paradigm, { ...paradigm, name: ' SYNTHETIC PARADIGM ' }],
@@ -163,13 +126,13 @@ test('joint PCA rejects incomplete, duplicate and invalid paradigm profiles', ()
   }
   assert.equal('map' in selectRepos(data, 2), false);
   assert.equal('gaps' in selectRepos(data, 2), false);
-});
+}
 
-test('map coverage bounds the largest empty circle on a known square', () => {
+function check08(): void {
   // Synthetic profiles describe geometry only, not real projects or paradigms.
   const input = {
     axes: ['x', 'y'],
-    repos: [[0, 0], [0, 10], [10, 0], [10, 10]].map((scores, i) => profile(`corner-${i}`, scores)),
+    repos: [[0, 0], [0, 10], [10, 0], [10, 10]].map((scores, i) => profile(`corner-${String(i)}`, scores)),
     paradigms: [{ name: 'Centre', layer: 'software', scores: [5, 5] }],
   };
   const before = selectRepos(input, 2).map;
@@ -179,7 +142,7 @@ test('map coverage bounds the largest empty circle on a known square', () => {
   assert.equal(before.coverage.gridSteps, 40);
   assert.equal(before.coverage.errorBound, Math.hypot(0.25, 0.25) / 2);
   const after = selectRepos({ ...input, paradigms: [...input.paradigms,
-    ...input.repos.map((repo, i) => ({ name: `Corner ${i}`, layer: 'software', scores: repo.scores })),
+    ...input.repos.map((repo, i) => ({ name: `Corner ${String(i)}`, layer: 'software', scores: repo.scores })),
   ] }, 2).map;
   assert.deepEqual(after.components, before.components);
   assert.deepEqual(after.mean, before.mean);
@@ -187,37 +150,38 @@ test('map coverage bounds the largest empty circle on a known square', () => {
   assert.equal(after.coverage.radius, 5);
   assert.ok(after.coverage.radius < before.coverage.radius);
   assert.deepEqual(selectRepos(input, 4).map.coverage, before.coverage);
-});
+}
 
-test('map coverage remains finite on coincident and collinear profiles', () => {
+function check09(): void {
   for (const scores of [[5, 5], [10, 5]]) {
     const input = { axes: ['x', 'y'], repos: [profile('a', [5, 5]), profile('b', scores)],
       paradigms: [{ name: 'Centre', layer: 'software', scores: [5, 5] }] };
     const coverage = selectRepos(input, 2).map.coverage;
-    const exact = scores[0]! - 5;
+    const exact = at(scores, 0) - 5;
     assert.equal(coverage.radius, exact);
     assert.ok(Number.isFinite(coverage.errorBound));
     assert.ok(coverage.errorBound >= 0);
   }
-});
+}
 
-test('coverage compares a baseline within the full PCA frame and rectangle', () => {
+function check10(): void {
   const input = {
     axes: ['x', 'y'],
-    repos: [[0, 0], [0, 10], [10, 0], [10, 10]].map((scores, i) => profile(`corner-${i}`, scores)),
+    repos: [[0, 0], [0, 10], [10, 0], [10, 10]].map((scores, i) => profile(`corner-${String(i)}`, scores)),
     paradigms: [[3, 4], [0, 0], [0, 10], [10, 0], [10, 10]].map((scores, i) =>
-      ({ name: `Point ${i}`, layer: 'software', scores })),
+      ({ name: `Point ${String(i)}`, layer: 'software', scores })),
     coverageBaseline: [' POINT 0 '],
   };
   const original = structuredClone(input);
   const { map } = selectRepos(input, 2);
   const { baseline, ...coverage } = map.coverage;
-  const { coverageBaseline, ...withoutBaseline } = input;
+  const withoutBaseline: Record<string, unknown> = { ...input };
+  delete withoutBaseline['coverageBaseline'];
   assert.deepEqual(coverage, selectRepos(withoutBaseline, 2).map.coverage);
-  const point = map.points[input.repos.length]!;
+  const point = at(map.points, input.repos.length);
   const { min, max } = map.coverage.bounds;
-  const corners = [min[0]!, max[0]!].flatMap((x) => [min[1]!, max[1]!].map((y) => [x, y]));
-  const exact = Math.max(...corners.map((corner) => Math.hypot(...corner.map((v, i) => v - point[i]!))));
+  const corners = [at(min, 0), at(max, 0)].flatMap((x) => [at(min, 1), at(max, 1)].map((y) => [x, y]));
+  const exact = Math.max(...corners.map((corner) => Math.hypot(...corner.map((v, i) => v - at(point, i)))));
   assert.ok(Math.abs(baseline.radius - exact) < 1e-9);
   assert.deepEqual(baseline.names, ['Point 0']);
   assert.ok(baseline.radius > coverage.radius);
@@ -227,56 +191,56 @@ test('coverage compares a baseline within the full PCA frame and rectangle', () 
   const all = selectRepos({ ...input, coverageBaseline: input.paradigms.map((p) => p.name) }, 2).map.coverage;
   assert.equal(all.baseline.radius, all.radius);
   assert.deepEqual(all.baseline.center, all.center);
-});
+}
 
-test('coverage baselines reject absent, empty, duplicate and unknown profiles', () => {
+function check11(): void {
   assert.throws(() => selectRepos({ ...data, coverageBaseline: ['Absent'] }, 2), /paradigm/);
   const input = { ...data, paradigms: [{ name: 'Centre', layer: 'software', scores: [5, 5] }] };
   for (const coverageBaseline of [[], null, {}, ['Absent'], [null], ['Centre', ' CENTRE ']]) {
     assert.throws(() => selectRepos({ ...input, coverageBaseline }, 2), /baseline/);
   }
-});
+}
 
-test('the error bound includes an empty-circle centre between grid nodes', () => {
+function check12(): void {
   const input = { axes: ['x', 'y'], repos: [profile('a', [0, 0]), profile('b', [10, 0])],
-    paradigms: [0, 3.1, 10].map((x, i) => ({ name: `Point ${i}`, layer: 'software', scores: [x, 0] })) };
+    paradigms: [0, 3.1, 10].map((x, i) => ({ name: `Point ${String(i)}`, layer: 'software', scores: [x, 0] })) };
   const { radius, errorBound } = selectRepos(input, 2).map.coverage;
   const exact = (10 - 3.1) / 2;
   assert.ok(radius < exact);
   assert.ok(exact <= radius + errorBound);
   assert.ok(Math.abs(radius - 3.4) < 1e-9);
   assert.ok(Math.abs(errorBound - 0.125) < 1e-9);
-});
+}
 
-test('the prior map has empty space despite zero repository search regions', () => {
+function check13(): void {
   const corpus = corpusBeforeAutomerge();
   const result = selectRepos(corpus, corpus.repos.length);
   assert.deepEqual(result.gaps, []);
   const { center, radius, errorBound } = result.map.coverage;
   const nearest = Math.min(...result.map.points.slice(corpus.repos.length)
-    .map((point) => Math.hypot(...point.map((value, axis) => value - center[axis]!))));
+    .map((point) => Math.hypot(...point.map((value, axis) => value - at(center, axis)))));
   assert.ok(Math.abs(nearest - radius) < 1e-9);
   assert.ok(radius > 7);
   assert.ok(errorBound < 0.33);
-});
+}
 
-test('the real baseline measures a coverage gain within one map', () => {
+function check14(): void {
   const corpus = loadCorpus();
   const { map } = selectRepos(corpus, corpus.repos.length);
   const { baseline, radius, errorBound } = map.coverage;
   assert.deepEqual(baseline.names, corpus.coverageBaseline);
   // The lower bound before exceeds the upper bound after.
   assert.ok(baseline.radius > radius + errorBound);
-});
+}
 
-test('gap regions retain axis separation that the first two components omit', () => {
+function check15(): void {
   // Synthetic corners share map coordinates but differ on the third axis.
   const corners = [[0, 0], [0, 10], [10, 0], [10, 10]];
   const input = {
     axes: ['x', 'y', 'z'],
-    repos: corners.map((point, i) => profile(`corner-${i}`, [...point, 4])),
+    repos: corners.map((point, i) => profile(`corner-${String(i)}`, [...point, 4])),
     paradigms: corners.map((point, i) =>
-      ({ name: `Corner ${i}`, layer: 'hardware', scores: [...point, 6] })),
+      ({ name: `Corner ${String(i)}`, layer: 'hardware', scores: [...point, 6] })),
   };
   const result = selectRepos(input, 4);
   assert.deepEqual(result.map.components, [[1, 0, 0], [0, 1, 0]]);
@@ -286,9 +250,9 @@ test('gap regions retain axis separation that the first two components omit', ()
     assert.equal(gap.nearestOnMap.distance, 0);
     assert.equal(gap.nearestOnAxes.distance, 2);
   }
-});
+}
 
-test('gap regions use selected repositories and exact nearest distances in each space', () => {
+function check16(): void {
   const input = {
     axes: ['state', 'parallelism'],
     repos: [profile('a', [0, 0]), profile('b', [0, 2]), profile('c', [10, 0])],
@@ -305,35 +269,13 @@ test('gap regions use selected repositories and exact nearest distances in each 
     assert.deepEqual(gap.point, result.map.points[input.repos.indexOf(gap.repo)]);
   }
   const covered = { ...input, paradigms: input.repos.map((repo, i) => ({
-    name: `Synthetic ${i}`, layer: 'software', scores: repo.scores,
+    name: `Synthetic ${String(i)}`, layer: 'software', scores: repo.scores,
   })) };
   assert.deepEqual(selectRepos(covered, 2).gaps, []);
   assert.deepEqual(input, original);
-});
-
-// Keep prior discovery checks on the repository pool that supplied their measurements.
-function corpusBeforeKubo() {
-  const corpus = loadCorpus();
-  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Kubo'),
-    paradigms: corpus.paradigms.filter((p) => !['Peer-to-peer', 'Vector processor', 'Exokernel'].includes(p.name)) };
 }
 
-function corpusBeforeAutomerge() {
-  const corpus = corpusBeforeKubo();
-  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Automerge'),
-    paradigms: corpus.paradigms.filter((p) =>
-      !['Conflict-free replicated data types', 'Reconfigurable logic (FPGA)',
-        'Cluster (warehouse-scale computer)', 'Multikernel', 'Hardware root of trust', 'Microservices',
-        'Logic programming', 'Distributed OS', 'Event sourcing', 'Constraint programming', 'Separation kernel', 'Domain-specific accelerator'].includes(p.name)) };
-}
-
-function corpusBeforeGforth() {
-  const corpus = corpusBeforeAutomerge();
-  return { ...corpus, repos: corpus.repos.filter((repo) => repo.name !== 'Gforth'),
-    paradigms: corpus.paradigms.filter((p) => !['Concatenative programming', 'Single-level store'].includes(p.name)) };
-}
-
-test('Gforth improves seven-repository separation and retains a source-backed search region', () => {
+function check17(): void {
   const current = corpusBeforeAutomerge();
   // Exclude the later profile to retain the original discovery measurement.
   const corpus = { ...current,
@@ -343,7 +285,7 @@ test('Gforth improves seven-repository separation and retains a source-backed se
   assert.equal(before.minimumDistance, 9);
   assert.ok(Math.abs(after.minimumDistance - Math.sqrt(104)) < 1e-9);
   assert.ok(after.minimumDistance > before.minimumDistance);
-  const region = after.gaps.find((gap) => gap.repo.name === 'Gforth')!;
+  const region = gapFor(after.gaps, 'Gforth');
   assert.ok(region);
   assert.equal(region.repo.layer, 'language');
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(104)) < 1e-9);
@@ -352,15 +294,15 @@ test('Gforth improves seven-repository separation and retains a source-backed se
   assert.ok(region.repo.reasons.every((reason) => region.repo.sources.includes(reason.source)));
   assert.equal(after.map.records.filter(({ kind }) => kind === 'repo').length,
     before.map.records.filter(({ kind }) => kind === 'repo').length + 1);
-});
+}
 
-test('the existing concatenative seed profile removes the duplicate Gforth search candidate', () => {
+function check18(): void {
   const corpus = corpusBeforeAutomerge();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Concatenative programming')!;
+  const candidate = byName(corpus.paradigms, 'Concatenative programming');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
     paradigms: corpus.paradigms.filter((p) => p !== candidate) }, corpus.repos.length);
-  const region = before.gaps.find((gap) => gap.repo.name === 'Gforth')!;
+  const region = gapFor(before.gaps, 'Gforth');
   assert.ok(region);
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(104)) < 1e-9);
   assert.ok(candidate.suggestedBy.includes(region.repo.url));
@@ -372,9 +314,9 @@ test('the existing concatenative seed profile removes the duplicate Gforth searc
   assert.deepEqual(selectRepos(corpus, 7).gaps, []);
   assert.deepEqual(after.repos, before.repos);
   assert.equal(after.minimumDistance, before.minimumDistance);
-});
+}
 
-test('real gap regions exclude an exact profile match and retain source evidence', () => {
+function check19(): void {
   const corpus = corpusBeforeGforth();
   // Omit the actor profile to retain a real uncovered region for this distance check.
   const result = selectRepos({ ...corpus,
@@ -389,21 +331,21 @@ test('real gap regions exclude an exact profile match and retain source evidence
       const vectors = key === 'nearestOnMap'
         ? result.map.points.slice(corpus.repos.length)
         : result.map.records.filter(({ kind }) => kind === 'paradigm').map(({ record }) => record.scores);
-      const distances = vectors.map((vector) => Math.hypot(...vector.map((value, i) => value - point[i]!)));
+      const distances = vectors.map((vector) => Math.hypot(...vector.map((value, i) => value - at(point, i))));
       assert.ok(Math.abs(gap[key].distance - Math.min(...distances)) < 1e-9);
       const paradigms = result.map.records.filter(({ kind }) => kind === 'paradigm').map(({ record }) => record);
       assert.deepEqual(gap[key].paradigm, paradigms[distances.indexOf(Math.min(...distances))]);
     }
   }
-});
+}
 
-test('the existing actor seed profile removes the duplicate Erlang search candidate', () => {
+function check20(): void {
   const corpus = corpusBeforeGforth();
-  const actor = corpus.paradigms.find((p) => p.name === 'Actor model')!;
+  const actor = byName(corpus.paradigms, 'Actor model');
   assert.ok(actor);
   const before = selectRepos({ ...corpus,
     paradigms: corpus.paradigms.filter((p) => p !== actor) }, 3);
-  const region = before.gaps.find((gap) => gap.repo.name === 'Erlang/OTP')!;
+  const region = gapFor(before.gaps, 'Erlang/OTP');
   assert.ok(region);
   assert.ok(region.nearestOnAxes.distance > 0);
   assert.ok(actor.suggestedBy.includes(region.repo.url));
@@ -412,15 +354,15 @@ test('the existing actor seed profile removes the duplicate Erlang search candid
   assert.equal(before.gaps.length, after.gaps.length + 1);
   assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Erlang/OTP'));
   assert.deepEqual(after.repos, before.repos);
-});
+}
 
-test('the verified hardware generator profile closes the Rocket Chip search region', () => {
+function check21(): void {
   const corpus = corpusBeforeGforth();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Hardware generators')!;
+  const candidate = byName(corpus.paradigms, 'Hardware generators');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
     paradigms: corpus.paradigms.filter((p) => p !== candidate) }, corpus.repos.length);
-  const region = before.gaps.find((gap) => gap.repo.name === 'Rocket Chip')!;
+  const region = gapFor(before.gaps, 'Rocket Chip');
   assert.ok(region);
   assert.ok(region.nearestOnAxes.distance > 6);
   assert.ok(candidate.suggestedBy.includes(region.repo.url));
@@ -428,15 +370,15 @@ test('the verified hardware generator profile closes the Rocket Chip search regi
   const after = selectRepos(corpus, corpus.repos.length);
   assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Rocket Chip'));
   assert.deepEqual(after.repos, before.repos);
-});
+}
 
-test('functional package management covers the Nix region in the full repository pool', () => {
+function check22(): void {
   const corpus = corpusBeforeGforth();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Functional package management')!;
+  const candidate = byName(corpus.paradigms, 'Functional package management');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
     paradigms: corpus.paradigms.filter((p) => p !== candidate) }, corpus.repos.length);
-  const region = before.gaps.find((gap) => gap.repo.name === 'Nix')!;
+  const region = gapFor(before.gaps, 'Nix');
   assert.ok(region);
   assert.ok(region.nearestOnAxes.distance > 11);
   assert.ok(candidate.suggestedBy.includes(region.repo.url));
@@ -445,28 +387,28 @@ test('functional package management covers the Nix region in the full repository
   assert.equal(before.gaps.length, after.gaps.length + 1);
   assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Nix'));
   assert.deepEqual(after.repos, before.repos);
-});
+}
 
-test('consistent Unikraft evidence removes a false region from the full repository pool', () => {
+function check23(): void {
   const corpus = corpusBeforeGforth();
-  const repo = corpus.repos.find((record) => record.name === 'Unikraft')!;
-  const paradigm = corpus.paradigms.find((record) => record.name === 'Unikernel')!;
+  const repo = byName(corpus.repos, 'Unikraft');
+  const paradigm = byName(corpus.paradigms, 'Unikernel');
   // Restore the two uncertain midpoint scores from the earlier README-only profile.
   const earlier = structuredClone(corpus);
-  const oldRepo = earlier.repos.find((record) => record.name === 'Unikraft')!;
-  oldRepo.scores[2]! = 5;
-  oldRepo.scores[6]! = 5;
+  const oldRepo = byName(earlier.repos, 'Unikraft');
+  oldRepo.scores.splice(2, 1, 5);
+  oldRepo.scores.splice(6, 1, 5);
   const before = selectRepos(earlier, earlier.repos.length);
-  const region = before.gaps.find((gap) => gap.repo.name === 'Unikraft')!;
+  const region = gapFor(before.gaps, 'Unikraft');
   assert.ok(region);
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(50)) < 1e-9);
   assert.equal(repo.scope, paradigm.scope);
   assert.deepEqual(repo.scores, paradigm.scores);
-  assert.equal(repo.scores[2]!, 0);
-  assert.equal(repo.scores[6]!, 0);
+  assert.equal(at(repo.scores, 2), 0);
+  assert.equal(at(repo.scores, 6), 0);
   for (const axis of [2, 6]) {
-    assert.ok(paradigm.sources.includes(repo.reasons[axis]!.source));
-    assert.doesNotMatch(repo.reasons[axis]!.reason, /uncertain/);
+    assert.ok(paradigm.sources.includes(at(repo.reasons, axis).source));
+    assert.doesNotMatch(at(repo.reasons, axis).reason, /uncertain/);
   }
   const after = selectRepos(corpus, corpus.repos.length);
   assert.equal(before.gaps.length, after.gaps.length + 1);
@@ -474,15 +416,15 @@ test('consistent Unikraft evidence removes a false region from the full reposito
     before.gaps.filter((gap) => gap.repo.name !== 'Unikraft').map((gap) => gap.repo.name));
   assert.deepEqual(new Set(after.repos.map((record) => record.url)),
     new Set(before.repos.map((record) => record.url)));
-});
+}
 
-test('the data structure server profile covers the Redis region without a duplicate seed', () => {
+function check24(): void {
   const corpus = corpusBeforeGforth();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Data structure server')!;
+  const candidate = byName(corpus.paradigms, 'Data structure server');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
     paradigms: corpus.paradigms.filter((p) => p !== candidate) }, corpus.repos.length);
-  const region = before.gaps.find((gap) => gap.repo.name === 'Redis')!;
+  const region = gapFor(before.gaps, 'Redis');
   assert.ok(region);
   assert.equal(region.nearestOnAxes.distance, 9);
   assert.ok(candidate.suggestedBy.includes(region.repo.url));
@@ -491,9 +433,9 @@ test('the data structure server profile covers the Redis region without a duplic
   assert.equal(before.gaps.length, after.gaps.length + 1);
   assert.ok(after.gaps.every((gap) => gap.repo.name !== 'Redis'));
   assert.deepEqual(after.repos, before.repos);
-});
+}
 
-test('seL4 increases four-repository separation and exposes an OS search region', () => {
+function check25(): void {
   const current = corpusBeforeGforth();
   // Exclude the later profile to retain the original repository discovery check.
   const corpus = { ...current,
@@ -505,35 +447,35 @@ test('seL4 increases four-repository separation and exposes an OS search region'
   assert.ok(Math.abs(after.minimumDistance - Math.sqrt(214)) < 1e-9);
   assert.equal(baseline.repos.filter((repo) => repo.layer === 'os').length, 1);
   assert.equal(corpus.repos.filter((repo) => repo.layer === 'os').length, 2);
-  const region = after.gaps.find((gap) => gap.repo.name === 'seL4')!;
+  const region = gapFor(after.gaps, 'seL4');
   assert.ok(region);
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(76)) < 1e-9);
   assert.ok(region.nearestOnMap.distance > 6);
-  assert.ok(region.repo.reasons[5]!.reason.includes('uncertain'));
-});
+  assert.ok(at(region.repo.reasons, 5).reason.includes('uncertain'));
+}
 
-test('the existing capability OS profile removes the duplicate seL4 search candidate', () => {
+function check26(): void {
   const corpus = corpusBeforeGforth();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Capability-based OS')!;
+  const candidate = byName(corpus.paradigms, 'Capability-based OS');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
     paradigms: corpus.paradigms.filter((p) => p !== candidate) }, 4);
-  const region = before.gaps.find((gap) => gap.repo.name === 'seL4')!;
+  const region = gapFor(before.gaps, 'seL4');
   assert.ok(region);
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(76)) < 1e-9);
   assert.ok(candidate.suggestedBy.includes(region.repo.url));
   assert.equal(candidate.scope, region.repo.scope);
   assert.deepEqual(candidate.scores, region.repo.scores);
-  assert.ok(candidate.reasons[5]!.reason.includes('uncertain'));
+  assert.ok(at(candidate.reasons, 5).reason.includes('uncertain'));
   const after = selectRepos(corpus, 4);
   assert.equal(before.gaps.length, after.gaps.length + 1);
   assert.deepEqual(after.gaps, []);
   assert.ok(selectRepos(corpus, corpus.repos.length).gaps.every((gap) => gap.repo.name !== 'seL4'));
   assert.deepEqual(after.repos, before.repos);
   assert.equal(after.minimumDistance, before.minimumDistance);
-});
+}
 
-test('GHCi increases six-repository separation and exposes a language search region', () => {
+function check27(): void {
   const current = corpusBeforeGforth();
   // Exclude the later profile to retain the original repository discovery check.
   const corpus = { ...current,
@@ -544,7 +486,7 @@ test('GHCi increases six-repository separation and exposes a language search reg
   assert.equal(before.minimumDistance, 9);
   assert.ok(Math.abs(after.minimumDistance - Math.sqrt(143)) < 1e-9);
   assert.ok(after.minimumDistance > before.minimumDistance);
-  const region = after.gaps.find((gap) => gap.repo.name === 'GHCi')!;
+  const region = gapFor(after.gaps, 'GHCi');
   assert.ok(region);
   assert.equal(region.repo.layer, 'language');
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(143)) < 1e-9);
@@ -552,15 +494,15 @@ test('GHCi increases six-repository separation and exposes a language search reg
   assert.equal(region.nearestOnAxes.paradigm.name, 'Embedded database');
   assert.equal(corpus.repos.filter((repo) => repo.layer === 'language').length,
     baseline.repos.filter((repo) => repo.layer === 'language').length + 1);
-});
+}
 
-test('the existing functional seed profile removes the duplicate GHCi search candidate', () => {
+function check28(): void {
   const corpus = corpusBeforeGforth();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Functional programming')!;
+  const candidate = byName(corpus.paradigms, 'Functional programming');
   assert.ok(candidate);
   const before = selectRepos({ ...corpus,
     paradigms: corpus.paradigms.filter((p) => p !== candidate) }, corpus.repos.length);
-  const region = before.gaps.find((gap) => gap.repo.name === 'GHCi')!;
+  const region = gapFor(before.gaps, 'GHCi');
   assert.ok(region);
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(143)) < 1e-9);
   assert.ok(candidate.suggestedBy.includes(region.repo.url));
@@ -572,31 +514,31 @@ test('the existing functional seed profile removes the duplicate GHCi search can
   assert.deepEqual(selectRepos(corpus, 6).gaps, []);
   assert.deepEqual(after.repos, before.repos);
   assert.equal(after.minimumDistance, before.minimumDistance);
-});
+}
 
-test('invalid scores and duplicate repositories cannot distort the distance', () => {
+function check29(): void {
   for (const scores of [[0], [0, 11], [NaN, 0], [null, 0], ['2', 0]]) {
     assert.throws(() => selectRepos({ ...data, repos: [profile('a', scores), data.repos[1]] }, 2), /score/);
   }
-  for (const url of [data.repos[0]!.url, 'https://github.com/TEST/A.git']) {
+  for (const url of [at(data.repos, 0).url, 'https://github.com/TEST/A.git']) {
     assert.throws(() => selectRepos({ ...data, repos: [data.repos[0], { ...data.repos[1], url }] }, 2), /once/);
   }
   assert.throws(() => selectRepos({ ...data, axes: ['state', 'state'] }, 2), /distinct/);
   assert.throws(() => selectRepos(data, 5), /count/);
   assert.throws(() => selectRepos(data, 2.5), /count/);
   assert.throws(() => selectRepos({ ...data, repos: [profile('a/tree/main', [0, 0]), data.repos[1]] }, 2), /URL/);
-});
+}
 
-test('the command reports input errors with a nonzero exit status', () => {
+function check30(): void {
   const result = spawnSync(process.execPath, ['scripts/select-repos.ts'], { encoding: 'utf8' });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Use: bun/);
   assert.equal(result.stdout, '');
-});
+}
 
-test('the command preserves source evidence and leaves its input file intact', (t) => {
+function check31(t: TestContext): void {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'snowmobile-subset-'));
-  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  t.after(() => { fs.rmSync(dir, { recursive: true, force: true }); });
   const file = path.join(dir, 'scores.json');
   const input = JSON.stringify({ ...data,
     paradigms: [{ name: 'Synthetic paradigm', layer: 'hardware', scores: [2, 3] }],
@@ -608,31 +550,31 @@ test('the command preserves source evidence and leaves its input file intact', (
   fs.writeFileSync(file, input);
   const result = spawnSync(process.execPath, ['scripts/select-repos.ts', file, '3'], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
-  const output = JSON.parse(result.stdout);
+  const output = parseOutput(result.stdout);
   assert.equal(output.minimumDistance, 10);
-  assert.deepEqual(output.repos[0], JSON.parse(input).repos[2]);
+  assert.deepEqual(output.repos[0], parseInput(input).repos[2]);
   assert.equal(output.map.points.length, data.repos.length + 1);
-  assert.deepEqual(output.map.records.at(-1), { kind: 'paradigm', record: JSON.parse(input).paradigms[0] });
+  assert.deepEqual(output.map.records.at(-1), { kind: 'paradigm', record: parseInput(input).paradigms[0] });
   assert.equal(output.map.coverage.baseline.radius, output.map.coverage.radius);
   assert.equal(fs.readFileSync(file, 'utf8'), input);
-});
+}
 
-test('the single-level store profile adds a distinct durable OS example', () => {
+function check32(): void {
   const corpus = corpusBeforeAutomerge();
-  const profile = corpus.paradigms.find((p) => p.name === 'Single-level store')!;
-  assert.equal(profile.layer, 'os');
-  const previous = corpus.paradigms.filter((p) => p !== profile);
+  const store = byName(corpus.paradigms, 'Single-level store');
+  assert.equal(store.layer, 'os');
+  const previous = corpus.paradigms.filter((p) => p !== store);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((score, axis) => score - profile.scores[axis]!))));
+    Math.hypot(...p.scores.map((score, axis) => score - at(store.scores, axis)))));
   assert.equal(nearest, 10);
-  assert.ok(profile.scores[7]! > Math.max(...previous.filter((p) => p.layer === 'os').map((p) => p.scores[7]!)));
-  assert.match(profile.reasons[5]!.reason, /uncertain evidence/);
+  assert.ok(at(store.scores, 7) > Math.max(...previous.filter((p) => p.layer === 'os').map((p) => at(p.scores, 7))));
+  assert.match(at(store.reasons, 5).reason, /uncertain evidence/);
   // Compare only reference sets within one map, rectangle, and grid.
   const { map } = selectRepos({ ...corpus, coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.equal(map.coverage.baseline.radius, map.coverage.radius);
-});
+}
 
-test('Automerge improves repository separation and exposes a replicated data region', () => {
+function check33(): void {
   const current = corpusBeforeKubo();
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Conflict-free replicated data types') };
   const baseline = corpusBeforeAutomerge();
@@ -645,7 +587,7 @@ test('Automerge improves repository separation and exposes a replicated data reg
     assert.ok(after.minimumDistance > before.minimumDistance);
   }
   const result = selectRepos(corpus, 4);
-  const region = result.gaps.find((gap) => gap.repo.name === 'Automerge')!;
+  const region = gapFor(result.gaps, 'Automerge');
   assert.ok(region);
   assert.equal(region.nearestOnAxes.paradigm.name, 'Actor model');
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(23)) < 1e-9);
@@ -653,15 +595,15 @@ test('Automerge improves repository separation and exposes a replicated data reg
   assert.equal(region.repo.layer, 'software');
   assert.ok(region.repo.reasons.every(({ source }) => region.repo.sources.includes(source)));
   assert.ok(selectRepos(corpus, corpus.repos.length).gaps.some((gap) => gap.repo === region.repo));
-});
+}
 
-test('the verified CRDT profile covers the Automerge region without a duplicate seed', () => {
+function check34(): void {
   const corpus = corpusBeforeKubo();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Conflict-free replicated data types')!;
+  const candidate = byName(corpus.paradigms, 'Conflict-free replicated data types');
   assert.ok(candidate);
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   const before = selectRepos({ ...corpus, paradigms: previous }, corpus.repos.length);
-  const region = before.gaps.find((gap) => gap.repo.name === 'Automerge')!;
+  const region = gapFor(before.gaps, 'Automerge');
   assert.ok(region);
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(23)) < 1e-9);
   assert.equal(candidate.scope, region.repo.scope);
@@ -675,39 +617,39 @@ test('the verified CRDT profile covers the Automerge region without a duplicate 
   assert.equal(after.minimumDistance, before.minimumDistance);
   const { map } = selectRepos({ ...corpus, coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
-});
+}
 
-test('the FPGA profile adds hardware flexibility without a duplicate seed', () => {
+function check35(): void {
   const current = corpusBeforeKubo();
   // Preserve the corpus for this historical measurement.
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Domain-specific accelerator') };
-  const candidate = corpus.paradigms.find((p) => p.name === 'Reconfigurable logic (FPGA)')!;
+  const candidate = byName(corpus.paradigms, 'Reconfigurable logic (FPGA)');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   const hardware = previous.filter((p) => p.layer === 'hardware');
   assert.equal(candidate.layer, 'hardware');
-  assert.ok(candidate.scores[3]! > Math.max(...hardware.map((p) => p.scores[3]!)));
+  assert.ok(at(candidate.scores, 3) > Math.max(...hardware.map((p) => at(p.scores, 3))));
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(69)) < 1e-9);
-  assert.match(candidate.reasons[6]!.reason, /uncertain evidence/);
+  assert.match(at(candidate.reasons, 6).reason, /uncertain evidence/);
   const source = readSeedSource();
   assert.equal(source.split("['Reconfigurable logic (FPGA)',").length - 1, 1);
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
-});
+}
 
-test('the cluster profile adds a distributed hardware example without a duplicate seed', () => {
+function check36(): void {
   const current = corpusBeforeKubo();
   // Preserve the corpus for this historical measurement.
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Distributed OS') };
-  const candidate = corpus.paradigms.find((p) => p.name === 'Cluster (warehouse-scale computer)')!;
+  const candidate = byName(corpus.paradigms, 'Cluster (warehouse-scale computer)');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'hardware');
-  assert.ok(candidate.scores[2]! > Math.max(...previous.filter((p) => p.layer === 'hardware').map((p) => p.scores[2]!)));
+  assert.ok(at(candidate.scores, 2) > Math.max(...previous.filter((p) => p.layer === 'hardware').map((p) => at(p.scores, 2))));
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(86)) < 1e-9);
   const source = readSeedSource();
   assert.equal(source.split("['Cluster (warehouse-scale computer)',").length - 1, 1);
@@ -719,22 +661,22 @@ test('the cluster profile adds a distributed hardware example without a duplicat
   const { map } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
-});
+}
 
-test('the multikernel profile adds a distributed OS example without false isolation', () => {
+function check37(): void {
   const current = corpusBeforeKubo();
   // Preserve the corpus for this historical measurement.
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => p.name !== 'Distributed OS') };
-  const candidate = corpus.paradigms.find((p) => p.name === 'Multikernel')!;
+  const candidate = byName(corpus.paradigms, 'Multikernel');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'os');
-  assert.ok(candidate.scores[2]! > Math.max(...previous.filter((p) => p.layer === 'os').map((p) => p.scores[2]!)));
+  assert.ok(at(candidate.scores, 2) > Math.max(...previous.filter((p) => p.layer === 'os').map((p) => at(p.scores, 2))));
   // Replicas can change state, and separate cores do not supply separate failure units.
-  assert.equal(candidate.scores[1]!, 0);
-  assert.ok(candidate.scores[6]! < 5);
-  assert.match(candidate.reasons[6]!.reason, /one failure unit/);
+  assert.equal(at(candidate.scores, 1), 0);
+  assert.ok(at(candidate.scores, 6) < 5);
+  assert.match(at(candidate.reasons, 6).reason, /one failure unit/);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(87)) < 1e-9);
   const source = readSeedSource();
   assert.equal(source.split("['Multikernel',").length - 1, 1);
@@ -746,18 +688,18 @@ test('the multikernel profile adds a distributed OS example without false isolat
   const { map } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
-});
+}
 
-test('the hardware root of trust profile adds a distinct durable device example', () => {
+function check38(): void {
   const corpus = corpusBeforeKubo();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Hardware root of trust')!;
+  const candidate = byName(corpus.paradigms, 'Hardware root of trust');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'hardware');
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(68)) < 1e-9);
   // Access control alone does not establish separate failure boundaries.
-  assert.match(candidate.reasons[6]!.reason, /uncertain evidence/);
+  assert.match(at(candidate.reasons, 6).reason, /uncertain evidence/);
   const source = readSeedSource();
   assert.equal(source.split("['Hardware root of trust',").length - 1, 1);
   const before = selectRepos({ ...corpus, paradigms: previous }, corpus.repos.length);
@@ -768,20 +710,19 @@ test('the hardware root of trust profile adds a distinct durable device example'
   const { map } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
-});
+}
 
-
-test('the microservices profile separates mutable services from immutable replicas', () => {
+function check39(): void {
   const current = corpusBeforeKubo();
   // Preserve the corpus for this historical measurement.
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => !['Distributed OS', 'Constraint programming'].includes(p.name)) };
-  const candidate = corpus.paradigms.find((p) => p.name === 'Microservices')!;
+  const candidate = byName(corpus.paradigms, 'Microservices');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'software');
-  assert.equal(candidate.scores[1]!, 0);
-  assert.match(candidate.reasons[5]!.reason, /uncertain evidence/);
+  assert.equal(at(candidate.scores, 1), 0);
+  assert.match(at(candidate.reasons, 5).reason, /uncertain evidence/);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(29)) < 1e-9);
   const source = readSeedSource();
   assert.equal(source.split("['Microservices',").length - 1, 1);
@@ -793,21 +734,21 @@ test('the microservices profile separates mutable services from immutable replic
   const { map } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
-});
+}
 
-test('the logic profile distinguishes mutable clauses from immutable functional values', () => {
+function check40(): void {
   const corpus = corpusBeforeKubo();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Logic programming')!;
+  const candidate = byName(corpus.paradigms, 'Logic programming');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'language');
-  const functional = previous.find((p) => p.name === 'Functional programming')!;
-  assert.ok(candidate.scores[1]! < functional.scores[1]!);
-  assert.match(candidate.reasons[1]!.reason, /changes survive backtracking/);
-  assert.equal(candidate.scores[7]!, 0);
+  const functional = byName(previous, 'Functional programming');
+  assert.ok(at(candidate.scores, 1) < at(functional.scores, 1));
+  assert.match(at(candidate.reasons, 1).reason, /changes survive backtracking/);
+  assert.equal(at(candidate.scores, 7), 0);
   assert.match(candidate.scope, /disk persistence libraries lie outside/);
-  assert.match(candidate.reasons[6]!.reason, /do not supply independent failure boundaries/);
+  assert.match(at(candidate.reasons, 6).reason, /do not supply independent failure boundaries/);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(38)) < 1e-9);
   const source = readSeedSource();
   assert.equal(source.split("['Logic programming',").length - 1, 1);
@@ -815,134 +756,130 @@ test('the logic profile distinguishes mutable clauses from immutable functional 
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
-});
+}
 
-
-test('the distributed OS profile preserves private namespaces and mutable active files', () => {
+function check41(): void {
   const corpus = corpusBeforeKubo();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Distributed OS')!;
+  const candidate = byName(corpus.paradigms, 'Distributed OS');
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   assert.equal(candidate.layer, 'os');
   assert.match(candidate.scope, /private per-process namespaces/);
-  assert.match(candidate.reasons[1]!.reason, /change active files/);
-  assert.ok(candidate.scores[1]! < 5);
-  assert.equal(candidate.scores[2]!, 10);
-  assert.equal(candidate.scores[7]!, 10);
-  assert.match(candidate.reasons[5]!.reason, /uncertain evidence/);
-  assert.match(candidate.reasons[6]!.reason, /uncertain evidence/);
+  assert.match(at(candidate.reasons, 1).reason, /change active files/);
+  assert.ok(at(candidate.scores, 1) < 5);
+  assert.equal(at(candidate.scores, 2), 10);
+  assert.equal(at(candidate.scores, 7), 10);
+  assert.match(at(candidate.reasons, 5).reason, /uncertain evidence/);
+  assert.match(at(candidate.reasons, 6).reason, /uncertain evidence/);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(18)) < 1e-9);
   const source = readSeedSource();
   assert.equal(source.split("['Distributed OS',").length - 1, 1);
-  assert.ok(source.includes(`['Distributed OS', '${candidate.definition}', '${candidate.sources[0]}']`));
+  assert.ok(source.includes(`['Distributed OS', '${candidate.definition}', '${at(candidate.sources, 0)}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
-});
+}
 
-test('the event log profile preserves history without an assumed distributed deployment', () => {
+function check42(): void {
   const corpus = corpusBeforeKubo();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Event sourcing')!;
+  const candidate = byName(corpus.paradigms, 'Event sourcing');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'software');
   assert.match(candidate.scope, /mutable projections/);
-  assert.equal(candidate.scores[2]!, 0);
-  assert.match(candidate.reasons[5]!.reason, /uncertain evidence/);
+  assert.equal(at(candidate.scores, 2), 0);
+  assert.match(at(candidate.reasons, 5).reason, /uncertain evidence/);
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.equal(nearest, 11);
   const source = readSeedSource();
   assert.equal(source.split("['Event sourcing',").length - 1, 1);
-  assert.ok(source.includes(`['Event sourcing', '${candidate.definition}', '${candidate.sources[0]}']`));
+  assert.ok(source.includes(`['Event sourcing', '${candidate.definition}', '${at(candidate.sources, 0)}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
-});
+}
 
-
-test('the constraint profile separates fixed model values from mutable solver state', () => {
+function check43(): void {
   const corpus = corpusBeforeKubo();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Constraint programming')!;
+  const candidate = byName(corpus.paradigms, 'Constraint programming');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'language');
   assert.match(candidate.scope, /not mutable solver internals/);
-  assert.ok(candidate.scores[1]! > 5);
-  assert.match(candidate.reasons[1]!.reason, /Solver search state lies outside/);
-  assert.ok(candidate.scores[3]! < 5);
-  assert.ok(candidate.scores[5]! > 5);
-  assert.match(candidate.reasons[6]!.reason, /uncertain evidence/);
+  assert.ok(at(candidate.scores, 1) > 5);
+  assert.match(at(candidate.reasons, 1).reason, /Solver search state lies outside/);
+  assert.ok(at(candidate.scores, 3) < 5);
+  assert.ok(at(candidate.scores, 5) > 5);
+  assert.match(at(candidate.reasons, 6).reason, /uncertain evidence/);
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(118)) < 1e-9);
   const source = readSeedSource();
   assert.equal(source.split("['Constraint programming',").length - 1, 1);
-  assert.ok(source.includes(`['Constraint programming', '${candidate.definition}', '${candidate.sources[0]}']`));
+  assert.ok(source.includes(`['Constraint programming', '${candidate.definition}', '${at(candidate.sources, 0)}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
-});
+}
 
-test('the separation kernel profile distinguishes fixed resources from immutable channel data', () => {
+function check44(): void {
   const corpus = corpusBeforeKubo();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Separation kernel')!;
+  const candidate = byName(corpus.paradigms, 'Separation kernel');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'os');
-  const capability = corpus.paradigms.find((p) => p.name === 'Capability-based OS')!;
-  assert.ok(candidate.scores[3]! < capability.scores[3]!);
-  assert.ok(candidate.scores[5]! > capability.scores[5]!);
-  assert.equal(candidate.scores[1]!, 0);
-  assert.match(candidate.reasons[1]!.reason, /do not make channel data immutable/);
+  const capability = byName(corpus.paradigms, 'Capability-based OS');
+  assert.ok(at(candidate.scores, 3) < at(capability.scores, 3));
+  assert.ok(at(candidate.scores, 5) > at(capability.scores, 5));
+  assert.equal(at(candidate.scores, 1), 0);
+  assert.match(at(candidate.reasons, 1).reason, /do not make channel data immutable/);
   assert.match(candidate.scope, /Dynamic Tau0.*lie outside/);
-  assert.match(candidate.reasons[6]!.reason, /share the kernel and physical machine/);
-  assert.equal(candidate.scores[7]!, 0);
+  assert.match(at(candidate.reasons, 6).reason, /share the kernel and physical machine/);
+  assert.equal(at(candidate.scores, 7), 0);
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(23)) < 1e-9);
   const source = readSeedSource();
   assert.equal(source.split("['Separation kernel',").length - 1, 1);
-  assert.ok(source.includes(`['Separation kernel', '${candidate.definition}', '${candidate.sources[0]}']`));
+  assert.ok(source.includes(`['Separation kernel', '${candidate.definition}', '${at(candidate.sources, 0)}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
-});
+}
 
-
-test('the accelerator profile distinguishes fixed silicon from fixed runtime work', () => {
+function check45(): void {
   const corpus = corpusBeforeKubo();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Domain-specific accelerator')!;
+  const candidate = byName(corpus.paradigms, 'Domain-specific accelerator');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'hardware');
   assert.match(candidate.scope, /first-generation TPU ASIC/);
-  assert.ok(candidate.scores[3]! > 5);
-  assert.ok(candidate.scores[5]! > 5);
-  assert.match(candidate.reasons[1]!.reason, /overwrite accumulators/);
-  assert.match(candidate.reasons[3]!.reason, /fixed instruction set/);
-  assert.match(candidate.reasons[5]!.reason, /same circuit serves multiple model types/);
-  assert.match(candidate.reasons[6]!.reason, /uncertain evidence/);
-  assert.equal(candidate.scores[7]!, 0);
+  assert.ok(at(candidate.scores, 3) > 5);
+  assert.ok(at(candidate.scores, 5) > 5);
+  assert.match(at(candidate.reasons, 1).reason, /overwrite accumulators/);
+  assert.match(at(candidate.reasons, 3).reason, /fixed instruction set/);
+  assert.match(at(candidate.reasons, 5).reason, /same circuit serves multiple model types/);
+  assert.match(at(candidate.reasons, 6).reason, /uncertain evidence/);
+  assert.equal(at(candidate.scores, 7), 0);
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(27)) < 1e-9);
   const source = readSeedSource();
   assert.equal(source.split("['Domain-specific accelerator',").length - 1, 1);
-  assert.ok(source.includes(`['Domain-specific accelerator', '${candidate.definition}', '${candidate.sources[0]}']`));
+  assert.ok(source.includes(`['Domain-specific accelerator', '${candidate.definition}', '${at(candidate.sources, 0)}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
-});
+}
 
-
-test('Kubo increases seven-repository separation and exposes an immutable content region', () => {
+function check46(): void {
   const current = loadCorpus();
   const corpus = { ...current, paradigms: current.paradigms.filter((p) => !['Peer-to-peer', 'Vector processor', 'Exokernel'].includes(p.name)) };
   const before = selectRepos(corpusBeforeKubo(), 7);
@@ -950,33 +887,32 @@ test('Kubo increases seven-repository separation and exposes an immutable conten
   assert.ok(Math.abs(before.minimumDistance - Math.sqrt(104)) < 1e-9);
   assert.ok(Math.abs(after.minimumDistance - Math.sqrt(111)) < 1e-9);
   assert.ok(after.minimumDistance > before.minimumDistance);
-  const region = after.gaps.find((gap) => gap.repo.name === 'Kubo')!;
+  const region = gapFor(after.gaps, 'Kubo');
   assert.ok(region);
   assert.equal(region.nearestOnAxes.paradigm.name, 'Conflict-free replicated data types');
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(27)) < 1e-9);
-  assert.equal(region.repo.scores[1]!, 10);
+  assert.equal(at(region.repo.scores, 1), 10);
   assert.match(region.repo.scope, /Mutable names, MFS, and daemon metadata lie outside/);
-  assert.match(region.repo.reasons[7]!.reason, /do not automatically guarantee permanent retention/);
+  assert.match(at(region.repo.reasons, 7).reason, /do not automatically guarantee permanent retention/);
   assert.equal(region.repo.reasons.length, corpus.axes.length);
   assert.ok(region.repo.reasons.every(({ source }) => region.repo.sources.includes(source)));
   assert.ok(after.map.records.some(({ kind, record }) => kind === 'repo' && (record as unknown) === region.repo));
-});
+}
 
-
-test('the existing peer-to-peer seed covers Kubo without a duplicate paradigm', () => {
+function check47(): void {
   const corpus = loadCorpus();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Peer-to-peer')!;
+  const candidate = byName(corpus.paradigms, 'Peer-to-peer');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'software');
   assert.match(candidate.scope, /not all peer-to-peer systems/);
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   const before = selectRepos({ ...corpus, paradigms: previous }, corpus.repos.length);
-  const region = before.gaps.find((gap) => gap.repo.name === 'Kubo')!;
+  const region = gapFor(before.gaps, 'Kubo');
   assert.ok(region);
   assert.ok(Math.abs(region.nearestOnAxes.distance - Math.sqrt(27)) < 1e-9);
   assert.ok(candidate.suggestedBy.includes(region.repo.url));
   assert.deepEqual(candidate.scores, region.repo.scores);
-  assert.match(candidate.reasons[7]!.reason, /do not automatically guarantee permanent retention/);
+  assert.match(at(candidate.reasons, 7).reason, /do not automatically guarantee permanent retention/);
   const after = selectRepos(corpus, corpus.repos.length);
   assert.equal(before.gaps.length, 1);
   assert.deepEqual(after.gaps, []);
@@ -985,58 +921,117 @@ test('the existing peer-to-peer seed covers Kubo without a duplicate paradigm', 
   assert.equal(after.minimumDistance, before.minimumDistance);
   const source = readSeedSource();
   assert.equal(source.split("['Peer-to-peer',").length - 1, 1);
-  assert.ok(source.includes(`['Peer-to-peer', '${candidate.definition}', '${candidate.sources[0]}']`));
+  assert.ok(source.includes(`['Peer-to-peer', '${candidate.definition}', '${at(candidate.sources, 0)}']`));
   const { map } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.ok(map.coverage.radius <= map.coverage.baseline.radius);
-});
+}
 
-
-test('the vector profile covers runtime vector control without a task-specific circuit', () => {
+function check48(): void {
   const corpus = loadCorpus();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Vector processor')!;
+  const candidate = byName(corpus.paradigms, 'Vector processor');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'hardware');
-  assert.ok(candidate.scores[3]! > candidate.scores[5]!);
-  assert.equal(candidate.scores[1]!, 0);
-  assert.equal(candidate.scores[2]!, 0);
-  assert.equal(candidate.scores[7]!, 0);
-  assert.match(candidate.reasons[6]!.reason, /uncertain evidence/);
+  assert.ok(at(candidate.scores, 3) > at(candidate.scores, 5));
+  assert.equal(at(candidate.scores, 1), 0);
+  assert.equal(at(candidate.scores, 2), 0);
+  assert.equal(at(candidate.scores, 7), 0);
+  assert.match(at(candidate.reasons, 6).reason, /uncertain evidence/);
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(26)) < 1e-9);
   const source = readSeedSource();
   assert.equal(source.split("['Vector processor',").length - 1, 1);
-  assert.ok(source.includes(`['Vector processor', '${candidate.definition}', '${candidate.sources[0]}']`));
+  assert.ok(source.includes(`['Vector processor', '${candidate.definition}', '${at(candidate.sources, 0)}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
-});
+}
 
-
-test('the exokernel profile separates library policy from kernel resource protection', () => {
+function check49(): void {
   const corpus = loadCorpus();
-  const candidate = corpus.paradigms.find((p) => p.name === 'Exokernel')!;
+  const candidate = byName(corpus.paradigms, 'Exokernel');
   assert.ok(candidate);
   assert.equal(candidate.layer, 'os');
   assert.match(candidate.scope, /1995 prototype.*not later XOK/);
-  assert.equal(candidate.scores[1]!, 0);
-  assert.match(candidate.reasons[3]!.reason, /packet filters.*runtime/);
-  assert.match(candidate.reasons[5]!.reason, /link time/);
-  assert.match(candidate.reasons[6]!.reason, /library fault.*share the kernel/);
-  assert.ok(candidate.scores[7]! > 0);
-  assert.match(candidate.reasons[7]!.reason, /NFS.*native file system was incomplete/);
+  assert.equal(at(candidate.scores, 1), 0);
+  assert.match(at(candidate.reasons, 3).reason, /packet filters.*runtime/);
+  assert.match(at(candidate.reasons, 5).reason, /link time/);
+  assert.match(at(candidate.reasons, 6).reason, /library fault.*share the kernel/);
+  assert.ok(at(candidate.scores, 7) > 0);
+  assert.match(at(candidate.reasons, 7).reason, /NFS.*native file system was incomplete/);
   const previous = corpus.paradigms.filter((p) => p !== candidate);
   const nearest = Math.min(...previous.map((p) =>
-    Math.hypot(...p.scores.map((value, axis) => value - candidate.scores[axis]!))));
+    Math.hypot(...p.scores.map((value, axis) => value - at(candidate.scores, axis)))));
   assert.ok(Math.abs(nearest - Math.sqrt(21)) < 1e-9);
   const source = readSeedSource();
   assert.equal(source.split("['Exokernel',").length - 1, 1);
-  assert.ok(source.includes(`['Exokernel', '${candidate.definition}', '${candidate.sources[0]}']`));
+  assert.ok(source.includes(`['Exokernel', '${candidate.definition}', '${at(candidate.sources, 0)}']`));
   const { map, gaps } = selectRepos({ ...corpus,
     coverageBaseline: previous.map((p) => p.name) }, corpus.repos.length);
   assert.deepEqual(gaps, []);
   assert.equal(map.coverage.radius, map.coverage.baseline.radius);
-});
+}
+function register1(): void {
+  void test('the real corpus has complete source evidence and yields a more distant subset', check01);
+  void test('the real corpus maps source-backed paradigms from all Stack layers with repositories', check02);
+  void test('max-min selection increases minimum distance from 1 to 10 on a known geometry', check03);
+  void test('each initial pair improves real subsets to the exhaustive optimum for this corpus', check04);
+  void test('ties follow input order and identical profiles remain distinct repositories', check05);
+  void test('joint PCA uses one frame for all records and preserves axis distances in two dimensions', check06);
+  void test('joint PCA rejects incomplete, duplicate and invalid paradigm profiles', check07);
+  void test('map coverage bounds the largest empty circle on a known square', check08);
+  void test('map coverage remains finite on coincident and collinear profiles', check09);
+  void test('coverage compares a baseline within the full PCA frame and rectangle', check10);
+  void test('coverage baselines reject absent, empty, duplicate and unknown profiles', check11);
+  void test('the error bound includes an empty-circle centre between grid nodes', check12);
+  void test('the prior map has empty space despite zero repository search regions', check13);
+  void test('the real baseline measures a coverage gain within one map', check14);
+  void test('gap regions retain axis separation that the first two components omit', check15);
+  void test('gap regions use selected repositories and exact nearest distances in each space', check16);
+  void test('Gforth improves seven-repository separation and retains a source-backed search region', check17);
+}
+
+function register2(): void {
+  void test('the existing concatenative seed profile removes the duplicate Gforth search candidate', check18);
+  void test('real gap regions exclude an exact profile match and retain source evidence', check19);
+  void test('the existing actor seed profile removes the duplicate Erlang search candidate', check20);
+  void test('the verified hardware generator profile closes the Rocket Chip search region', check21);
+  void test('functional package management covers the Nix region in the full repository pool', check22);
+  void test('consistent Unikraft evidence removes a false region from the full repository pool', check23);
+  void test('the data structure server profile covers the Redis region without a duplicate seed', check24);
+  void test('seL4 increases four-repository separation and exposes an OS search region', check25);
+  void test('the existing capability OS profile removes the duplicate seL4 search candidate', check26);
+  void test('GHCi increases six-repository separation and exposes a language search region', check27);
+  void test('the existing functional seed profile removes the duplicate GHCi search candidate', check28);
+  void test('invalid scores and duplicate repositories cannot distort the distance', check29);
+  void test('the command reports input errors with a nonzero exit status', check30);
+  void test('the command preserves source evidence and leaves its input file intact', check31);
+  void test('the single-level store profile adds a distinct durable OS example', check32);
+  void test('Automerge improves repository separation and exposes a replicated data region', check33);
+  void test('the verified CRDT profile covers the Automerge region without a duplicate seed', check34);
+}
+
+function register3(): void {
+  void test('the FPGA profile adds hardware flexibility without a duplicate seed', check35);
+  void test('the cluster profile adds a distributed hardware example without a duplicate seed', check36);
+  void test('the multikernel profile adds a distributed OS example without false isolation', check37);
+  void test('the hardware root of trust profile adds a distinct durable device example', check38);
+  void test('the microservices profile separates mutable services from immutable replicas', check39);
+  void test('the logic profile distinguishes mutable clauses from immutable functional values', check40);
+  void test('the distributed OS profile preserves private namespaces and mutable active files', check41);
+  void test('the event log profile preserves history without an assumed distributed deployment', check42);
+  void test('the constraint profile separates fixed model values from mutable solver state', check43);
+  void test('the separation kernel profile distinguishes fixed resources from immutable channel data', check44);
+  void test('the accelerator profile distinguishes fixed silicon from fixed runtime work', check45);
+  void test('Kubo increases seven-repository separation and exposes an immutable content region', check46);
+  void test('the existing peer-to-peer seed covers Kubo without a duplicate paradigm', check47);
+  void test('the vector profile covers runtime vector control without a task-specific circuit', check48);
+  void test('the exokernel profile separates library policy from kernel resource protection', check49);
+}
+
+register1();
+register2();
+register3();

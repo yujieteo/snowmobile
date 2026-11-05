@@ -1,3 +1,4 @@
+import { assert } from './assert.ts';
 import type { Machine } from './fsm.ts';
 
 export type SwipeState = 'idle' | 'pending' | 'scrolling' | 'dragging' | 'leaving';
@@ -53,3 +54,6 @@ export const onceMachine: Machine<OnceState, OnceEvent> = {
     running: { run: '-', settle: 'idle' },
   },
 };
+
+assert(Object.keys(swipeMachine.table).includes(swipeMachine.initial), 'the swipe machine starts in one of its states');
+assert(Object.keys(toastMachine.table).includes(toastMachine.initial), 'the toast machine starts in one of its states');

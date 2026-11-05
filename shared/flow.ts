@@ -1,3 +1,4 @@
+import { assert } from './assert.ts';
 import type { Machine } from './fsm.ts';
 
 export type HuntState = 'seeded' | 'hunting' | 'hunted' | 'creating' | 'created' | 'failed';
@@ -59,3 +60,6 @@ export const stackJobMachine: Machine<StackJobState, StackJobEvent> = {
     failed: { start: 'running' },
   },
 };
+
+assert(Object.keys(huntMachine.table).includes(huntMachine.initial), 'the hunt machine starts in one of its states');
+assert(Object.keys(grillMachine.table).includes(grillMachine.initial), 'the grill machine starts in one of its states');

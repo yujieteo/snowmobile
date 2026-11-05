@@ -1,0 +1,1682 @@
+{
+ "seeds": {
+  "accelerator": {
+   "id": 136,
+   "layer": "hardware",
+   "name": "Domain-specific accelerator",
+   "url": "https://research.google/pubs/in-datacenter-performance-analysis-of-a-tensor-processing-unit/"
+  },
+  "imperative": {
+   "id": 135,
+   "layer": "language",
+   "name": "Imperative programming",
+   "url": "https://en.wikipedia.org/wiki/Imperative_programming"
+  },
+  "ownership": {
+   "id": 95,
+   "layer": "language",
+   "name": "Ownership types",
+   "url": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
+  },
+  "injection": {
+   "id": 93,
+   "layer": "software",
+   "name": "Dependency injection",
+   "url": "https://martinfowler.com/articles/injection.html"
+  },
+  "actor": {
+   "id": 94,
+   "layer": "language",
+   "name": "Actor model",
+   "url": "https://en.wikipedia.org/wiki/Actor_model"
+  },
+  "cqrs": {
+   "id": 96,
+   "layer": "software",
+   "name": "CQRS",
+   "url": "https://martinfowler.com/bliki/CQRS.html"
+  },
+  "embedded": {
+   "id": 97,
+   "layer": "software",
+   "name": "Embedded database",
+   "url": "https://www.sqlite.org/serverless.html"
+  },
+  "microkernel": {
+   "id": 98,
+   "layer": "os",
+   "name": "Microkernel",
+   "url": "https://en.wikipedia.org/wiki/Microkernel"
+  },
+  "events": {
+   "id": 99,
+   "layer": "software",
+   "name": "Event sourcing",
+   "url": "https://martinfowler.com/eaaDev/EventSourcing.html"
+  },
+  "localFirst": {
+   "id": 100,
+   "layer": "software",
+   "name": "Local-first software",
+   "url": "https://www.inkandswitch.com/local-first/"
+  },
+  "serverless": {
+   "id": 101,
+   "layer": "software",
+   "name": "Serverless",
+   "url": "https://en.wikipedia.org/wiki/Serverless_computing"
+  },
+  "filters": {
+   "id": 102,
+   "layer": "software",
+   "name": "Pipes and filters",
+   "url": "https://en.wikipedia.org/wiki/Pipeline_(software)"
+  },
+  "eventDriven": {
+   "id": 103,
+   "layer": "software",
+   "name": "Event-driven architecture",
+   "url": "https://en.wikipedia.org/wiki/Event-driven_architecture"
+  },
+  "peers": {
+   "id": 104,
+   "layer": "software",
+   "name": "Peer-to-peer",
+   "url": "https://docs.ipfs.tech/concepts/how-ipfs-works/"
+  },
+  "functional": {
+   "id": 106,
+   "layer": "language",
+   "name": "Functional programming",
+   "url": "https://en.wikipedia.org/wiki/Functional_programming"
+  },
+  "structures": {
+   "id": 107,
+   "layer": "software",
+   "name": "Data structure server",
+   "url": "https://redis.io/docs/latest/develop/data-types/"
+  },
+  "separation": {
+   "id": 108,
+   "layer": "os",
+   "name": "Separation kernel",
+   "url": "https://muen.sk/"
+  },
+  "effects": {
+   "id": 109,
+   "layer": "language",
+   "name": "Algebraic effects",
+   "url": "https://koka-lang.github.io/koka/doc/book.html"
+  },
+  "constraint": {
+   "id": 111,
+   "layer": "language",
+   "name": "Constraint programming",
+   "url": "https://docs.minizinc.dev/en/stable/modelling.html"
+  },
+  "unikernel": {
+   "id": 112,
+   "layer": "os",
+   "name": "Unikernel",
+   "url": "https://en.wikipedia.org/wiki/Unikernel"
+  },
+  "capabilities": {
+   "id": 113,
+   "layer": "os",
+   "name": "Capability-based OS",
+   "url": "https://en.wikipedia.org/wiki/Capability-based_security"
+  },
+  "hypervisor": {
+   "id": 114,
+   "layer": "os",
+   "name": "Hypervisor",
+   "url": "https://en.wikipedia.org/wiki/Hypervisor"
+  },
+  "generators": {
+   "id": 115,
+   "layer": "hardware",
+   "name": "Hardware generators",
+   "url": "https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html"
+  },
+  "distributed": {
+   "id": 116,
+   "layer": "os",
+   "name": "Distributed OS",
+   "url": "https://9p.io/sys/doc/9.html"
+  },
+  "dataflow": {
+   "id": 118,
+   "layer": "language",
+   "name": "Dataflow programming",
+   "url": "https://en.wikipedia.org/wiki/Dataflow_programming"
+  },
+  "objects": {
+   "id": 119,
+   "layer": "language",
+   "name": "Object-oriented programming",
+   "url": "https://en.wikipedia.org/wiki/Object-oriented_programming"
+  },
+  "logic": {
+   "id": 120,
+   "layer": "language",
+   "name": "Logic programming",
+   "url": "https://en.wikipedia.org/wiki/Logic_programming"
+  },
+  "multikernel": {
+   "id": 123,
+   "layer": "os",
+   "name": "Multikernel",
+   "url": "https://barrelfish.org/publications/barrelfish_sosp09.pdf"
+  },
+  "exokernel": {
+   "id": 125,
+   "layer": "os",
+   "name": "Exokernel",
+   "url": "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf"
+  },
+  "gpu": {
+   "id": 127,
+   "layer": "hardware",
+   "name": "GPU (SIMT)",
+   "url": "https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads"
+  },
+  "sharedMemory": {
+   "id": 128,
+   "layer": "hardware",
+   "name": "Shared-memory multiprocessor",
+   "url": "https://en.wikipedia.org/wiki/Symmetric_multiprocessing"
+  },
+  "monolithic": {
+   "id": 130,
+   "layer": "os",
+   "name": "Monolithic kernel",
+   "url": "https://en.wikipedia.org/wiki/Monolithic_kernel"
+  },
+  "fpga": {
+   "id": 131,
+   "layer": "hardware",
+   "name": "Reconfigurable logic (FPGA)",
+   "url": "https://docs.amd.com/r/en-US/ug474_7Series_CLB/CLB-Overview?contentId=Iu8f5wALojKVM4rTwaBPtw"
+  },
+  "vliw": {
+   "id": 134,
+   "layer": "hardware",
+   "name": "VLIW",
+   "url": "https://en.wikipedia.org/wiki/Very_long_instruction_word"
+  },
+  "vector": {
+   "id": 133,
+   "layer": "hardware",
+   "name": "Vector processor",
+   "url": "https://docs.riscv.org/reference/isa/v20260120/unpriv/v-st-ext.html"
+  },
+  "rootOfTrust": {
+   "id": 132,
+   "layer": "hardware",
+   "name": "Hardware root of trust",
+   "url": "https://opentitan.org/book/doc/introduction.html"
+  },
+  "cluster": {
+   "id": 129,
+   "layer": "hardware",
+   "name": "Cluster (warehouse-scale computer)",
+   "url": "https://en.wikipedia.org/wiki/Computer_cluster"
+  },
+  "realtime": {
+   "id": 126,
+   "layer": "os",
+   "name": "Real-time OS",
+   "url": "https://en.wikipedia.org/wiki/Real-time_operating_system"
+  },
+  "splitkernel": {
+   "id": 124,
+   "layer": "os",
+   "name": "Splitkernel",
+   "url": "https://www.usenix.org/conference/osdi18/presentation/shan"
+  },
+  "concatenative": {
+   "id": 122,
+   "layer": "language",
+   "name": "Concatenative programming",
+   "url": "https://concatenative.org/wiki/view/Concatenative%20language"
+  },
+  "reactive": {
+   "id": 121,
+   "layer": "language",
+   "name": "Functional reactive programming",
+   "url": "https://en.wikipedia.org/wiki/Functional_reactive_programming"
+  },
+  "clientServer": {
+   "id": 117,
+   "layer": "software",
+   "name": "Client-server",
+   "url": "https://en.wikipedia.org/wiki/Client%E2%80%93server_model"
+  },
+  "store": {
+   "id": 110,
+   "layer": "os",
+   "name": "Single-level store",
+   "url": "https://www.usenix.org/legacy/event/usenix02/shapiro.html"
+  },
+  "crdt": {
+   "id": 105,
+   "layer": "software",
+   "name": "Conflict-free replicated data types",
+   "url": "https://crdt.tech/"
+  },
+  "microservices": {
+   "id": 71,
+   "layer": "software",
+   "name": "Microservices",
+   "url": "https://en.wikipedia.org/wiki/Microservices"
+  },
+  "nix": {
+   "id": 92,
+   "layer": "software",
+   "name": "Functional package management",
+   "url": "https://nix.dev/manual/nix/2.35/introduction.html"
+  }
+ },
+ "cases": [
+  {
+   "why": "",
+   "seeds": [
+    "injection",
+    "actor"
+   ],
+   "links": [
+    [
+     93,
+     "technical-debt",
+     "reduces"
+    ],
+    [
+     94,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "Assessment:.*does not address all technical debt"
+    ],
+    [
+     1,
+     "In Erlang\\/OTP.*Actors alone provide no supervisor"
+    ]
+   ]
+  },
+  {
+   "why": "",
+   "seeds": [
+    "ownership"
+   ],
+   "links": [
+    [
+     95,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "In Rust.*double-free.*does not prove whole-system reliability"
+    ]
+   ]
+  },
+  {
+   "why": "a documented cost must not count as a reduction in technical debt.",
+   "seeds": [
+    "cqrs"
+   ],
+   "links": [
+    [
+     96,
+     "technical-debt",
+     "worsens"
+    ]
+   ],
+   "without": "empty",
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "when CQRS does not fit the domain.*Assessment:.*does not apply to every CQRS use"
+    ]
+   ]
+  },
+  {
+   "why": "the deployment benefit must not hide the loss of a fault boundary.",
+   "seeds": [
+    "embedded"
+   ],
+   "links": [
+    [
+     97,
+     "deployment-complexity",
+     "reduces"
+    ],
+    [
+     97,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "no separate database server.*Other application deployment costs remain"
+    ],
+    [
+     1,
+     "stray pointers.*does not prove more faults in every application"
+    ]
+   ]
+  },
+  {
+   "why": "driver isolation must reach coverage without a claim about every microkernel.",
+   "seeds": [
+    "microkernel"
+   ],
+   "links": [
+    [
+     98,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "MINIX 3.*contain driver memory faults.*does not prove whole-system reliability or apply to every microkernel"
+    ]
+   ]
+  },
+  {
+   "why": "a recovery benefit must not hide faults from repeat external updates.",
+   "seeds": [
+    "events"
+   ],
+   "links": [
+    [
+     99,
+     "unreliable-tools",
+     "reduces"
+    ],
+    [
+     99,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "retained event log.*does not prevent every fault"
+    ],
+    [
+     1,
+     "unless gateways suppress repeat updates.*depends on external effects and replay controls"
+    ]
+   ]
+  },
+  {
+   "why": "offline access must not hide resource costs from retained history.",
+   "seeds": [
+    "localFirst"
+   ],
+   "links": [
+    [
+     100,
+     "unreliable-tools",
+     "reduces"
+    ],
+    [
+     100,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "network outage.*does not protect against device loss or local faults"
+    ],
+    [
+     1,
+     "CRDT change history.*depends on the implementation and workload"
+    ]
+   ]
+  },
+  {
+   "why": "server management removal must not hide request failures at concurrency limits.",
+   "seeds": [
+    "serverless"
+   ],
+   "links": [
+    [
+     101,
+     "deployment-complexity",
+     "reduces"
+    ],
+    [
+     101,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "removes server setup.*configuration and service integration costs remain"
+    ],
+    [
+     1,
+     "reject requests.*depends on demand, quotas and concurrency controls"
+    ]
+   ]
+  },
+  {
+   "why": "filter reuse must not hide faults from repeat state updates.",
+   "seeds": [
+    "filters"
+   ],
+   "links": [
+    [
+     102,
+     "technical-debt",
+     "reduces"
+    ],
+    [
+     102,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "duplicate pipeline logic.*compatible data schemas.*does not address all technical debt"
+    ],
+    [
+     1,
+     "retries after filter faults.*depends on retry controls"
+    ]
+   ]
+  },
+  {
+   "why": "fewer dependencies must not hide event loss after a component crash.",
+   "seeds": [
+    "eventDriven"
+   ],
+   "links": [
+    [
+     103,
+     "technical-debt",
+     "reduces"
+    ],
+    [
+     103,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "without changes to producers.*Event contracts still need maintenance.*does not address all technical debt"
+    ],
+    [
+     1,
+     "crash before event transfer.*depends on durable event storage and receipt controls"
+    ]
+   ]
+  },
+  {
+   "why": "remote copies must not hide data loss from temporary peer caches.",
+   "seeds": [
+    "peers"
+   ],
+   "links": [
+    [
+     104,
+     "unreliable-tools",
+     "reduces"
+    ],
+    [
+     104,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "reachable peers.*requires explicit data retention.*does not prove whole-system reliability"
+    ],
+    [
+     1,
+     "temporary peer caches.*depends on retained copies"
+    ]
+   ]
+  },
+  {
+   "why": "convergence must not imply complete application correctness or device-loss protection.",
+   "seeds": [
+    "crdt"
+   ],
+   "links": [
+    [
+     105,
+     "technical-debt",
+     "reduces"
+    ],
+    [
+     105,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "application-specific merge code.*requires suitable data types.*does not address all technical debt"
+    ],
+    [
+     1,
+     "network outages.*does not prove application correctness or protect against device loss"
+    ]
+   ]
+  },
+  {
+   "why": "pure functions must not imply fault-free effects or complete debt removal.",
+   "seeds": [
+    "functional"
+   ],
+   "links": [
+    [
+     106,
+     "technical-debt",
+     "reduces"
+    ],
+    [
+     106,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "urlAll": "https://clojure.org/about/state#_functional_programming",
+   "reasons": [
+    [
+     0,
+     "local function behavior.*does not address all technical debt"
+    ],
+    [
+     1,
+     "no mutable state.*Effects and shared state still need controls.*does not prove whole-system reliability"
+    ]
+   ]
+  },
+  {
+   "why": "recovery evidence must not hide data loss between snapshots.",
+   "seeds": [
+    "structures"
+   ],
+   "links": [
+    [
+     107,
+     "unreliable-tools",
+     "reduces"
+    ],
+    [
+     107,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "urlAll": "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/",
+   "reasons": [
+    [
+     0,
+     "replay.*requires intact persistence files.*does not prove whole-system reliability"
+    ],
+    [
+     1,
+     "lose recent writes.*depends on the persistence policy"
+    ]
+   ]
+  },
+  {
+   "why": "component isolation must not imply complete system reliability.",
+   "seeds": [
+    "separation"
+   ],
+   "links": [
+    [
+     108,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "reasons": [
+    [
+     0,
+     "Muen.*correct isolation policy.*does not prove whole-system reliability or apply to every separation kernel"
+    ]
+   ]
+  },
+  {
+   "why": "typed handlers must not imply correct handler behavior or complete debt removal.",
+   "seeds": [
+    "effects"
+   ],
+   "links": [
+    [
+     109,
+     "technical-debt",
+     "reduces"
+    ],
+    [
+     109,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "reasons": [
+    [
+     0,
+     "suitable handler interfaces.*does not address all technical debt"
+    ],
+    [
+     1,
+     "absent effect handlers before execution.*Correct handler behavior still needs checks.*does not prove whole-system reliability"
+    ]
+   ]
+  },
+  {
+   "why": "consistent durable state must not imply correct application transactions or complete debt removal.",
+   "seeds": [
+    "store"
+   ],
+   "links": [
+    [
+     110,
+     "technical-debt",
+     "reduces"
+    ],
+    [
+     110,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "urlAll": "https://www.usenix.org/legacy/event/usenix02/shapiro.html",
+   "reasons": [
+    [
+     0,
+     "custom code at the storage boundary.*does not address all technical debt"
+    ],
+    [
+     1,
+     "inconsistent stored state after a crash.*Correct application transactions remain necessary.*does not prove whole-system reliability"
+    ]
+   ]
+  },
+  {
+   "why": "model reuse must not imply correct constraints or complete debt removal.",
+   "seeds": [
+    "constraint"
+   ],
+   "links": [
+    [
+     111,
+     "technical-debt",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": false,
+   "reasons": [
+    [
+     0,
+     "duplicate constraint code.*requires a reusable model.*does not address all technical debt or prove that the constraints match the real problem"
+    ]
+   ]
+  },
+  {
+   "why": "less configuration work must not hide the cost of static configuration changes.",
+   "seeds": [
+    "unikernel"
+   ],
+   "links": [
+    [
+     112,
+     "deployment-complexity",
+     "reduces"
+    ],
+    [
+     112,
+     "deployment-complexity",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": false,
+   "urlAll": "https://dave.recoil.org/papers/final/asplos2013.pdf",
+   "reasons": [
+    [
+     0,
+     "requires libraries that fit the application.*does not remove all deployment costs or apply to every unikernel"
+    ],
+    [
+     1,
+     "new compilation.*depends on which parameters are static"
+    ]
+   ]
+  },
+  {
+   "why": "resource access controls must not imply correct authorized code or complete system reliability.",
+   "seeds": [
+    "capabilities"
+   ],
+   "links": [
+    [
+     113,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "urlAt": [
+    [
+     0,
+     "https://docs.sel4.systems/Tutorials/capabilities.html"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "correct capability allocation.*Authorized code can still cause faults.*does not prove whole-system reliability or apply to every capability-based OS"
+    ]
+   ]
+  },
+  {
+   "why": "driver isolation must not imply complete system reliability for every hypervisor.",
+   "seeds": [
+    "hypervisor"
+   ],
+   "links": [
+    [
+     114,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "urlAt": [
+    [
+     0,
+     "https://xenproject.org/projects/hypervisor/"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "requires driver isolation.*does not prove whole-system reliability or apply to every hypervisor"
+    ]
+   ]
+  },
+  {
+   "why": "circuit reuse must not imply complete debt removal or correct generated circuits.",
+   "seeds": [
+    "generators"
+   ],
+   "links": [
+    [
+     115,
+     "technical-debt",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": true,
+   "urlAt": [
+    [
+     0,
+     "https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-17.html"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "duplicate circuit description code.*requires compatible generator interfaces.*still need validation.*does not address all technical debt or apply to every hardware generator"
+    ]
+   ]
+  },
+  {
+   "why": "uniform resource access must not imply complete debt removal for every distributed OS.",
+   "seeds": [
+    "distributed"
+   ],
+   "links": [
+    [
+     116,
+     "technical-debt",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": true,
+   "urlAt": [
+    [
+     0,
+     "https://9p.io/sys/doc/9.html"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "custom resource access code.*requires services that expose compatible file interfaces.*does not address all technical debt or apply to every distributed OS"
+    ]
+   ]
+  },
+  {
+   "why": "database isolation must not hide deployment costs or imply whole-system reliability.",
+   "seeds": [
+    "clientServer"
+   ],
+   "links": [
+    [
+     117,
+     "unreliable-tools",
+     "reduces"
+    ],
+    [
+     117,
+     "deployment-complexity",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": true,
+   "urlAll": "https://www.sqlite.org/serverless.html",
+   "reasons": [
+    [
+     0,
+     "requires a separate server process.*Authorized requests can still cause faults.*does not prove whole-system reliability or apply to every client-server system"
+    ],
+    [
+     1,
+     "self-managed database server.*managed service can transfer server administration.*does not apply to every client-server system"
+    ]
+   ]
+  },
+  {
+   "why": "reusable transforms must not hide retry risks or imply complete debt removal.",
+   "seeds": [
+    "dataflow"
+   ],
+   "links": [
+    [
+     118,
+     "technical-debt",
+     "reduces"
+    ],
+    [
+     118,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": true,
+   "urlEach": [
+    "https://beam.apache.org/documentation/programming-guide/#composite-transforms",
+    "https://beam.apache.org/documentation/programming-guide/#idempotence"
+   ],
+   "reasons": [
+    [
+     0,
+     "duplicate pipeline code.*requires compatible transform interfaces.*does not address all technical debt or apply to every dataflow system"
+    ],
+    [
+     1,
+     "repeat external updates.*without idempotent operations.*depends on the runner and external effect controls.*does not apply to every dataflow system"
+    ]
+   ]
+  },
+  {
+   "why": "encapsulation must not imply complete debt removal for every object-oriented design.",
+   "seeds": [
+    "objects"
+   ],
+   "links": [
+    [
+     119,
+     "technical-debt",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": false,
+   "urlAt": [
+    [
+     0,
+     "https://docs.oracle.com/javase/tutorial/java/concepts/object.html"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "dependencies on internal implementation details.*requires stable method contracts and encapsulated state.*does not address all technical debt or apply to every object-oriented design"
+    ]
+   ]
+  },
+  {
+   "why": "query termination benefits must not hide stale answers or imply whole-system reliability.",
+   "seeds": [
+    "logic"
+   ],
+   "links": [
+    [
+     120,
+     "unreliable-tools",
+     "reduces"
+    ],
+    [
+     120,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "urlEach": [
+    "https://www.swi-prolog.org/pldoc/man?section=tabling-non-termination",
+    "https://www.swi-prolog.org/pldoc/man?section=tabling"
+   ],
+   "reasons": [
+    [
+     0,
+     "finite graph query.*requires suitable tabled predicates.*does not guarantee termination for every query or whole-system reliability"
+    ],
+    [
+     1,
+     "stale answers.*after facts change.*explicit table invalidation or suitable incremental tables.*does not apply to every logic program"
+    ]
+   ]
+  },
+  {
+   "why": "event combinators must not imply complete debt removal or safe external effects.",
+   "seeds": [
+    "reactive"
+   ],
+   "links": [
+    [
+     121,
+     "technical-debt",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": false,
+   "urlAt": [
+    [
+     0,
+     "https://hackage-content.haskell.org/package/reactive-banana-1.3.2.0/docs/Reactive-Banana-Combinators.html"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "custom event coordination code.*requires event and value models that fit the application.*External effects still need controls.*does not address all technical debt or apply to every functional reactive program"
+    ]
+   ]
+  },
+  {
+   "why": "static stack checks must not imply safe dynamic code or whole-system reliability.",
+   "seeds": [
+    "concatenative"
+   ],
+   "links": [
+    [
+     122,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": true,
+   "urlAt": [
+    [
+     0,
+     "https://docs.factorcode.org/content/article-inference.html"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "Factor.*invalid stack effects.*requires code that passes the static stack checker.*Dynamic code still needs controls.*does not prove whole-system reliability or apply to every concatenative language"
+    ]
+   ]
+  },
+  {
+   "why": "hardware abstraction benefits must not hide control flow costs.",
+   "seeds": [
+    "multikernel"
+   ],
+   "links": [
+    [
+     123,
+     "technical-debt",
+     "reduces"
+    ],
+    [
+     123,
+     "technical-debt",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": true,
+   "urlAll": "https://barrelfish.org/publications/barrelfish_sosp09.pdf",
+   "reasons": [
+    [
+     0,
+     "code changes across components.*requires hardware details.*does not address all technical debt or apply to every multikernel"
+    ],
+    [
+     1,
+     "obscure control flow.*cost depends on message handlers and control flow tools.*does not apply to every multikernel"
+    ]
+   ]
+  },
+  {
+   "why": "best-effort memory recovery must not imply protection for all application data or processor faults.",
+   "seeds": [
+    "splitkernel"
+   ],
+   "links": [
+    [
+     124,
+     "unreliable-tools",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "urlAt": [
+    [
+     0,
+     "https://www.usenix.org/system/files/osdi18-shan.pdf"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "requires intact backup logs.*full backup log can stop replication.*protect persistent data and handle processor faults.*does not prove whole-system reliability or apply to every splitkernel"
+    ]
+   ]
+  },
+  {
+   "why": "fault containment must not hide direct interface portability costs.",
+   "seeds": [
+    "exokernel"
+   ],
+   "links": [
+    [
+     125,
+     "unreliable-tools",
+     "reduces"
+    ],
+    [
+     125,
+     "technical-debt",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "urlAll": "https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf",
+   "reasons": [
+    [
+     0,
+     "Wrong arguments.*affect only that application.*requires correct kernel resource protection.*does not prove whole-system reliability or apply to every exokernel"
+    ],
+    [
+     1,
+     "hardware-dependent maintenance work.*applies to direct interface use.*standard interface can preserve portability.*does not apply to every exokernel application"
+    ]
+   ]
+  },
+  {
+   "why": "GPU costs must reach the map without false problem reductions.",
+   "seeds": [
+    "gpu"
+   ],
+   "links": [
+    [
+     127,
+     "unreliable-tools",
+     "worsens"
+    ],
+    [
+     127,
+     "build-complexity",
+     "worsens"
+    ]
+   ],
+   "without": "empty",
+   "unassessed": true,
+   "reasons": [
+    [
+     0,
+     "incorrect synchronization scopes.*depends on shared memory access and synchronization controls.*does not imply faults in every GPU program"
+    ],
+    [
+     1,
+     "compatible host compiler.*explicit compiler flags and device linkage.*nvcc coordinates compiler steps automatically.*does not apply to every GPU toolchain"
+    ]
+   ]
+  },
+  {
+   "why": "a data race cost must not count as a reduction or imply faults in every shared-memory program.",
+   "seeds": [
+    "sharedMemory"
+   ],
+   "links": [
+    [
+     128,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": "empty",
+   "unassessed": true,
+   "urlAt": [
+    [
+     0,
+     "https://www.openmp.org/spec-html/5.2/openmpsu9.html"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "OpenMP.*data race.*unordered access to shared memory.*depends on shared data access and synchronization controls.*does not imply faults in every shared-memory program"
+    ]
+   ]
+  },
+  {
+   "why": "a protocol cost must not imply faults in every cluster application or count as a reduction.",
+   "seeds": [
+    "cluster"
+   ],
+   "links": [
+    [
+     129,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": "empty",
+   "unassessed": true,
+   "urlAt": [
+    [
+     0,
+     "https://www.mpi-forum.org/docs/mpi-5.0/mpi50-report/node73.htm"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "MPI.*deadlock.*incorrect message order.*depends on the communication pattern and protocol controls.*asynchronous operations can avoid this order constraint.*does not imply faults in every cluster application"
+    ]
+   ]
+  },
+  {
+   "why": "driver costs must not count as reductions or imply unstable application interfaces.",
+   "seeds": [
+    "monolithic"
+   ],
+   "links": [
+    [
+     130,
+     "technical-debt",
+     "worsens"
+    ],
+    [
+     130,
+     "build-complexity",
+     "worsens"
+    ]
+   ],
+   "without": "empty",
+   "unassessed": true,
+   "urlAll": "https://docs.kernel.org/process/stable-api-nonsense.html",
+   "reasons": [
+    [
+     0,
+     "drivers outside that tree.*extra maintenance.*userspace interface stays stable.*does not apply to every monolithic kernel or ordinary application"
+    ],
+    [
+     1,
+     "separate module builds.*supported variants.*does not apply to every monolithic kernel or ordinary application"
+    ]
+   ]
+  },
+  {
+   "why": "a concurrency cost must retain its scope and must not count as a reduction.",
+   "seeds": [
+    "imperative"
+   ],
+   "links": [
+    [
+     135,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": "empty",
+   "unassessed": true,
+   "urlAt": [
+    [
+     0,
+     "https://clojure.org/about/state#_imperative_programming"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "concurrent tasks.*shared mutable state.*incorrect coordination can cause faults.*depends on synchronization controls.*does not imply faults in every imperative program"
+    ]
+   ]
+  },
+  {
+   "why": "assembly costs must retain input limits and must not count as reductions.",
+   "seeds": [
+    "vliw"
+   ],
+   "links": [
+    [
+     134,
+     "technical-debt",
+     "worsens"
+    ],
+    [
+     134,
+     "unreliable-tools",
+     "worsens"
+    ]
+   ],
+   "without": "empty",
+   "unassessed": true,
+   "urlAll": "https://downloads.ti.com/docs/esd/SPRUI04/what-you-need-to-know-to-write-linear-assembly-spru1874615.html",
+   "reasons": [
+    [
+     0,
+     "target-specific assembly.*maintenance work.*optimizer handles instruction order and register allocation by default.*depends on performance needs and source choices.*does not apply to every VLIW program"
+    ],
+    [
+     1,
+     "may accept illegal assembly.*unintended results.*requires invalid optimizer input.*does not imply faults in every VLIW program"
+    ]
+   ]
+  },
+  {
+   "why": "vector portability must retain its compatibility limits and exclude other problem reductions.",
+   "seeds": [
+    "vector"
+   ],
+   "links": [
+    [
+     133,
+     "technical-debt",
+     "reduces"
+    ]
+   ],
+   "without": [
+    "build-complexity",
+    "deployment-complexity",
+    "unreliable-tools"
+   ],
+   "unassessed": true,
+   "urlAt": [
+    [
+     0,
+     "https://raw.githubusercontent.com/riscv/riscv-v-spec/v1.0/v-spec.adoc"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "one binary.*different vector register lengths.*reduce duplicate implementations.*requires compatible element types, instructions and portable code.*does not address all technical debt or apply to every vector processor"
+    ]
+   ]
+  },
+  {
+   "why": "secure boot benefits must not hide release costs or imply correct authorized code.",
+   "seeds": [
+    "rootOfTrust"
+   ],
+   "links": [
+    [
+     132,
+     "unreliable-tools",
+     "reduces"
+    ],
+    [
+     132,
+     "deployment-complexity",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": true,
+   "urlAll": "https://opentitan.org/book/doc/security/specs/secure_boot/",
+   "reasons": [
+    [
+     0,
+     "Earl Grey.*unauthorized boot code.*requires trusted keys and correct verification controls.*Authorized code can still contain faults.*Pre-RFC.*does not prove whole-system reliability or apply to every hardware root of trust"
+    ],
+    [
+     1,
+     "fails to boot after verification errors.*extra key and signature controls.*depends on key configuration and release procedures.*Pre-RFC.*does not apply to every hardware root of trust"
+    ]
+   ]
+  },
+  {
+   "why": "FPGA build costs must not imply manual stages or count as problem reductions.",
+   "seeds": [
+    "fpga"
+   ],
+   "links": [
+    [
+     131,
+     "build-complexity",
+     "worsens"
+    ]
+   ],
+   "without": "empty",
+   "unassessed": true,
+   "urlAt": [
+    [
+     0,
+     "https://docs.amd.com/r/2024.1-English/ug888-vivado-design-flows-overview-tutorial/Step-7-Synthesizing-and-Implementing-the-Design"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "synthesis and implementation run options.*build configuration work.*prerequisite stages automatically.*depends on the design and run options.*does not apply to every FPGA toolchain or imply manual execution"
+    ]
+   ]
+  },
+  {
+   "why": "optional MPU protection must not imply universal reliability or hide maintenance costs.",
+   "seeds": [
+    "realtime"
+   ],
+   "links": [
+    [
+     126,
+     "unreliable-tools",
+     "reduces"
+    ],
+    [
+     126,
+     "technical-debt",
+     "worsens"
+    ]
+   ],
+   "without": [
+    "technical-debt",
+    "build-complexity",
+    "deployment-complexity"
+   ],
+   "unassessed": false,
+   "urlAll": "https://github.com/FreeRTOS/FreeRTOS-Website-Content/blob/main/content/en-us/Security/04-FreeRTOS-MPU-memory-protection-unit.md",
+   "reasons": [
+    [
+     0,
+     "requires suitable hardware, an MPU port and correct access permissions.*Privileged code still needs controls.*does not prove whole-system reliability or apply to every real-time OS"
+    ],
+    [
+     1,
+     "maintenance work.*cost depends on the memory layout and task boundaries.*does not apply to every real-time OS"
+    ]
+   ]
+  },
+  {
+   "why": "accelerator build costs must retain model limits and must not count as problem reductions.",
+   "seeds": [
+    "accelerator"
+   ],
+   "links": [
+    [
+     136,
+     "build-complexity",
+     "worsens"
+    ]
+   ],
+   "without": "empty",
+   "unassessed": true,
+   "urlAt": [
+    [
+     0,
+     "https://coral.ai/docs/edgetpu/models-intro/"
+    ]
+   ],
+   "reasons": [
+    [
+     0,
+     "custom models.*add build work.*depends on model compatibility and toolchain choices.*does not apply to every accelerator or imply manual execution"
+    ]
+   ]
+  }
+ ],
+ "mutate": [
+  "accelerator",
+  "imperative",
+  "injection",
+  "actor",
+  "ownership",
+  "cqrs",
+  "embedded",
+  "microkernel",
+  "events",
+  "localFirst",
+  "serverless",
+  "filters",
+  "eventDriven",
+  "peers",
+  "crdt",
+  "functional",
+  "structures",
+  "separation",
+  "effects",
+  "store",
+  "constraint",
+  "unikernel",
+  "capabilities",
+  "hypervisor",
+  "generators",
+  "distributed",
+  "clientServer",
+  "dataflow",
+  "objects",
+  "logic",
+  "reactive",
+  "concatenative",
+  "multikernel",
+  "splitkernel",
+  "exokernel",
+  "realtime",
+  "gpu",
+  "sharedMemory",
+  "cluster",
+  "monolithic",
+  "fpga",
+  "rootOfTrust",
+  "vector",
+  "vliw"
+ ]
+}
