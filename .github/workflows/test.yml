@@ -11,5 +11,17 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.4
+      # The runner's container image has no C compiler. Building the pinned
+      # power10-check needs cc and c++, to build Goose, and cmake, plus make
+      # for cmake's default generator (scripts/p10-run and scripts/build.sh in
+      # that commit). They go in this job's own container, never on the runner
+      # host, and the build prints their versions so the log shows what ran.
+      - name: Install the C toolchain the checker build needs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake
+          cc --version | head -1
+          c++ --version | head -1
+          cmake --version | head -1
       - run: bun install --frozen-lockfile
       - run: bun run test
